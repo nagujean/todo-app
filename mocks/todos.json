@@ -1,0 +1,28 @@
+{
+  "todos": [
+    {
+      "id": "1",
+      "text": "프로젝트 설정 완료하기",
+      "completed": true,
+      "createdAt": "2026-01-16T00:00:00.000Z"
+    },
+    {
+      "id": "2",
+      "text": "할일 목록 컴포넌트 만들기",
+      "completed": true,
+      "createdAt": "2026-01-16T00:01:00.000Z"
+    },
+    {
+      "id": "3",
+      "text": "상태 관리 추가하기",
+      "completed": false,
+      "createdAt": "2026-01-16T00:02:00.000Z"
+    },
+    {
+      "id": "4",
+      "text": "스타일링 마무리하기",
+      "completed": false,
+      "createdAt": "2026-01-16T00:03:00.000Z"
+    }
+  ]
+}
