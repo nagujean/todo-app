@@ -558,4 +558,155 @@ test.describe('Todo App', () => {
     // 달력 뷰 유지 확인
     await expect(page.getByRole('button', { name: '오늘' })).toBeVisible()
   })
+
+  test('할일을 클릭하면 상세 모달이 열린다', async ({ page }) => {
+    const input = page.getByPlaceholder('할 일을 입력하세요...')
+    await input.fill('상세 모달 테스트')
+    await input.press('Enter')
+
+    // 할일 클릭
+    await page.getByText('상세 모달 테스트').click()
+
+    // 상세 모달이 열림
+    await expect(page.getByRole('dialog')).toBeVisible()
+    await expect(page.getByText('할 일 상세')).toBeVisible()
+  })
+
+  test('상세 모달에서 할일 내용을 수정할 수 있다', async ({ page }) => {
+    const input = page.getByPlaceholder('할 일을 입력하세요...')
+    await input.fill('수정 전 제목')
+    await input.press('Enter')
+
+    // 할일 클릭하여 상세 모달 열기
+    await page.getByText('수정 전 제목').click()
+
+    // 제목 수정
+    const titleInput = page.getByRole('dialog').getByRole('textbox').first()
+    await titleInput.clear()
+    await titleInput.fill('수정 후 제목')
+
+    // 저장
+    await page.getByRole('button', { name: '저장' }).click()
+
+    // 모달이 닫히고 수정된 제목이 표시됨
+    await expect(page.getByRole('dialog')).not.toBeVisible()
+    await expect(page.getByText('수정 후 제목')).toBeVisible()
+  })
+
+  test('상세 모달에서 상세 내용을 추가할 수 있다', async ({ page }) => {
+    const input = page.getByPlaceholder('할 일을 입력하세요...')
+    await input.fill('상세 내용 테스트')
+    await input.press('Enter')
+
+    // 할일 클릭
+    await page.getByText('상세 내용 테스트').click()
+
+    // 상세 내용 입력
+    const descriptionInput = page.getByPlaceholder('상세 내용을 입력하세요...')
+    await descriptionInput.fill('이것은 상세 내용입니다.')
+
+    // 저장
+    await page.getByRole('button', { name: '저장' }).click()
+
+    // 상세 내용 아이콘이 표시됨
+    const todoItem = page.locator('[data-testid="todo-item"]').filter({ hasText: '상세 내용 테스트' })
+    await expect(todoItem.locator('svg.lucide-file-text')).toBeVisible()
+  })
+
+  test('상세 모달에서 할일을 삭제할 수 있다', async ({ page }) => {
+    const input = page.getByPlaceholder('할 일을 입력하세요...')
+    await input.fill('삭제될 상세 할일')
+    await input.press('Enter')
+
+    // 할일 클릭
+    await page.getByText('삭제될 상세 할일').click()
+
+    // 삭제 버튼 클릭
+    await page.getByRole('dialog').getByRole('button', { name: '삭제' }).click()
+
+    // 모달이 닫히고 할일이 삭제됨
+    await expect(page.getByRole('dialog')).not.toBeVisible()
+    await expect(page.getByText('삭제될 상세 할일')).not.toBeVisible()
+  })
+
+  test('상세 모달에서 완료 상태를 변경할 수 있다', async ({ page }) => {
+    const input = page.getByPlaceholder('할 일을 입력하세요...')
+    await input.fill('상태 변경 테스트')
+    await input.press('Enter')
+
+    // 할일 클릭
+    await page.getByText('상태 변경 테스트').click()
+
+    // 완료로 변경 버튼 클릭
+    await page.getByRole('button', { name: '완료로 변경' }).click()
+
+    // 할일이 완료 상태로 변경됨 (취소선)
+    await expect(page.getByText('상태 변경 테스트')).toHaveClass(/line-through/)
+  })
+
+  test('할일 입력 시 상세 내용 필드가 옵션에 표시된다', async ({ page }) => {
+    // 옵션 열기
+    await page.getByRole('button', { name: '옵션 설정' }).click()
+
+    // 상세 내용 필드가 표시됨
+    await expect(page.getByText('상세 내용')).toBeVisible()
+    await expect(page.getByPlaceholder('상세 내용을 입력하세요...')).toBeVisible()
+  })
+
+  test('할일 추가 시 상세 내용을 함께 입력할 수 있다', async ({ page }) => {
+    const input = page.getByPlaceholder('할 일을 입력하세요...')
+    await input.fill('상세 내용 있는 할일')
+
+    // 옵션 열기
+    await page.getByRole('button', { name: '옵션 설정' }).click()
+
+    // 상세 내용 입력
+    await page.getByPlaceholder('상세 내용을 입력하세요...').fill('이것은 입력 시 작성한 상세 내용입니다.')
+
+    // 할일 추가
+    await page.getByRole('button', { name: '추가' }).click()
+
+    // 할일이 추가되고 상세 내용 아이콘이 표시됨
+    const todoItem = page.locator('[data-testid="todo-item"]').filter({ hasText: '상세 내용 있는 할일' })
+    await expect(todoItem).toBeVisible()
+    await expect(todoItem.locator('svg.lucide-file-text')).toBeVisible()
+  })
+
+  test('입력한 상세 내용이 상세 모달에서 확인된다', async ({ page }) => {
+    const input = page.getByPlaceholder('할 일을 입력하세요...')
+    await input.fill('상세 확인 테스트')
+
+    // 옵션 열기
+    await page.getByRole('button', { name: '옵션 설정' }).click()
+
+    // 상세 내용 입력
+    await page.getByPlaceholder('상세 내용을 입력하세요...').fill('모달에서 확인할 상세 내용')
+
+    // 할일 추가
+    await page.getByRole('button', { name: '추가' }).click()
+
+    // 할일 클릭하여 상세 모달 열기
+    await page.getByText('상세 확인 테스트').click()
+
+    // 상세 모달에서 입력한 상세 내용이 표시됨
+    await expect(page.getByRole('dialog')).toBeVisible()
+    const descriptionField = page.getByRole('dialog').getByPlaceholder('상세 내용을 입력하세요...')
+    await expect(descriptionField).toHaveValue('모달에서 확인할 상세 내용')
+  })
+
+  test('상세 내용 없이 할일을 추가해도 아이콘이 표시되지 않는다', async ({ page }) => {
+    const input = page.getByPlaceholder('할 일을 입력하세요...')
+    await input.fill('상세 내용 없는 할일')
+
+    // 옵션 열기 (상세 내용은 입력하지 않음)
+    await page.getByRole('button', { name: '옵션 설정' }).click()
+
+    // 할일 추가
+    await page.getByRole('button', { name: '추가' }).click()
+
+    // 할일이 추가되고 상세 내용 아이콘이 없음
+    const todoItem = page.locator('[data-testid="todo-item"]').filter({ hasText: '상세 내용 없는 할일' })
+    await expect(todoItem).toBeVisible()
+    await expect(todoItem.locator('svg.lucide-file-text')).not.toBeVisible()
+  })
 })

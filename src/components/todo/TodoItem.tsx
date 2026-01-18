@@ -1,13 +1,15 @@
 'use client'
 
+import { useState } from 'react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { useTodoStore, type Todo, type Priority } from '@/store/todoStore'
 import { usePresetStore } from '@/store/presetStore'
-import { Star, Calendar } from 'lucide-react'
+import { Star, Calendar, FileText } from 'lucide-react'
 
 interface TodoItemProps {
   todo: Todo
+  onOpenDetail?: (todo: Todo) => void
 }
 
 function formatDate(dateStr: string): string {
@@ -21,17 +23,34 @@ const priorityConfig: Record<Priority, { label: string; color: string }> = {
   low: { label: '낮음', color: 'bg-blue-500' },
 }
 
-export function TodoItem({ todo }: TodoItemProps) {
+export function TodoItem({ todo, onOpenDetail }: TodoItemProps) {
   const { toggleTodo, deleteTodo } = useTodoStore()
   const { presets, addPreset } = usePresetStore()
+  const [isDeleting, setIsDeleting] = useState(false)
 
-  const isPreset = presets.some((p) => p.title === todo.title) // Changed from p.text to p.title
+  const isPreset = presets.some((p) => p.title === todo.title)
   const hasDate = todo.startDate || todo.endDate
+  const hasDescription = !!todo.description
+
+  const handleDelete = () => {
+    setIsDeleting(true)
+    // REQ-FUNC-009: 페이드아웃 애니메이션 (300ms)
+    setTimeout(() => {
+      deleteTodo(todo.id)
+    }, 300)
+  }
+
+  if (isDeleting) {
+    return null
+  }
 
   return (
     <div
-      className="flex items-center gap-3 p-3 bg-card rounded-lg border group"
-      data-testid="todo-item" // Added for E2E testing
+      className={`flex items-center gap-3 p-3 bg-card rounded-lg border group hover:border-primary/30 transition-all cursor-pointer ${
+        todo.completed ? 'opacity-60' : ''
+      }`}
+      data-testid="todo-item"
+      onClick={() => onOpenDetail?.(todo)}
     >
       {todo.priority && (
         <div
@@ -40,20 +59,26 @@ export function TodoItem({ todo }: TodoItemProps) {
           aria-label={`우선순위: ${priorityConfig[todo.priority].label}`}
         />
       )}
-      <Checkbox
-        checked={todo.completed}
-        onCheckedChange={() => toggleTodo(todo.id)}
-        id={todo.id}
-      />
+      <div onClick={(e) => e.stopPropagation()}>
+        <Checkbox
+          checked={todo.completed}
+          onCheckedChange={() => toggleTodo(todo.id)}
+          id={todo.id}
+        />
+      </div>
       <div className="flex-1 min-w-0">
-        <label
-          htmlFor={todo.id}
-          className={`cursor-pointer block ${
-            todo.completed ? 'line-through text-muted-foreground' : ''
-          }`}
-        >
-          {todo.title} {/* Changed from todo.text to todo.title */}
-        </label>
+        <div className="flex items-center gap-1.5">
+          <span
+            className={`${
+              todo.completed ? 'line-through text-muted-foreground' : ''
+            }`}
+          >
+            {todo.title}
+          </span>
+          {hasDescription && (
+            <FileText className="h-3 w-3 text-muted-foreground" title="상세 내용 있음" />
+          )}
+        </div>
         {hasDate && (
           <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
             <Calendar className="h-3 w-3" />
@@ -65,12 +90,12 @@ export function TodoItem({ todo }: TodoItemProps) {
           </div>
         )}
       </div>
-      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
         {!isPreset && (
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => addPreset(todo.title)} // Changed from todo.text to todo.title
+            onClick={() => addPreset(todo.title)}
             title="프리셋으로 저장"
             aria-label="프리셋으로 저장"
           >
@@ -80,7 +105,7 @@ export function TodoItem({ todo }: TodoItemProps) {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => deleteTodo(todo.id)}
+          onClick={handleDelete}
           className="text-destructive hover:text-destructive"
         >
           삭제

@@ -5,6 +5,7 @@ export type Priority = 'high' | 'medium' | 'low'
 export type SortType = 'created' | 'priority' | 'startDate' | 'endDate'
 export type SortOrder = 'asc' | 'desc'
 export type ViewMode = 'list' | 'calendar'
+export type FilterMode = 'all' | 'incomplete' | 'completed' // REQ-FUNC-014
 
 /**
  * Todo Interface
@@ -19,6 +20,7 @@ export type ViewMode = 'list' | 'calendar'
 export interface Todo {
   id: string
   title: string // Max 200 characters (REQ-DATA-005)
+  description?: string // Detailed description
   completed: boolean
   createdAt: string // ISO 8601 format (REQ-DATA-007)
   updatedAt: string // ISO 8601 format (REQ-DATA-001)
@@ -30,6 +32,16 @@ export interface Todo {
 
 interface AddTodoParams {
   title: string
+  description?: string
+  startDate?: string
+  endDate?: string
+  priority?: Priority
+}
+
+interface UpdateTodoParams {
+  id: string
+  title?: string
+  description?: string
   startDate?: string
   endDate?: string
   priority?: Priority
@@ -41,7 +53,9 @@ interface TodoState {
   sortOrder: SortOrder
   hideCompleted: boolean
   viewMode: ViewMode
+  filterMode: FilterMode // REQ-FUNC-016: 필터 상태 유지
   addTodo: (params: AddTodoParams) => void
+  updateTodo: (params: UpdateTodoParams) => void
   toggleTodo: (id: string) => void
   deleteTodo: (id: string) => void
   clearCompleted: () => void
@@ -49,6 +63,7 @@ interface TodoState {
   setSortOrder: (sortOrder: SortOrder) => void
   setHideCompleted: (hide: boolean) => void
   setViewMode: (mode: ViewMode) => void
+  setFilterMode: (mode: FilterMode) => void // REQ-FUNC-016: 필터 상태 설정
 }
 
 const priorityOrder: Record<Priority, number> = {
@@ -116,7 +131,8 @@ export const useTodoStore = create<TodoState>()(
       sortOrder: 'desc',
       hideCompleted: false,
       viewMode: 'list',
-      addTodo: ({ title, startDate, endDate, priority }) =>
+      filterMode: 'all', // REQ-FUNC-016: 기본 필터 모드
+      addTodo: ({ title, description, startDate, endDate, priority }) =>
         set((state) => {
           // Validate title length (REQ-DATA-005: Max 200 characters)
           const trimmedTitle = title.trim().slice(0, 200)
@@ -130,6 +146,7 @@ export const useTodoStore = create<TodoState>()(
           const newTodo: Todo = {
             id: crypto.randomUUID(),
             title: trimmedTitle,
+            description: description?.trim() || undefined,
             completed: false,
             createdAt: now,
             updatedAt: now,
@@ -143,6 +160,22 @@ export const useTodoStore = create<TodoState>()(
             todos: [newTodo, ...state.todos], // Add to top (AC-001)
           }
         }),
+      updateTodo: ({ id, title, description, startDate, endDate, priority }) =>
+        set((state) => ({
+          todos: state.todos.map((todo) =>
+            todo.id === id
+              ? {
+                  ...todo,
+                  title: title !== undefined ? title.trim().slice(0, 200) : todo.title,
+                  description: description !== undefined ? description : todo.description,
+                  startDate: startDate !== undefined ? startDate : todo.startDate,
+                  endDate: endDate !== undefined ? endDate : todo.endDate,
+                  priority: priority !== undefined ? priority : todo.priority,
+                  updatedAt: getTimestamp(),
+                }
+              : todo
+          ),
+        })),
       toggleTodo: (id) =>
         set((state) => ({
           todos: state.todos.map((todo) =>
@@ -168,6 +201,7 @@ export const useTodoStore = create<TodoState>()(
       setSortOrder: (sortOrder) => set({ sortOrder }),
       setHideCompleted: (hide) => set({ hideCompleted: hide }),
       setViewMode: (mode) => set({ viewMode: mode }),
+      setFilterMode: (filterMode) => set({ filterMode }), // REQ-FUNC-016: 필터 상태 저장
     }),
     {
       name: 'todo-storage',
