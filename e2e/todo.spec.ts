@@ -115,8 +115,9 @@ test.describe('Todo App', () => {
     await input.fill('삭제될 할일')
     await input.press('Enter')
 
-    // 두 번째 항목만 완료
-    await page.getByRole('checkbox').nth(1).click()
+    // '삭제될 할일' 항목만 완료 (텍스트로 찾아서 체크)
+    const todoToDelete = page.locator('.rounded-lg.border').filter({ hasText: '삭제될 할일' })
+    await todoToDelete.getByRole('checkbox').click()
 
     // 완료된 항목 삭제
     await page.getByRole('button', { name: '완료된 항목 삭제' }).click()
@@ -344,5 +345,77 @@ test.describe('Todo App', () => {
     await expect(todoItem.locator('.bg-red-500')).not.toBeVisible()
     await expect(todoItem.locator('.bg-yellow-500')).not.toBeVisible()
     await expect(todoItem.locator('.bg-blue-500')).not.toBeVisible()
+  })
+
+  test('정렬 옵션 버튼들이 표시된다', async ({ page }) => {
+    // 할일 추가
+    const input = page.getByPlaceholder('할 일을 입력하세요...')
+    await input.fill('정렬 테스트')
+    await input.press('Enter')
+
+    // 정렬 버튼들 표시 확인
+    await expect(page.getByRole('button', { name: /입력일/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /우선순위/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /시작일/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /종료일/ })).toBeVisible()
+  })
+
+  test('우선순위별로 정렬할 수 있다', async ({ page }) => {
+    const input = page.getByPlaceholder('할 일을 입력하세요...')
+
+    // 낮은 우선순위 할일 추가
+    await input.fill('낮은 우선순위')
+    await page.getByRole('button', { name: '옵션 설정' }).click()
+    await page.getByRole('button', { name: '낮음' }).click()
+    await page.getByRole('button', { name: '추가' }).click()
+
+    // 높은 우선순위 할일 추가
+    await input.fill('높은 우선순위')
+    await page.getByRole('button', { name: '높음' }).click()
+    await page.getByRole('button', { name: '추가' }).click()
+
+    // 우선순위 정렬 클릭
+    await page.getByRole('button', { name: /우선순위/ }).click()
+
+    // 첫 번째 항목이 높은 우선순위인지 확인
+    const todoItems = page.locator('.rounded-lg.border')
+    await expect(todoItems.first()).toContainText('높은 우선순위')
+  })
+
+  test('정렬 방향을 토글할 수 있다', async ({ page }) => {
+    const input = page.getByPlaceholder('할 일을 입력하세요...')
+
+    // 할일 2개 추가
+    await input.fill('할일 A')
+    await input.press('Enter')
+    await input.fill('할일 B')
+    await input.press('Enter')
+
+    // 입력일 정렬 클릭 (이미 기본 선택된 상태)
+    const sortButton = page.getByRole('button', { name: /입력일/ })
+    await sortButton.click()
+
+    // 정렬 방향 아이콘 확인 (asc 또는 desc)
+    await expect(sortButton.locator('svg')).toBeVisible()
+
+    // 다시 클릭하면 방향 토글
+    await sortButton.click()
+    await expect(sortButton.locator('svg')).toBeVisible()
+  })
+
+  test('정렬 설정이 새로고침 후에도 유지된다', async ({ page }) => {
+    const input = page.getByPlaceholder('할 일을 입력하세요...')
+    await input.fill('정렬 영속화 테스트')
+    await input.press('Enter')
+
+    // 우선순위 정렬 선택
+    await page.getByRole('button', { name: /우선순위/ }).click()
+
+    // 새로고침
+    await page.reload()
+
+    // 우선순위 버튼이 활성화된 상태인지 확인
+    const priorityButton = page.getByRole('button', { name: /우선순위/ })
+    await expect(priorityButton).toHaveClass(/text-primary/)
   })
 })

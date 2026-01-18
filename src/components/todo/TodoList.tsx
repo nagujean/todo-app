@@ -1,13 +1,32 @@
 'use client'
 
-import { useTodoStore } from '@/store/todoStore'
+import { useTodoStore, sortTodos, type SortType } from '@/store/todoStore'
 import { TodoItem } from './TodoItem'
 import { Button } from '@/components/ui/button'
+import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
+
+const sortOptions: { value: SortType; label: string }[] = [
+  { value: 'created', label: '입력일' },
+  { value: 'priority', label: '우선순위' },
+  { value: 'startDate', label: '시작일' },
+  { value: 'endDate', label: '종료일' },
+]
 
 export function TodoList() {
-  const { todos, clearCompleted } = useTodoStore()
+  const { todos, clearCompleted, sortType, sortOrder, setSortType, setSortOrder } = useTodoStore()
   const completedCount = todos.filter((t) => t.completed).length
   const totalCount = todos.length
+
+  const sortedTodos = sortTodos(todos, sortType, sortOrder)
+
+  const handleSortClick = (type: SortType) => {
+    if (sortType === type) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortType(type)
+      setSortOrder('asc')
+    }
+  }
 
   if (todos.length === 0) {
     return (
@@ -20,8 +39,29 @@ export function TodoList() {
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center gap-1 text-xs">
+        <ArrowUpDown className="h-3 w-3 text-muted-foreground mr-1" />
+        {sortOptions.map((option) => (
+          <button
+            key={option.value}
+            onClick={() => handleSortClick(option.value)}
+            className={`px-2 py-1 rounded-md flex items-center gap-1 transition-colors ${
+              sortType === option.value
+                ? 'bg-primary/10 text-primary font-medium'
+                : 'text-muted-foreground hover:bg-muted'
+            }`}
+          >
+            {option.label}
+            {sortType === option.value && (
+              sortOrder === 'asc'
+                ? <ArrowUp className="h-3 w-3" />
+                : <ArrowDown className="h-3 w-3" />
+            )}
+          </button>
+        ))}
+      </div>
       <div className="space-y-2">
-        {todos.map((todo) => (
+        {sortedTodos.map((todo) => (
           <TodoItem key={todo.id} todo={todo} />
         ))}
       </div>
