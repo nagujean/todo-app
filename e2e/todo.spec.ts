@@ -247,12 +247,12 @@ test.describe('Todo App', () => {
     await expect(page.getByRole('button', { name: '영속 프리셋', exact: true })).toBeVisible()
   })
 
-  test('날짜 설정 버튼을 클릭하면 날짜 입력 필드가 나타난다', async ({ page }) => {
+  test('옵션 설정 버튼을 클릭하면 날짜 입력 필드가 나타난다', async ({ page }) => {
     // 날짜 필드가 처음에는 보이지 않음
     await expect(page.getByLabel('시작일')).not.toBeVisible()
 
-    // 날짜 설정 버튼 클릭
-    await page.getByRole('button', { name: '날짜 설정' }).click()
+    // 옵션 설정 버튼 클릭
+    await page.getByRole('button', { name: '옵션 설정' }).click()
 
     // 날짜 필드가 나타남
     await expect(page.getByText('시작일')).toBeVisible()
@@ -265,8 +265,8 @@ test.describe('Todo App', () => {
     // 할일 텍스트 입력
     await input.fill('날짜 있는 할일')
 
-    // 날짜 설정 열기
-    await page.getByRole('button', { name: '날짜 설정' }).click()
+    // 옵션 설정 열기
+    await page.getByRole('button', { name: '옵션 설정' }).click()
 
     // 날짜 입력
     const today = new Date()
@@ -297,5 +297,52 @@ test.describe('Todo App', () => {
     const todoItem = page.locator('.rounded-lg.border').filter({ hasText: '날짜 없는 할일' })
     // Calendar icon should not be present
     await expect(todoItem.locator('.text-xs')).not.toBeVisible()
+  })
+
+  test('우선순위 옵션이 표시된다', async ({ page }) => {
+    // 옵션 열기
+    await page.getByRole('button', { name: '옵션 설정' }).click()
+
+    // 우선순위 옵션들이 표시됨
+    await expect(page.getByText('우선순위')).toBeVisible()
+    await expect(page.getByRole('button', { name: '없음' })).toBeVisible()
+    await expect(page.getByRole('button', { name: '높음' })).toBeVisible()
+    await expect(page.getByRole('button', { name: '중간' })).toBeVisible()
+    await expect(page.getByRole('button', { name: '낮음' })).toBeVisible()
+  })
+
+  test('할일에 우선순위를 설정할 수 있다', async ({ page }) => {
+    const input = page.getByPlaceholder('할 일을 입력하세요...')
+
+    await input.fill('높은 우선순위 할일')
+
+    // 옵션 열기
+    await page.getByRole('button', { name: '옵션 설정' }).click()
+
+    // 높음 우선순위 선택
+    await page.getByRole('button', { name: '높음' }).click()
+
+    // 할일 추가
+    await page.getByRole('button', { name: '추가' }).click()
+
+    // 할일과 우선순위 표시 확인
+    await expect(page.getByText('높은 우선순위 할일')).toBeVisible()
+    const todoItem = page.locator('.rounded-lg.border').filter({ hasText: '높은 우선순위 할일' })
+    // 빨간색 우선순위 표시가 있어야 함
+    await expect(todoItem.locator('.bg-red-500')).toBeVisible()
+  })
+
+  test('우선순위 없이 할일을 추가할 수 있다', async ({ page }) => {
+    const input = page.getByPlaceholder('할 일을 입력하세요...')
+
+    await input.fill('우선순위 없는 할일')
+    await input.press('Enter')
+
+    // 할일이 표시되고 우선순위 표시는 없음
+    await expect(page.getByText('우선순위 없는 할일')).toBeVisible()
+    const todoItem = page.locator('.rounded-lg.border').filter({ hasText: '우선순위 없는 할일' })
+    await expect(todoItem.locator('.bg-red-500')).not.toBeVisible()
+    await expect(todoItem.locator('.bg-yellow-500')).not.toBeVisible()
+    await expect(todoItem.locator('.bg-blue-500')).not.toBeVisible()
   })
 })

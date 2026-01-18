@@ -2,7 +2,7 @@
 
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
-import { useTodoStore, type Todo } from '@/store/todoStore'
+import { useTodoStore, type Todo, type Priority } from '@/store/todoStore'
 import { usePresetStore } from '@/store/presetStore'
 import { Star, Calendar } from 'lucide-react'
 
@@ -15,6 +15,12 @@ function formatDate(dateStr: string): string {
   return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
 }
 
+const priorityConfig: Record<Priority, { label: string; color: string }> = {
+  high: { label: '높음', color: 'bg-red-500' },
+  medium: { label: '중간', color: 'bg-yellow-500' },
+  low: { label: '낮음', color: 'bg-blue-500' },
+}
+
 export function TodoItem({ todo }: TodoItemProps) {
   const { toggleTodo, deleteTodo } = useTodoStore()
   const { presets, addPreset } = usePresetStore()
@@ -24,6 +30,13 @@ export function TodoItem({ todo }: TodoItemProps) {
 
   return (
     <div className="flex items-center gap-3 p-3 bg-card rounded-lg border group">
+      {todo.priority && (
+        <div
+          className={`w-1 h-8 rounded-full ${priorityConfig[todo.priority].color}`}
+          title={`우선순위: ${priorityConfig[todo.priority].label}`}
+          aria-label={`우선순위: ${priorityConfig[todo.priority].label}`}
+        />
+      )}
       <Checkbox
         checked={todo.completed}
         onCheckedChange={() => toggleTodo(todo.id)}

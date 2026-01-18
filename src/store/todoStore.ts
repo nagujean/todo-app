@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+export type Priority = 'high' | 'medium' | 'low'
+
 export interface Todo {
   id: string
   text: string
@@ -8,12 +10,14 @@ export interface Todo {
   createdAt: Date
   startDate?: string
   endDate?: string
+  priority?: Priority
 }
 
 interface AddTodoParams {
   text: string
   startDate?: string
   endDate?: string
+  priority?: Priority
 }
 
 interface TodoState {
@@ -28,7 +32,7 @@ export const useTodoStore = create<TodoState>()(
   persist(
     (set) => ({
       todos: [],
-      addTodo: ({ text, startDate, endDate }) =>
+      addTodo: ({ text, startDate, endDate, priority }) =>
         set((state) => ({
           todos: [
             ...state.todos,
@@ -39,6 +43,7 @@ export const useTodoStore = create<TodoState>()(
               createdAt: new Date(),
               startDate,
               endDate,
+              priority,
             },
           ],
         })),
