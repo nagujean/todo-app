@@ -709,4 +709,27 @@ test.describe('Todo App', () => {
     await expect(todoItem).toBeVisible()
     await expect(todoItem.locator('svg.lucide-file-text')).not.toBeVisible()
   })
+
+  test('달력 뷰에서 할일을 클릭하면 상세 모달이 열린다', async ({ page }) => {
+    const input = page.getByPlaceholder('할 일을 입력하세요...')
+
+    // 오늘 날짜로 할일 추가
+    await input.fill('달력 상세 테스트')
+    await page.getByRole('button', { name: '옵션 설정' }).click()
+
+    const today = new Date()
+    const todayStr = today.toISOString().split('T')[0]
+    await page.locator('input[type="date"]').first().fill(todayStr)
+    await page.getByRole('button', { name: '추가' }).click()
+
+    // 달력 뷰로 전환
+    await page.getByRole('button', { name: /달력/ }).click()
+
+    // 달력에서 할일 클릭
+    await page.getByText('달력 상세 테스트').click()
+
+    // 상세 모달이 열림
+    await expect(page.getByRole('dialog')).toBeVisible()
+    await expect(page.getByText('할 일 상세')).toBeVisible()
+  })
 })

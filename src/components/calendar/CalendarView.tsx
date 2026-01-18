@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useTodoStore, type Todo, type Priority } from '@/store/todoStore'
 import { Button } from '@/components/ui/button'
+import { TodoDetail } from '@/components/todo/TodoDetail'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토']
@@ -72,9 +73,10 @@ interface CalendarDayProps {
   todos: Todo[]
   isToday: boolean
   hideCompleted: boolean
+  onOpenDetail: (todo: Todo) => void
 }
 
-function CalendarDay({ day, dateStr, todos, isToday, hideCompleted }: CalendarDayProps) {
+function CalendarDay({ day, dateStr, todos, isToday, hideCompleted, onOpenDetail }: CalendarDayProps) {
   const filteredTodos = hideCompleted ? todos.filter((t) => !t.completed) : todos
   const displayTodos = filteredTodos.slice(0, 3)
   const remainingCount = filteredTodos.length - 3
@@ -102,7 +104,8 @@ function CalendarDay({ day, dateStr, todos, isToday, hideCompleted }: CalendarDa
         {displayTodos.map((todo) => (
           <div
             key={todo.id}
-            className={`text-xs px-1 py-0.5 rounded truncate ${
+            onClick={() => onOpenDetail(todo)}
+            className={`text-xs px-1 py-0.5 rounded truncate cursor-pointer hover:opacity-80 transition-opacity ${
               todo.completed
                 ? 'bg-muted text-muted-foreground line-through'
                 : todo.priority
@@ -127,6 +130,13 @@ function CalendarDay({ day, dateStr, todos, isToday, hideCompleted }: CalendarDa
 export function CalendarView() {
   const { todos, hideCompleted } = useTodoStore()
   const [currentDate, setCurrentDate] = useState(new Date())
+  const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null)
+  const [detailOpen, setDetailOpen] = useState(false)
+
+  const handleOpenDetail = (todo: Todo) => {
+    setSelectedTodo(todo)
+    setDetailOpen(true)
+  }
 
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
@@ -204,6 +214,7 @@ export function CalendarView() {
                 todos={dayTodos}
                 isToday={isToday}
                 hideCompleted={hideCompleted}
+                onOpenDetail={handleOpenDetail}
               />
             )
           })}
@@ -229,6 +240,12 @@ export function CalendarView() {
           <span>기본</span>
         </div>
       </div>
+
+      <TodoDetail
+        todo={selectedTodo}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+      />
     </div>
   )
 }

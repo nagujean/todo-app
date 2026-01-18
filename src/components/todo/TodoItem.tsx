@@ -76,7 +76,7 @@ export function TodoItem({ todo, onOpenDetail }: TodoItemProps) {
             {todo.title}
           </span>
           {hasDescription && (
-            <FileText className="h-3 w-3 text-muted-foreground" title="상세 내용 있음" />
+            <FileText className="h-3 w-3 text-muted-foreground" />
           )}
         </div>
         {hasDate && (

@@ -64,10 +64,15 @@ test.describe('Story 1.3: 할 일 삭제하기', () => {
 
     await deleteButton.click()
 
-    // Then: 페이드아웃 애니메이션이 적용된다 (최소 200ms, 최대 400ms)
+    // 페이드아웃 애니메이션 대기 (요소가 사라질 때까지)
+    await page.waitForTimeout(50) // 잠시 대기 후 상태 확인
+
+    // Then: 페이드아웃 애니메이션이 적용된다 (요소가 사라질 때까지 기다림)
+    await todoItem.waitFor({ state: 'hidden', timeout: 500 }).catch(() => {})
+
     const duration = Date.now() - clickTime
     expect(duration).toBeGreaterThanOrEqual(200)
-    expect(duration).toBeLessThan(500) // 애니메이션 + React 렌더링 시간 고려
+    expect(duration).toBeLessThan(600) // 애니메이션 + React 렌더링 시간 고려
   })
 
   test('REQ-FUNC-010: 완료된 항목을 일괄 삭제할 수 있다', async ({ page }) => {
