@@ -6,11 +6,19 @@ export interface Todo {
   text: string
   completed: boolean
   createdAt: Date
+  startDate?: string
+  endDate?: string
+}
+
+interface AddTodoParams {
+  text: string
+  startDate?: string
+  endDate?: string
 }
 
 interface TodoState {
   todos: Todo[]
-  addTodo: (text: string) => void
+  addTodo: (params: AddTodoParams) => void
   toggleTodo: (id: string) => void
   deleteTodo: (id: string) => void
   clearCompleted: () => void
@@ -20,7 +28,7 @@ export const useTodoStore = create<TodoState>()(
   persist(
     (set) => ({
       todos: [],
-      addTodo: (text) =>
+      addTodo: ({ text, startDate, endDate }) =>
         set((state) => ({
           todos: [
             ...state.todos,
@@ -29,6 +37,8 @@ export const useTodoStore = create<TodoState>()(
               text,
               completed: false,
               createdAt: new Date(),
+              startDate,
+              endDate,
             },
           ],
         })),

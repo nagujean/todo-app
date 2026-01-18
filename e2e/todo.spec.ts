@@ -246,4 +246,56 @@ test.describe('Todo App', () => {
     // 프리셋 유지 확인
     await expect(page.getByRole('button', { name: '영속 프리셋', exact: true })).toBeVisible()
   })
+
+  test('날짜 설정 버튼을 클릭하면 날짜 입력 필드가 나타난다', async ({ page }) => {
+    // 날짜 필드가 처음에는 보이지 않음
+    await expect(page.getByLabel('시작일')).not.toBeVisible()
+
+    // 날짜 설정 버튼 클릭
+    await page.getByRole('button', { name: '날짜 설정' }).click()
+
+    // 날짜 필드가 나타남
+    await expect(page.getByText('시작일')).toBeVisible()
+    await expect(page.getByText('종료일')).toBeVisible()
+  })
+
+  test('할일에 시작일과 종료일을 설정할 수 있다', async ({ page }) => {
+    const input = page.getByPlaceholder('할 일을 입력하세요...')
+
+    // 할일 텍스트 입력
+    await input.fill('날짜 있는 할일')
+
+    // 날짜 설정 열기
+    await page.getByRole('button', { name: '날짜 설정' }).click()
+
+    // 날짜 입력
+    const today = new Date()
+    const startDate = today.toISOString().split('T')[0]
+    const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
+    await page.locator('input[type="date"]').first().fill(startDate)
+    await page.locator('input[type="date"]').last().fill(endDate)
+
+    // 할일 추가
+    await page.getByRole('button', { name: '추가' }).click()
+
+    // 할일과 날짜가 표시됨
+    await expect(page.getByText('날짜 있는 할일')).toBeVisible()
+    // 날짜 표시 확인 (날짜 텍스트로 확인)
+    const todoItem = page.locator('.rounded-lg.border').filter({ hasText: '날짜 있는 할일' })
+    await expect(todoItem.locator('.text-xs')).toBeVisible() // Date display area
+  })
+
+  test('날짜 없이 할일을 추가할 수 있다', async ({ page }) => {
+    const input = page.getByPlaceholder('할 일을 입력하세요...')
+
+    await input.fill('날짜 없는 할일')
+    await input.press('Enter')
+
+    // 할일이 표시되고 날짜 영역은 없음
+    await expect(page.getByText('날짜 없는 할일')).toBeVisible()
+    const todoItem = page.locator('.rounded-lg.border').filter({ hasText: '날짜 없는 할일' })
+    // Calendar icon should not be present
+    await expect(todoItem.locator('.text-xs')).not.toBeVisible()
+  })
 })

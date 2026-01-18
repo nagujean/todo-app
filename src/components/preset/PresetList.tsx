@@ -22,7 +22,7 @@ export function PresetList() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => addTodo(preset.text)}
+              onClick={() => addTodo({ text: preset.text })}
               className="pr-7"
             >
               {preset.text}
