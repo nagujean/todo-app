@@ -139,4 +139,111 @@ test.describe('Todo App', () => {
     // 데이터 유지 확인
     await expect(page.getByText('영속화 테스트')).toBeVisible()
   })
+
+  test('다크모드 토글 버튼이 표시된다', async ({ page }) => {
+    const toggleButton = page.getByRole('button', { name: /모드로 전환/ })
+    await expect(toggleButton).toBeVisible()
+  })
+
+  test('다크모드를 토글할 수 있다', async ({ page }) => {
+    const html = page.locator('html')
+
+    // 초기 상태: 라이트 모드
+    await expect(html).not.toHaveClass(/dark/)
+
+    // 다크모드로 전환
+    await page.getByRole('button', { name: '다크 모드로 전환' }).click()
+    await expect(html).toHaveClass(/dark/)
+
+    // 라이트모드로 전환
+    await page.getByRole('button', { name: '라이트 모드로 전환' }).click()
+    await expect(html).not.toHaveClass(/dark/)
+  })
+
+  test('다크모드 설정이 새로고침 후에도 유지된다', async ({ page }) => {
+    const html = page.locator('html')
+
+    // 다크모드로 전환
+    await page.getByRole('button', { name: '다크 모드로 전환' }).click()
+    await expect(html).toHaveClass(/dark/)
+
+    // 페이지 새로고침
+    await page.reload()
+
+    // 다크모드 유지 확인
+    await expect(html).toHaveClass(/dark/)
+  })
+
+  test('할일을 프리셋으로 저장할 수 있다', async ({ page }) => {
+    // 할일 추가
+    const input = page.getByPlaceholder('할 일을 입력하세요...')
+    await input.fill('프리셋 테스트')
+    await input.press('Enter')
+
+    // 프리셋 저장 버튼 클릭
+    const todoItem = page.locator('.rounded-lg.border').filter({ hasText: '프리셋 테스트' })
+    await todoItem.hover()
+    await page.getByRole('button', { name: '프리셋으로 저장' }).click()
+
+    // 프리셋 목록에 표시 확인
+    await expect(page.getByText('빠른 추가')).toBeVisible()
+    await expect(page.getByRole('button', { name: '프리셋 테스트', exact: true })).toBeVisible()
+  })
+
+  test('프리셋을 클릭하면 할일이 추가된다', async ({ page }) => {
+    // 할일 추가 후 프리셋으로 저장
+    const input = page.getByPlaceholder('할 일을 입력하세요...')
+    await input.fill('반복 할일')
+    await input.press('Enter')
+
+    const todoItem = page.locator('.rounded-lg.border').filter({ hasText: '반복 할일' })
+    await todoItem.hover()
+    await page.getByRole('button', { name: '프리셋으로 저장' }).click()
+
+    // 기존 할일 삭제
+    await todoItem.hover()
+    await page.getByRole('button', { name: '삭제', exact: true }).click()
+    await expect(page.getByText('할 일이 없어요')).toBeVisible()
+
+    // 프리셋 클릭으로 할일 추가
+    await page.getByRole('button', { name: '반복 할일', exact: true }).click()
+    await expect(page.locator('.rounded-lg.border').filter({ hasText: '반복 할일' })).toBeVisible()
+    await expect(page.getByText('할 일이 없어요')).not.toBeVisible()
+  })
+
+  test('프리셋을 삭제할 수 있다', async ({ page }) => {
+    // 할일 추가 후 프리셋으로 저장
+    const input = page.getByPlaceholder('할 일을 입력하세요...')
+    await input.fill('삭제될 프리셋')
+    await input.press('Enter')
+
+    const todoItem = page.locator('.rounded-lg.border').filter({ hasText: '삭제될 프리셋' })
+    await todoItem.hover()
+    await page.getByRole('button', { name: '프리셋으로 저장' }).click()
+
+    // 프리셋 삭제
+    const presetContainer = page.locator('.group.relative').filter({ hasText: '삭제될 프리셋' })
+    await presetContainer.hover()
+    await page.getByRole('button', { name: '삭제될 프리셋 프리셋 삭제' }).click()
+
+    // 프리셋 목록에서 사라짐 확인
+    await expect(page.getByRole('button', { name: '삭제될 프리셋', exact: true })).not.toBeVisible()
+  })
+
+  test('프리셋이 새로고침 후에도 유지된다', async ({ page }) => {
+    // 할일 추가 후 프리셋으로 저장
+    const input = page.getByPlaceholder('할 일을 입력하세요...')
+    await input.fill('영속 프리셋')
+    await input.press('Enter')
+
+    const todoItem = page.locator('.rounded-lg.border').filter({ hasText: '영속 프리셋' })
+    await todoItem.hover()
+    await page.getByRole('button', { name: '프리셋으로 저장' }).click()
+
+    // 페이지 새로고침
+    await page.reload()
+
+    // 프리셋 유지 확인
+    await expect(page.getByRole('button', { name: '영속 프리셋', exact: true })).toBeVisible()
+  })
 })

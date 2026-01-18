@@ -1,6 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TodoInput } from '@/components/todo/TodoInput'
 import { TodoList } from '@/components/todo/TodoList'
+import { ThemeToggle } from '@/components/ThemeToggle'
+import { PresetList } from '@/components/preset/PresetList'
 
 export default function Home() {
   return (
@@ -8,12 +10,17 @@ export default function Home() {
       <main className="mx-auto max-w-xl">
         <Card className="shadow-sm">
           <CardHeader className="pb-4">
-            <CardTitle className="text-2xl font-semibold text-center">
-              할 일 목록
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <div className="w-10" />
+              <CardTitle className="text-2xl font-semibold">
+                할 일 목록
+              </CardTitle>
+              <ThemeToggle />
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <TodoInput />
+            <PresetList />
             <TodoList />
           </CardContent>
         </Card>
