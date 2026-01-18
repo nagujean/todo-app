@@ -25,7 +25,7 @@ export function TodoItem({ todo }: TodoItemProps) {
   const { toggleTodo, deleteTodo } = useTodoStore()
   const { presets, addPreset } = usePresetStore()
 
-  const isPreset = presets.some((p) => p.text === todo.title) // Changed from todo.text to todo.title
+  const isPreset = presets.some((p) => p.title === todo.title) // Changed from p.text to p.title
   const hasDate = todo.startDate || todo.endDate
 
   return (

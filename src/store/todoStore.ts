@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware'
 export type Priority = 'high' | 'medium' | 'low'
 export type SortType = 'created' | 'priority' | 'startDate' | 'endDate'
 export type SortOrder = 'asc' | 'desc'
+export type ViewMode = 'list' | 'calendar'
 
 /**
  * Todo Interface
@@ -39,6 +40,7 @@ interface TodoState {
   sortType: SortType
   sortOrder: SortOrder
   hideCompleted: boolean
+  viewMode: ViewMode
   addTodo: (params: AddTodoParams) => void
   toggleTodo: (id: string) => void
   deleteTodo: (id: string) => void
@@ -46,6 +48,7 @@ interface TodoState {
   setSortType: (sortType: SortType) => void
   setSortOrder: (sortOrder: SortOrder) => void
   setHideCompleted: (hide: boolean) => void
+  setViewMode: (mode: ViewMode) => void
 }
 
 const priorityOrder: Record<Priority, number> = {
@@ -112,6 +115,7 @@ export const useTodoStore = create<TodoState>()(
       sortType: 'created',
       sortOrder: 'desc',
       hideCompleted: false,
+      viewMode: 'list',
       addTodo: ({ title, startDate, endDate, priority }) =>
         set((state) => {
           // Validate title length (REQ-DATA-005: Max 200 characters)
@@ -163,6 +167,7 @@ export const useTodoStore = create<TodoState>()(
       setSortType: (sortType) => set({ sortType }),
       setSortOrder: (sortOrder) => set({ sortOrder }),
       setHideCompleted: (hide) => set({ hideCompleted: hide }),
+      setViewMode: (mode) => set({ viewMode: mode }),
     }),
     {
       name: 'todo-storage',

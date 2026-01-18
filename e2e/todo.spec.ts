@@ -493,4 +493,69 @@ test.describe('Todo App', () => {
     await expect(page.getByText('영속화 숨김 테스트')).not.toBeVisible()
     await expect(page.getByRole('button', { name: /완료 보기/ })).toBeVisible()
   })
+
+  test('뷰 전환 버튼이 표시된다', async ({ page }) => {
+    await expect(page.getByRole('button', { name: /목록/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /달력/ })).toBeVisible()
+  })
+
+  test('달력 뷰로 전환할 수 있다', async ({ page }) => {
+    // 달력 버튼 클릭
+    await page.getByRole('button', { name: /달력/ }).click()
+
+    // 달력 뷰 요소들이 표시됨
+    await expect(page.getByRole('button', { name: '오늘' })).toBeVisible()
+    await expect(page.getByText(/년.*월/)).toBeVisible()
+    // 요일 헤더 확인 (정확한 매칭 사용)
+    await expect(page.getByText('일', { exact: true })).toBeVisible()
+    await expect(page.getByText('월', { exact: true })).toBeVisible()
+  })
+
+  test('달력에서 할일이 표시된다', async ({ page }) => {
+    const input = page.getByPlaceholder('할 일을 입력하세요...')
+
+    // 오늘 날짜로 할일 추가
+    await input.fill('달력 테스트 할일')
+    await page.getByRole('button', { name: '옵션 설정' }).click()
+
+    const today = new Date()
+    const todayStr = today.toISOString().split('T')[0]
+    await page.locator('input[type="date"]').first().fill(todayStr)
+    await page.getByRole('button', { name: '추가' }).click()
+
+    // 달력 뷰로 전환
+    await page.getByRole('button', { name: /달력/ }).click()
+
+    // 달력에 할일이 표시됨
+    await expect(page.getByText('달력 테스트 할일')).toBeVisible()
+  })
+
+  test('달력에서 이전/다음 월로 이동할 수 있다', async ({ page }) => {
+    // 달력 뷰로 전환
+    await page.getByRole('button', { name: /달력/ }).click()
+
+    const currentMonthText = await page.getByText(/년.*월/).textContent()
+
+    // 이전 월로 이동
+    await page.locator('button').filter({ has: page.locator('svg.lucide-chevron-left') }).click()
+    const prevMonthText = await page.getByText(/년.*월/).textContent()
+    expect(prevMonthText).not.toBe(currentMonthText)
+
+    // 오늘 버튼으로 복귀
+    await page.getByRole('button', { name: '오늘' }).click()
+    const todayMonthText = await page.getByText(/년.*월/).textContent()
+    expect(todayMonthText).toBe(currentMonthText)
+  })
+
+  test('뷰 설정이 새로고침 후에도 유지된다', async ({ page }) => {
+    // 달력 뷰로 전환
+    await page.getByRole('button', { name: /달력/ }).click()
+    await expect(page.getByRole('button', { name: '오늘' })).toBeVisible()
+
+    // 새로고침
+    await page.reload()
+
+    // 달력 뷰 유지 확인
+    await expect(page.getByRole('button', { name: '오늘' })).toBeVisible()
+  })
 })
