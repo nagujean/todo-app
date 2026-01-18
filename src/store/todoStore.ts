@@ -5,18 +5,30 @@ export type Priority = 'high' | 'medium' | 'low'
 export type SortType = 'created' | 'priority' | 'startDate' | 'endDate'
 export type SortOrder = 'asc' | 'desc'
 
+/**
+ * Todo Interface
+ *
+ * Based on REQ-DATA-001 from Requirements.md
+ * - id: UUID v4 format (REQ-DATA-006)
+ * - title: Max 200 characters (REQ-DATA-005)
+ * - createdAt: ISO 8601 format (REQ-DATA-007)
+ * - updatedAt: ISO 8601 format (REQ-DATA-007)
+ * - completedAt: ISO 8601 format or null (REQ-DATA-001)
+ */
 export interface Todo {
   id: string
-  text: string
+  title: string // Max 200 characters (REQ-DATA-005)
   completed: boolean
-  createdAt: Date
+  createdAt: string // ISO 8601 format (REQ-DATA-007)
+  updatedAt: string // ISO 8601 format (REQ-DATA-001)
+  completedAt: string | null // ISO 8601 or null (REQ-DATA-001)
   startDate?: string
   endDate?: string
   priority?: Priority
 }
 
 interface AddTodoParams {
-  text: string
+  title: string
   startDate?: string
   endDate?: string
   priority?: Priority
@@ -26,18 +38,27 @@ interface TodoState {
   todos: Todo[]
   sortType: SortType
   sortOrder: SortOrder
+  hideCompleted: boolean
   addTodo: (params: AddTodoParams) => void
   toggleTodo: (id: string) => void
   deleteTodo: (id: string) => void
   clearCompleted: () => void
   setSortType: (sortType: SortType) => void
   setSortOrder: (sortOrder: SortOrder) => void
+  setHideCompleted: (hide: boolean) => void
 }
 
 const priorityOrder: Record<Priority, number> = {
   high: 0,
   medium: 1,
   low: 2,
+}
+
+/**
+ * Helper function to generate ISO 8601 timestamp
+ */
+function getTimestamp(): string {
+  return new Date().toISOString()
 }
 
 export function sortTodos(todos: Todo[], sortType: SortType, sortOrder: SortOrder): Todo[] {
@@ -90,25 +111,45 @@ export const useTodoStore = create<TodoState>()(
       todos: [],
       sortType: 'created',
       sortOrder: 'desc',
-      addTodo: ({ text, startDate, endDate, priority }) =>
-        set((state) => ({
-          todos: [
-            ...state.todos,
-            {
-              id: crypto.randomUUID(),
-              text,
-              completed: false,
-              createdAt: new Date(),
-              startDate,
-              endDate,
-              priority,
-            },
-          ],
-        })),
+      hideCompleted: false,
+      addTodo: ({ title, startDate, endDate, priority }) =>
+        set((state) => {
+          // Validate title length (REQ-DATA-005: Max 200 characters)
+          const trimmedTitle = title.trim().slice(0, 200)
+
+          // Don't add empty todos (REQ-FUNC-002)
+          if (!trimmedTitle) {
+            return state
+          }
+
+          const now = getTimestamp()
+          const newTodo: Todo = {
+            id: crypto.randomUUID(),
+            title: trimmedTitle,
+            completed: false,
+            createdAt: now,
+            updatedAt: now,
+            completedAt: null,
+            startDate,
+            endDate,
+            priority,
+          }
+
+          return {
+            todos: [newTodo, ...state.todos], // Add to top (AC-001)
+          }
+        }),
       toggleTodo: (id) =>
         set((state) => ({
           todos: state.todos.map((todo) =>
-            todo.id === id ? { ...todo, completed: !todo.completed } : todo
+            todo.id === id
+              ? {
+                  ...todo,
+                  completed: !todo.completed,
+                  updatedAt: getTimestamp(),
+                  completedAt: !todo.completed ? getTimestamp() : null,
+                }
+              : todo
           ),
         })),
       deleteTodo: (id) =>
@@ -121,6 +162,7 @@ export const useTodoStore = create<TodoState>()(
         })),
       setSortType: (sortType) => set({ sortType }),
       setSortOrder: (sortOrder) => set({ sortOrder }),
+      setHideCompleted: (hide) => set({ hideCompleted: hide }),
     }),
     {
       name: 'todo-storage',

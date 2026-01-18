@@ -22,10 +22,10 @@ export function PresetList() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => addTodo({ text: preset.text })}
+              onClick={() => addTodo({ title: preset.title })} // Changed from 'text' to 'title'
               className="pr-7"
             >
-              {preset.text}
+              {preset.title} {/* Changed from preset.text to preset.title */}
             </Button>
             <button
               onClick={(e) => {
@@ -33,7 +33,7 @@ export function PresetList() {
                 deletePreset(preset.id)
               }}
               className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-destructive/10 rounded"
-              aria-label={`${preset.text} 프리셋 삭제`}
+              aria-label={`${preset.title} 프리셋 삭제`} // Changed from preset.text to preset.title
             >
               <X className="h-3 w-3 text-destructive" />
             </button>

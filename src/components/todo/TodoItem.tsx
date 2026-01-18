@@ -25,11 +25,14 @@ export function TodoItem({ todo }: TodoItemProps) {
   const { toggleTodo, deleteTodo } = useTodoStore()
   const { presets, addPreset } = usePresetStore()
 
-  const isPreset = presets.some((p) => p.text === todo.text)
+  const isPreset = presets.some((p) => p.text === todo.title) // Changed from todo.text to todo.title
   const hasDate = todo.startDate || todo.endDate
 
   return (
-    <div className="flex items-center gap-3 p-3 bg-card rounded-lg border group">
+    <div
+      className="flex items-center gap-3 p-3 bg-card rounded-lg border group"
+      data-testid="todo-item" // Added for E2E testing
+    >
       {todo.priority && (
         <div
           className={`w-1 h-8 rounded-full ${priorityConfig[todo.priority].color}`}
@@ -49,7 +52,7 @@ export function TodoItem({ todo }: TodoItemProps) {
             todo.completed ? 'line-through text-muted-foreground' : ''
           }`}
         >
-          {todo.text}
+          {todo.title} {/* Changed from todo.text to todo.title */}
         </label>
         {hasDate && (
           <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
@@ -67,7 +70,7 @@ export function TodoItem({ todo }: TodoItemProps) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => addPreset(todo.text)}
+            onClick={() => addPreset(todo.title)} // Changed from todo.text to todo.title
             title="프리셋으로 저장"
             aria-label="프리셋으로 저장"
           >

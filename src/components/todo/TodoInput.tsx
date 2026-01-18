@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { useTodoStore, type Priority } from '@/store/todoStore'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 
+const MAX_TITLE_LENGTH = 200 // REQ-DATA-005: Max 200 characters
+
 const priorityOptions: { value: Priority | ''; label: string; color: string }[] = [
   { value: '', label: '없음', color: 'bg-gray-100 dark:bg-gray-800' },
   { value: 'high', label: '높음', color: 'bg-red-100 dark:bg-red-900/30' },
@@ -14,7 +16,7 @@ const priorityOptions: { value: Priority | ''; label: string; color: string }[] 
 ]
 
 export function TodoInput() {
-  const [text, setText] = useState('')
+  const [title, setTitle] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [priority, setPriority] = useState<Priority | ''>('')
@@ -23,30 +25,53 @@ export function TodoInput() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (text.trim()) {
+    if (title.trim()) {
       addTodo({
-        text: text.trim(),
+        title: title.trim(), // Changed from 'text' to 'title'
         startDate: startDate || undefined,
         endDate: endDate || undefined,
         priority: priority || undefined,
       })
-      setText('')
+      setTitle('')
       setStartDate('')
       setEndDate('')
       setPriority('')
     }
   }
 
+  // Handle input with 200 character limit (REQ-DATA-005)
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value
+    if (newValue.length <= MAX_TITLE_LENGTH) {
+      setTitle(newValue)
+    }
+  }
+
+  const characterCount = title.length
+  const isNearLimit = characterCount > MAX_TITLE_LENGTH * 0.9 // Show warning at 90%
+
   return (
     <form onSubmit={handleSubmit} className="space-y-2">
       <div className="flex gap-2">
-        <Input
-          type="text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="할 일을 입력하세요..."
-          className="flex-1"
-        />
+        <div className="flex-1 relative">
+          <Input
+            type="text"
+            value={title}
+            onChange={handleTitleChange}
+            placeholder="할 일을 입력하세요..."
+            className="flex-1 pr-16"
+            maxLength={MAX_TITLE_LENGTH}
+          />
+          {title.length > 0 && (
+            <div
+              className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs ${
+                isNearLimit ? 'text-orange-500 font-medium' : 'text-muted-foreground'
+              }`}
+            >
+              {characterCount}/{MAX_TITLE_LENGTH}
+            </div>
+          )}
+        </div>
         <Button
           type="button"
           variant="outline"
@@ -56,7 +81,7 @@ export function TodoInput() {
         >
           {showOptions ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </Button>
-        <Button type="submit" disabled={!text.trim()}>
+        <Button type="submit" disabled={!title.trim()}>
           추가
         </Button>
       </div>

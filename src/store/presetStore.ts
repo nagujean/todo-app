@@ -3,23 +3,30 @@ import { persist } from 'zustand/middleware'
 
 export interface Preset {
   id: string
-  text: string
-  createdAt: Date
+  title: string // Changed from 'text' to 'title' for consistency
+  createdAt: string // ISO 8601 format
 }
 
 interface PresetState {
   presets: Preset[]
-  addPreset: (text: string) => void
+  addPreset: (title: string) => void
   deletePreset: (id: string) => void
+}
+
+/**
+ * Helper function to generate ISO 8601 timestamp
+ */
+function getTimestamp(): string {
+  return new Date().toISOString()
 }
 
 export const usePresetStore = create<PresetState>()(
   persist(
     (set, get) => ({
       presets: [],
-      addPreset: (text) => {
+      addPreset: (title) => {
         // 중복 체크
-        const exists = get().presets.some((p) => p.text === text)
+        const exists = get().presets.some((p) => p.title === title)
         if (exists) return
 
         set((state) => ({
@@ -27,8 +34,8 @@ export const usePresetStore = create<PresetState>()(
             ...state.presets,
             {
               id: crypto.randomUUID(),
-              text,
-              createdAt: new Date(),
+              title,
+              createdAt: getTimestamp(),
             },
           ],
         }))

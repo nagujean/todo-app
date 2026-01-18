@@ -3,7 +3,7 @@
 import { useTodoStore, sortTodos, type SortType } from '@/store/todoStore'
 import { TodoItem } from './TodoItem'
 import { Button } from '@/components/ui/button'
-import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
+import { ArrowUpDown, ArrowUp, ArrowDown, Eye, EyeOff } from 'lucide-react'
 
 const sortOptions: { value: SortType; label: string }[] = [
   { value: 'created', label: '입력일' },
@@ -13,11 +13,12 @@ const sortOptions: { value: SortType; label: string }[] = [
 ]
 
 export function TodoList() {
-  const { todos, clearCompleted, sortType, sortOrder, setSortType, setSortOrder } = useTodoStore()
+  const { todos, clearCompleted, sortType, sortOrder, setSortType, setSortOrder, hideCompleted, setHideCompleted } = useTodoStore()
   const completedCount = todos.filter((t) => t.completed).length
   const totalCount = todos.length
 
-  const sortedTodos = sortTodos(todos, sortType, sortOrder)
+  const filteredTodos = hideCompleted ? todos.filter((t) => !t.completed) : todos
+  const sortedTodos = sortTodos(filteredTodos, sortType, sortOrder)
 
   const handleSortClick = (type: SortType) => {
     if (sortType === type) {
@@ -68,12 +69,28 @@ export function TodoList() {
       <div className="flex items-center justify-between text-sm text-muted-foreground pt-4 border-t">
         <span>
           {completedCount}/{totalCount} 완료
+          {hideCompleted && completedCount > 0 && (
+            <span className="ml-1">({completedCount}개 숨김)</span>
+          )}
         </span>
-        {completedCount > 0 && (
-          <Button variant="ghost" size="sm" onClick={clearCompleted}>
-            완료된 항목 삭제
-          </Button>
-        )}
+        <div className="flex items-center gap-1">
+          {completedCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setHideCompleted(!hideCompleted)}
+              title={hideCompleted ? '완료된 항목 보기' : '완료된 항목 숨기기'}
+            >
+              {hideCompleted ? <Eye className="h-4 w-4 mr-1" /> : <EyeOff className="h-4 w-4 mr-1" />}
+              {hideCompleted ? '완료 보기' : '완료 숨기기'}
+            </Button>
+          )}
+          {completedCount > 0 && (
+            <Button variant="ghost" size="sm" onClick={clearCompleted}>
+              완료된 항목 삭제
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   )
