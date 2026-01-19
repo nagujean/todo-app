@@ -1,30 +1,33 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import {
+  collection,
+  doc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  onSnapshot,
+  Timestamp,
+  writeBatch,
+  Unsubscribe,
+} from 'firebase/firestore'
+import { db, isFirebaseConfigured } from '@/lib/firebase'
 
 export type Priority = 'high' | 'medium' | 'low'
 export type SortType = 'created' | 'priority' | 'startDate' | 'endDate'
 export type SortOrder = 'asc' | 'desc'
 export type ViewMode = 'list' | 'calendar'
-export type FilterMode = 'all' | 'incomplete' | 'completed' // REQ-FUNC-014
+export type FilterMode = 'all' | 'incomplete' | 'completed'
 
-/**
- * Todo Interface
- *
- * Based on REQ-DATA-001 from Requirements.md
- * - id: UUID v4 format (REQ-DATA-006)
- * - title: Max 200 characters (REQ-DATA-005)
- * - createdAt: ISO 8601 format (REQ-DATA-007)
- * - updatedAt: ISO 8601 format (REQ-DATA-007)
- * - completedAt: ISO 8601 format or null (REQ-DATA-001)
- */
 export interface Todo {
   id: string
-  title: string // Max 200 characters (REQ-DATA-005)
-  description?: string // Detailed description
+  title: string
+  description?: string
   completed: boolean
-  createdAt: string // ISO 8601 format (REQ-DATA-007)
-  updatedAt: string // ISO 8601 format (REQ-DATA-001)
-  completedAt: string | null // ISO 8601 or null (REQ-DATA-001)
+  createdAt: string
+  updatedAt: string
+  completedAt: string | null
   startDate?: string
   endDate?: string
   priority?: Priority
@@ -53,17 +56,22 @@ interface TodoState {
   sortOrder: SortOrder
   hideCompleted: boolean
   viewMode: ViewMode
-  filterMode: FilterMode // REQ-FUNC-016: 필터 상태 유지
-  addTodo: (params: AddTodoParams) => void
-  updateTodo: (params: UpdateTodoParams) => void
-  toggleTodo: (id: string) => void
-  deleteTodo: (id: string) => void
-  clearCompleted: () => void
+  filterMode: FilterMode
+  userId: string | null
+  isLoading: boolean
+  addTodo: (params: AddTodoParams) => Promise<void>
+  updateTodo: (params: UpdateTodoParams) => Promise<void>
+  toggleTodo: (id: string) => Promise<void>
+  deleteTodo: (id: string) => Promise<void>
+  clearCompleted: () => Promise<void>
   setSortType: (sortType: SortType) => void
   setSortOrder: (sortOrder: SortOrder) => void
   setHideCompleted: (hide: boolean) => void
   setViewMode: (mode: ViewMode) => void
-  setFilterMode: (mode: FilterMode) => void // REQ-FUNC-016: 필터 상태 설정
+  setFilterMode: (mode: FilterMode) => void
+  setUserId: (userId: string | null) => void
+  setTodos: (todos: Todo[]) => void
+  setLoading: (loading: boolean) => void
 }
 
 const priorityOrder: Record<Priority, number> = {
@@ -72,9 +80,6 @@ const priorityOrder: Record<Priority, number> = {
   low: 2,
 }
 
-/**
- * Helper function to generate ISO 8601 timestamp
- */
 function getTimestamp(): string {
   return new Date().toISOString()
 }
@@ -123,26 +128,55 @@ export function sortTodos(todos: Todo[], sortType: SortType, sortOrder: SortOrde
   return sorted
 }
 
+// Helper to get todos collection reference
+function getTodosCollection(userId: string) {
+  if (!db) throw new Error('Firestore not initialized')
+  return collection(db, 'users', userId, 'todos')
+}
+
+// Helper to convert Firestore timestamp to ISO string
+function convertTimestamp(timestamp: Timestamp | string | null | undefined): string {
+  if (!timestamp) return new Date().toISOString()
+  if (typeof timestamp === 'string') return timestamp
+  return timestamp.toDate().toISOString()
+}
+
 export const useTodoStore = create<TodoState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       todos: [],
       sortType: 'created',
       sortOrder: 'desc',
       hideCompleted: false,
       viewMode: 'list',
-      filterMode: 'all', // REQ-FUNC-016: 기본 필터 모드
-      addTodo: ({ title, description, startDate, endDate, priority }) =>
-        set((state) => {
-          // Validate title length (REQ-DATA-005: Max 200 characters)
-          const trimmedTitle = title.trim().slice(0, 200)
+      filterMode: 'all',
+      userId: null,
+      isLoading: false,
 
-          // Don't add empty todos (REQ-FUNC-002)
-          if (!trimmedTitle) {
-            return state
+      addTodo: async ({ title, description, startDate, endDate, priority }) => {
+        const { userId } = get()
+        const trimmedTitle = title.trim().slice(0, 200)
+        if (!trimmedTitle) return
+
+        const now = getTimestamp()
+
+        if (userId && db) {
+          // Save to Firestore
+          const todoData = {
+            title: trimmedTitle,
+            description: description?.trim() || null,
+            completed: false,
+            createdAt: Timestamp.now(),
+            updatedAt: Timestamp.now(),
+            completedAt: null,
+            startDate: startDate || null,
+            endDate: endDate || null,
+            priority: priority || null,
           }
 
-          const now = getTimestamp()
+          await addDoc(getTodosCollection(userId), todoData)
+        } else {
+          // Fallback to local storage
           const newTodo: Todo = {
             id: crypto.randomUUID(),
             title: trimmedTitle,
@@ -156,55 +190,192 @@ export const useTodoStore = create<TodoState>()(
             priority,
           }
 
-          return {
-            todos: [newTodo, ...state.todos], // Add to top (AC-001)
+          set((state) => ({
+            todos: [newTodo, ...state.todos],
+          }))
+        }
+      },
+
+      updateTodo: async ({ id, title, description, startDate, endDate, priority }) => {
+        const { userId, todos } = get()
+
+        if (userId && db) {
+          const todoRef = doc(db, 'users', userId, 'todos', id)
+          const updates: Record<string, unknown> = {
+            updatedAt: Timestamp.now(),
           }
-        }),
-      updateTodo: ({ id, title, description, startDate, endDate, priority }) =>
-        set((state) => ({
-          todos: state.todos.map((todo) =>
-            todo.id === id
-              ? {
-                  ...todo,
-                  title: title !== undefined ? title.trim().slice(0, 200) : todo.title,
-                  description: description !== undefined ? description : todo.description,
-                  startDate: startDate !== undefined ? startDate : todo.startDate,
-                  endDate: endDate !== undefined ? endDate : todo.endDate,
-                  priority: priority !== undefined ? priority : todo.priority,
-                  updatedAt: getTimestamp(),
-                }
-              : todo
-          ),
-        })),
-      toggleTodo: (id) =>
-        set((state) => ({
-          todos: state.todos.map((todo) =>
-            todo.id === id
-              ? {
-                  ...todo,
-                  completed: !todo.completed,
-                  updatedAt: getTimestamp(),
-                  completedAt: !todo.completed ? getTimestamp() : null,
-                }
-              : todo
-          ),
-        })),
-      deleteTodo: (id) =>
-        set((state) => ({
-          todos: state.todos.filter((todo) => todo.id !== id),
-        })),
-      clearCompleted: () =>
-        set((state) => ({
-          todos: state.todos.filter((todo) => !todo.completed),
-        })),
+
+          if (title !== undefined) updates.title = title.trim().slice(0, 200)
+          if (description !== undefined) updates.description = description || null
+          if (startDate !== undefined) updates.startDate = startDate || null
+          if (endDate !== undefined) updates.endDate = endDate || null
+          if (priority !== undefined) updates.priority = priority || null
+
+          await updateDoc(todoRef, updates)
+        } else {
+          set((state) => ({
+            todos: state.todos.map((todo) =>
+              todo.id === id
+                ? {
+                    ...todo,
+                    title: title !== undefined ? title.trim().slice(0, 200) : todo.title,
+                    description: description !== undefined ? description : todo.description,
+                    startDate: startDate !== undefined ? startDate : todo.startDate,
+                    endDate: endDate !== undefined ? endDate : todo.endDate,
+                    priority: priority !== undefined ? priority : todo.priority,
+                    updatedAt: getTimestamp(),
+                  }
+                : todo
+            ),
+          }))
+        }
+      },
+
+      toggleTodo: async (id) => {
+        const { userId, todos } = get()
+        const todo = todos.find((t) => t.id === id)
+        if (!todo) return
+
+        const newCompleted = !todo.completed
+        const now = Timestamp.now()
+
+        if (userId && db) {
+          const todoRef = doc(db, 'users', userId, 'todos', id)
+          await updateDoc(todoRef, {
+            completed: newCompleted,
+            updatedAt: now,
+            completedAt: newCompleted ? now : null,
+          })
+        } else {
+          const nowStr = getTimestamp()
+          set((state) => ({
+            todos: state.todos.map((t) =>
+              t.id === id
+                ? {
+                    ...t,
+                    completed: newCompleted,
+                    updatedAt: nowStr,
+                    completedAt: newCompleted ? nowStr : null,
+                  }
+                : t
+            ),
+          }))
+        }
+      },
+
+      deleteTodo: async (id) => {
+        const { userId } = get()
+
+        if (userId && db) {
+          const todoRef = doc(db, 'users', userId, 'todos', id)
+          await deleteDoc(todoRef)
+        } else {
+          set((state) => ({
+            todos: state.todos.filter((todo) => todo.id !== id),
+          }))
+        }
+      },
+
+      clearCompleted: async () => {
+        const { userId, todos } = get()
+
+        if (userId && db) {
+          const completedTodos = todos.filter((t) => t.completed)
+          const firestoreDb = db
+          const batch = writeBatch(firestoreDb)
+
+          completedTodos.forEach((todo) => {
+            const todoRef = doc(firestoreDb, 'users', userId, 'todos', todo.id)
+            batch.delete(todoRef)
+          })
+
+          await batch.commit()
+        } else {
+          set((state) => ({
+            todos: state.todos.filter((todo) => !todo.completed),
+          }))
+        }
+      },
+
       setSortType: (sortType) => set({ sortType }),
       setSortOrder: (sortOrder) => set({ sortOrder }),
       setHideCompleted: (hide) => set({ hideCompleted: hide }),
       setViewMode: (mode) => set({ viewMode: mode }),
-      setFilterMode: (filterMode) => set({ filterMode }), // REQ-FUNC-016: 필터 상태 저장
+      setFilterMode: (filterMode) => set({ filterMode }),
+      setUserId: (userId) => set({ userId, todos: userId ? [] : get().todos }),
+      setTodos: (todos) => set({ todos }),
+      setLoading: (isLoading) => set({ isLoading }),
     }),
     {
       name: 'todo-storage',
+      partialize: (state) => ({
+        sortType: state.sortType,
+        sortOrder: state.sortOrder,
+        hideCompleted: state.hideCompleted,
+        viewMode: state.viewMode,
+        filterMode: state.filterMode,
+        // Only persist local todos when not logged in
+        todos: state.userId ? [] : state.todos,
+      }),
     }
   )
 )
+
+// Subscribe to Firestore changes
+let unsubscribe: Unsubscribe | null = null
+
+export function subscribeToTodos(userId: string) {
+  // Unsubscribe from previous listener
+  if (unsubscribe) {
+    unsubscribe()
+  }
+
+  if (!db) {
+    return () => {}
+  }
+
+  const { setTodos, setLoading, setUserId } = useTodoStore.getState()
+  setUserId(userId)
+  setLoading(true)
+
+  const todosQuery = query(getTodosCollection(userId))
+
+  unsubscribe = onSnapshot(
+    todosQuery,
+    (snapshot) => {
+      const todos: Todo[] = snapshot.docs.map((doc) => {
+        const data = doc.data()
+        return {
+          id: doc.id,
+          title: data.title,
+          description: data.description || undefined,
+          completed: data.completed,
+          createdAt: convertTimestamp(data.createdAt),
+          updatedAt: convertTimestamp(data.updatedAt),
+          completedAt: data.completedAt ? convertTimestamp(data.completedAt) : null,
+          startDate: data.startDate || undefined,
+          endDate: data.endDate || undefined,
+          priority: data.priority || undefined,
+        }
+      })
+
+      setTodos(todos)
+      setLoading(false)
+    },
+    (error) => {
+      console.error('Error subscribing to todos:', error)
+      setLoading(false)
+    }
+  )
+
+  return unsubscribe
+}
+
+export function unsubscribeFromTodos() {
+  if (unsubscribe) {
+    unsubscribe()
+    unsubscribe = null
+  }
+  const { setUserId } = useTodoStore.getState()
+  setUserId(null)
+}

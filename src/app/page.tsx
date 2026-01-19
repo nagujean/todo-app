@@ -7,10 +7,17 @@ import { CalendarView } from '@/components/calendar/CalendarView'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { ViewToggle } from '@/components/ViewToggle'
 import { PresetList } from '@/components/preset/PresetList'
+import { UserMenu } from '@/components/auth/UserMenu'
 import { useTodoStore } from '@/store/todoStore'
+import { useAuthStore } from '@/store/authStore'
 
 export default function Home() {
   const viewMode = useTodoStore((state) => state.viewMode)
+  const user = useAuthStore((state) => state.user)
+
+  if (!user) {
+    return null
+  }
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-8">
@@ -22,7 +29,10 @@ export default function Home() {
               <CardTitle className="text-2xl font-semibold">
                 할 일 목록
               </CardTitle>
-              <ViewToggle />
+              <div className="flex items-center gap-2">
+                <ViewToggle />
+                <UserMenu />
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
