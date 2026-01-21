@@ -123,6 +123,31 @@ const useTodoStore = create<TodoStore>()(
 
 ---
 
+## PWA (Progressive Web App)
+
+### Serwist
+
+**선택 이유**: Next.js와 원활하게 통합되는 Service Worker 라이브러리입니다.
+
+**기능**:
+| 기능 | 설명 |
+|------|------|
+| 오프라인 캐싱 | `defaultCache` 전략으로 자동 캐싱 |
+| 앱 설치 | 홈 화면에 앱으로 설치 가능 |
+| 백그라운드 동기화 | 오프라인 상태에서 작업 후 동기화 |
+
+**설정 파일**:
+- `src/app/sw.ts` - Service Worker 설정
+- `src/app/manifest.ts` - Web App Manifest
+- `public/icon.svg` - PWA 아이콘
+
+**빌드 명령어**:
+```bash
+npm run build  # --webpack 플래그 필요 (Turbopack 미지원)
+```
+
+---
+
 ## 백엔드 서비스
 
 ### Firebase 12
@@ -205,11 +230,40 @@ Next.js는 다음을 포함한 최적화된 프로덕션 빌드를 생성합니�
 - 정적 에셋 최적화
 - 해당되는 경우 서버 사이드 렌더링
 
-### 배포 옵션
+### 프로덕션 배포
+
+| 항목 | 값 |
+|------|-----|
+| **플랫폼** | Vercel |
+| **프로젝트명** | `todo-app-2` |
+| **URL** | https://todo-app-2-tan.vercel.app |
+| **브랜치** | `master` |
+| **자동 배포** | GitHub 푸시 시 자동 배포 |
+
+### 환경 변수 (Vercel)
+
+프로덕션 배포 시 Vercel Dashboard에서 다음 환경 변수 설정 필요:
+
+| 변수명 | 설명 |
+|--------|------|
+| `NEXT_PUBLIC_FIREBASE_API_KEY` | Firebase API 키 |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase 인증 도메인 |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Firebase 프로젝트 ID |
+| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Firebase 스토리지 버킷 |
+| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase 메시징 발신자 ID |
+| `NEXT_PUBLIC_FIREBASE_APP_ID` | Firebase 앱 ID |
+
+### Firebase 설정
+
+| 항목 | 값 |
+|------|-----|
+| **프로젝트** | `todo-app-291be` |
+| **인증 도메인** | `todo-app-2-tan.vercel.app` (Authorized domains에 추가 필요)
+
+### 기타 배포 옵션
 
 | 플랫폼 | 설정 |
 |--------|------|
-| Vercel | 제로 설정 배포 |
 | Netlify | `next build` 출력 |
 | Docker | Node.js 컨테이너 |
 
