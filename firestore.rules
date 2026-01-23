@@ -2,6 +2,46 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ============================================
+    // Helper Functions
+    // ============================================
+
+    // Check if user is authenticated
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Check if user is a member of the team
+    function isTeamMember(teamId) {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid));
+    }
+
+    // Get user's role in the team
+    function getTeamRole(teamId) {
+      return get(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid)).data.role;
+    }
+
+    // Check if user is team owner
+    function isTeamOwner(teamId) {
+      return isTeamMember(teamId) && getTeamRole(teamId) == 'owner';
+    }
+
+    // Check if user is team admin (owner or admin)
+    function isTeamAdmin(teamId) {
+      return isTeamMember(teamId) && getTeamRole(teamId) in ['owner', 'admin'];
+    }
+
+    // Check if user can edit team todos (owner, admin, or editor)
+    function canEditTeamTodos(teamId) {
+      return isTeamMember(teamId) && getTeamRole(teamId) in ['owner', 'admin', 'editor'];
+    }
+
+    // ============================================
+    // User Rules (existing - unchanged)
+    // ============================================
+
     // Users can only access their own data
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
@@ -20,6 +60,125 @@ service cloud.firestore {
       match /settings/{settingId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
+
+      // Team memberships subcollection
+      match /teamMemberships/{teamId} {
+        // Users can read their own team memberships
+        allow read: if request.auth != null && request.auth.uid == userId;
+        // Users can write their own membership (for joining/leaving teams)
+        allow write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // ============================================
+    // Team Rules
+    // ============================================
+
+    match /teams/{teamId} {
+      // Read: team members only
+      allow read: if isTeamMember(teamId);
+
+      // Create: any authenticated user can create a team
+      allow create: if isSignedIn() &&
+        request.resource.data.ownerId == request.auth.uid;
+
+      // Update: admin or owner
+      allow update: if isTeamAdmin(teamId);
+
+      // Delete: owner only
+      allow delete: if isTeamOwner(teamId);
+
+      // ============================================
+      // Team Members Rules
+      // ============================================
+
+      match /members/{memberId} {
+        // Read: team members can see all members
+        allow read: if isTeamMember(teamId);
+
+        // Create: admin can add members, or user can add themselves (via invitation)
+        allow create: if isSignedIn() && (
+          // Admin adding a member
+          isTeamAdmin(teamId) ||
+          // User adding themselves (self-join via invitation)
+          (memberId == request.auth.uid && request.resource.data.role in ['editor', 'viewer'])
+        );
+
+        // Update: admin can update roles (except owner role)
+        allow update: if isTeamAdmin(teamId) &&
+          // Cannot change owner's role
+          !(resource.data.role == 'owner') &&
+          // Cannot promote to owner
+          !(request.resource.data.role == 'owner');
+
+        // Delete: admin can remove members, or user can remove themselves (leave team)
+        allow delete: if isSignedIn() && (
+          // Admin removing a member (but not the owner)
+          (isTeamAdmin(teamId) && resource.data.role != 'owner') ||
+          // User removing themselves (leaving the team)
+          memberId == request.auth.uid
+        );
+      }
+
+      // ============================================
+      // Team Todos Rules
+      // ============================================
+
+      match /todos/{todoId} {
+        // Read: team members can read all todos
+        allow read: if isTeamMember(teamId);
+
+        // Create: owner, admin, or editor can create todos
+        allow create: if canEditTeamTodos(teamId) &&
+          request.resource.data.createdBy == request.auth.uid;
+
+        // Update: owner, admin, or editor can update todos
+        allow update: if canEditTeamTodos(teamId) &&
+          request.resource.data.lastModifiedBy == request.auth.uid;
+
+        // Delete: admin can delete any todo, editor can delete own todos
+        allow delete: if isSignedIn() && (
+          // Admin or owner can delete any todo
+          isTeamAdmin(teamId) ||
+          // Creator can delete their own todo
+          (canEditTeamTodos(teamId) && resource.data.createdBy == request.auth.uid)
+        );
+      }
+    }
+
+    // ============================================
+    // Invitation Rules
+    // ============================================
+
+    match /invitations/{invitationId} {
+      // Read: creator, recipient (by email), or anyone for link invitations
+      allow read: if isSignedIn() && (
+        // Creator can read
+        resource.data.createdBy == request.auth.uid ||
+        // Recipient can read (by email)
+        resource.data.email == request.auth.token.email ||
+        // Link invitations are readable by anyone authenticated
+        resource.data.type == 'link'
+      );
+
+      // Create: authenticated users who are team admins can create invitations
+      allow create: if isSignedIn() &&
+        request.resource.data.createdBy == request.auth.uid &&
+        isTeamAdmin(request.resource.data.teamId);
+
+      // Update: creator or recipient can update (e.g., accept/decline)
+      allow update: if isSignedIn() && (
+        // Creator can update (e.g., cancel)
+        resource.data.createdBy == request.auth.uid ||
+        // Recipient can update (e.g., accept)
+        resource.data.email == request.auth.token.email ||
+        // For link invitations, any authenticated user can accept
+        resource.data.type == 'link'
+      );
+
+      // Delete: creator only
+      allow delete: if isSignedIn() &&
+        resource.data.createdBy == request.auth.uid;
     }
   }
 }

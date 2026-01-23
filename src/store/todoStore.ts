@@ -12,7 +12,7 @@ import {
   writeBatch,
   Unsubscribe,
 } from 'firebase/firestore'
-import { db, isFirebaseConfigured } from '@/lib/firebase'
+import { db } from '@/lib/firebase'
 
 export type Priority = 'high' | 'medium' | 'low'
 export type SortType = 'created' | 'priority' | 'startDate' | 'endDate'
@@ -197,7 +197,7 @@ export const useTodoStore = create<TodoState>()(
       },
 
       updateTodo: async ({ id, title, description, startDate, endDate, priority }) => {
-        const { userId, todos } = get()
+        const { userId } = get()
 
         if (userId && db) {
           const todoRef = doc(db, 'users', userId, 'todos', id)

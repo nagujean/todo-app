@@ -105,6 +105,8 @@
 | `todoStore` | 할 일 데이터 및 작업 | localStorage + Firestore |
 | `presetStore` | 프리셋 템플릿 | localStorage |
 | `themeStore` | 테마 설정 | localStorage |
+| `teamStore` | 팀 관리, 멤버 관리, 팀 전환 | Firestore 실시간 구독 |
+| `invitationStore` | 이메일/링크 초대 시스템 | Firestore 실시간 구독 |
 
 **패턴**:
 ```typescript
@@ -174,6 +176,19 @@ users/
       {todoId}: { title, completed, priority, ... }
     presets/
       {presetId}: { title }
+    teamMemberships/
+      {teamId}: { teamName, role, joinedAt }
+
+teams/
+  {teamId}/
+    name, description, ownerId, memberCount, createdAt, settings
+    members/
+      {userId}: { role, displayName, email, joinedAt }
+    todos/
+      {todoId}: { title, completed, createdBy, assignedTo, ... }
+
+invitations/
+  {invitationId}: { teamId, type, email, token, role, status, expiresAt }
 ```
 
 ---
@@ -328,6 +343,26 @@ Next.js는 다음을 포함한 최적화된 프로덕션 빌드를 생성합니�
 ### 상태 관리
 **결정**: Redux/Context 대신 Zustand 선택
 **근거**: 더 간단한 API, 적은 보일러플레이트, 애플리케이션 규모에 적합
+
+### 팀 협업 아키텍처
+**결정**: 실시간 Firestore 구독을 사용한 팀 데이터 동기화
+**근거**: 팀 멤버 간 즉각적인 데이터 동기화 필요
+
+**컴포넌트 구조**:
+| 컴포넌트 | 경로 | 역할 |
+|----------|------|------|
+| `TeamSwitcher` | `src/components/team/` | 개인/팀 워크스페이스 전환 |
+| `CreateTeamDialog` | `src/components/team/` | 새 팀 생성 모달 |
+| `TeamMembers` | `src/components/team/` | 멤버 목록 및 역할 관리 |
+| `InviteDialog` | `src/components/team/` | 이메일/링크 초대 |
+
+**역할 기반 접근 제어**:
+| 역할 | 권한 |
+|------|------|
+| `owner` | 팀 삭제, 모든 권한 |
+| `admin` | 멤버 관리, 할 일 관리 |
+| `editor` | 할 일 생성/수정 |
+| `viewer` | 읽기 전용 |
 
 ---
 

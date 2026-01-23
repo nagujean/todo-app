@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import { setupAuthListener, useAuthStore } from '@/store/authStore'
 import { subscribeToTodos, unsubscribeFromTodos } from '@/store/todoStore'
 import { subscribeToPresets, unsubscribeFromPresets } from '@/store/presetStore'
+import { subscribeToTeams, unsubscribeFromTeams } from '@/store/teamStore'
 
 interface AuthProviderProps {
   children: React.ReactNode
@@ -25,14 +26,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (user) {
       subscribeToTodos(user.uid)
       subscribeToPresets(user.uid)
+      subscribeToTeams(user.uid)
     } else {
       unsubscribeFromTodos()
       unsubscribeFromPresets()
+      unsubscribeFromTeams()
     }
 
     return () => {
       unsubscribeFromTodos()
       unsubscribeFromPresets()
+      unsubscribeFromTeams()
     }
   }, [user])
 
