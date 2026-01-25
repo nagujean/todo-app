@@ -42,3 +42,131 @@ next-env.d.ts
 # IDE
 .idea
 .vscode
+# Environment files
+.nuxt/
+.claude/skills/*/.env*
+*.swp
+*.suo
+logs/
+.venv/
+*.bak
+# Virtual Environments
+*.pfx
+# Python Cache & Bytecode
+.vscode/
+# Test Coverage
+ehthumbs.db
+build/
+*.pyo
+*-api-key.*
+*.pyc
+# Build Tools & Frameworks
+private-key*
+.LSOverride
+.moai-backups/
+# Backups
+# Deployment & CI/CD
+# Certificate files
+# Purpose: Essential patterns for user projects
+.#*
+dist/
+*.log
+# Secrets and Credentials (CRITICAL)
+*.secret.*
+*.backup
+# ===========================================
+*.backup/
+# FIXED: Issue #237 - Replaced overly broad *key* and *secret* patterns
+*~
+.uv_cache/
+*.sublime-project
+.idea/
+*_secret=*
+.claude/settings.local.json
+*-backup/
+.firebase/
+.pytest_cache/
+.uv-cache/
+*.pyd
+# Windows
+*.p12
+*_key.*
+# OS Files
+.fseventsd
+.env.*
+.claude/.env.local*
+.vercel/
+.directory
+# IDE & Editors
+[Dd]esktop.ini
+*.temp
+# Build Artifacts & Distribution
+env/
+*.egg
+venv/
+*_backup_*/
+# Private keys (specific patterns to avoid false positives)
+.claude/local/
+.Spotlight-V100
+# Updated: 2026-01-10
+.env/
+*.db
+*.tmp
+.mypy_cache/
+*.rdb
+*-key.*
+.aws/credentials
+*.sln
+*.sqlite3
+*.sqlite
+# Version: 0.33.0
+.claude/settings.local.*.json
+coverage.json
+*.njsproj
+.DocumentRevisions-V100
+*.egg-info/
+# ============================================
+htmlcov/
+.cursor/
+# MoAI-ADK Package Distribution .gitignore
+.turbo/
+.claude/skills/*/*/*token*
+.ruff_cache/
+.AppleDouble
+# Claude Code Configuration
+*_token=*
+# Mac
+# Logs & Temporary Files
+secret-key-*
+.claude/skills/*/secrets/
+# Linux
+# Node.js (for docs/Nextra)
+!.env.example
+*.sublime-workspace
+*.jks
+# Skill-specific credentials
+.VolumeIcon.icns
+.aws/config
+# Cloud provider credentials
+node_modules/
+*.key.*
+secret-*.*
+.tscache/
+dist-ssr/
+*.swo
+*.dbm
+*-secret.*
+.TemporaryItems
+__pycache__/
+.coverage
+.Trashes
+*-secret-key.*
+api-key-*
+*_secret.*
+.claude/skills/*/*/*key*
+.claude/skills/*/*/*secret*
+Thumbs.db
+.netlify/
+# Credential patterns in environment files
+*.sw?
+.claude/plans/
