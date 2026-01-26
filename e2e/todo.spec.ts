@@ -419,84 +419,9 @@ test.describe('Todo App', () => {
     await expect(priorityButton).toHaveClass(/text-primary/)
   })
 
-  // Skip: "완료 숨기기" 버튼이 "미완료" 필터로 대체됨. story-1-4-filter-todo.spec.ts에서 테스트됨
-  test.skip('완료된 항목 숨기기 버튼이 표시된다', async ({ page }) => {
-    const input = page.getByPlaceholder('할 일을 입력하세요...')
-    await input.fill('숨기기 테스트')
-    await input.press('Enter')
-
-    // 완료 처리
-    const todoItem = page.locator('.rounded-lg.border').filter({ hasText: '숨기기 테스트' })
-    await todoItem.getByRole('checkbox').click()
-
-    // 숨기기 버튼 표시 확인
-    await expect(page.getByRole('button', { name: /완료 숨기기/ })).toBeVisible()
-  })
-
-  // Skip: "완료 숨기기" 버튼이 "미완료" 필터로 대체됨. story-1-4-filter-todo.spec.ts에서 테스트됨
-  test.skip('완료된 항목을 숨길 수 있다', async ({ page }) => {
-    const input = page.getByPlaceholder('할 일을 입력하세요...')
-
-    // 할일 2개 추가
-    await input.fill('미완료 할일')
-    await input.press('Enter')
-    await input.fill('완료될 할일')
-    await input.press('Enter')
-
-    // 하나 완료 처리
-    const todoToComplete = page.locator('.rounded-lg.border').filter({ hasText: '완료될 할일' })
-    await todoToComplete.getByRole('checkbox').click()
-
-    // 숨기기 버튼 클릭
-    await page.getByRole('button', { name: /완료 숨기기/ }).click()
-
-    // 완료된 항목이 보이지 않음
-    await expect(page.getByText('완료될 할일')).not.toBeVisible()
-    // 미완료 항목은 보임
-    await expect(page.getByText('미완료 할일')).toBeVisible()
-    // 숨김 개수 표시
-    await expect(page.getByText(/1개 숨김/)).toBeVisible()
-  })
-
-  // Skip: "완료 숨기기" 버튼이 "미완료" 필터로 대체됨. story-1-4-filter-todo.spec.ts에서 테스트됨
-  test.skip('숨긴 완료 항목을 다시 보이게 할 수 있다', async ({ page }) => {
-    const input = page.getByPlaceholder('할 일을 입력하세요...')
-    await input.fill('토글 테스트')
-    await input.press('Enter')
-
-    // 완료 처리
-    const todoItem = page.locator('.rounded-lg.border').filter({ hasText: '토글 테스트' })
-    await todoItem.getByRole('checkbox').click()
-
-    // 숨기기
-    await page.getByRole('button', { name: /완료 숨기기/ }).click()
-    await expect(page.getByText('토글 테스트')).not.toBeVisible()
-
-    // 다시 보이기
-    await page.getByRole('button', { name: /완료 보기/ }).click()
-    await expect(page.getByText('토글 테스트')).toBeVisible()
-  })
-
-  // Skip: "완료 숨기기" 버튼이 "미완료" 필터로 대체됨. story-1-5-persistence.spec.ts에서 테스트됨
-  test.skip('완료 숨김 설정이 새로고침 후에도 유지된다', async ({ page }) => {
-    const input = page.getByPlaceholder('할 일을 입력하세요...')
-    await input.fill('영속화 숨김 테스트')
-    await input.press('Enter')
-
-    // 완료 처리
-    const todoItem = page.locator('.rounded-lg.border').filter({ hasText: '영속화 숨김 테스트' })
-    await todoItem.getByRole('checkbox').click()
-
-    // 숨기기
-    await page.getByRole('button', { name: /완료 숨기기/ }).click()
-
-    // 새로고침
-    await page.reload()
-
-    // 숨김 상태 유지 확인
-    await expect(page.getByText('영속화 숨김 테스트')).not.toBeVisible()
-    await expect(page.getByRole('button', { name: /완료 보기/ })).toBeVisible()
-  })
+  // NOTE: "완료 숨기기" 기능은 "전체/미완료/완료" 필터 모드로 대체되었습니다.
+  // 필터 기능 테스트는 story-1-4-filter-todo.spec.ts에서 수행됩니다.
+  // 필터 상태 영속화 테스트는 story-1-4-filter-todo.spec.ts의 REQ-FUNC-016에서 수행됩니다.
 
   test('뷰 전환 버튼이 표시된다', async ({ page }) => {
     await expect(page.getByRole('button', { name: /목록/ })).toBeVisible()

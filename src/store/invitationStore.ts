@@ -50,12 +50,14 @@ interface InvitationState {
     teamId: string,
     teamName: string,
     email: string,
-    role: InvitationRole
+    role: InvitationRole,
+    createdBy: string
   ) => Promise<string | null>
   createLinkInvitation: (
     teamId: string,
     teamName: string,
     role: InvitationRole,
+    createdBy: string,
     maxUses?: number
   ) => Promise<string | null>
   acceptInvitation: (invitationId: string, userId: string, userEmail: string, displayName: string) => Promise<boolean>
@@ -119,7 +121,7 @@ export const useInvitationStore = create<InvitationState>()(
       teamInvitations: [],
       isLoading: false,
 
-      createEmailInvitation: async (teamId, teamName, email, role) => {
+      createEmailInvitation: async (teamId, teamName, email, role, createdBy) => {
         if (!db) return null
 
         const trimmedEmail = email.trim().toLowerCase()
@@ -132,7 +134,7 @@ export const useInvitationStore = create<InvitationState>()(
             type: 'email' as InvitationType,
             email: trimmedEmail,
             role,
-            createdBy: '', // Will be set by the caller or auth context
+            createdBy,
             createdAt: serverTimestamp(),
             expiresAt: Timestamp.fromDate(createExpirationDate()),
             status: 'pending' as InvitationStatus,
@@ -146,7 +148,7 @@ export const useInvitationStore = create<InvitationState>()(
         }
       },
 
-      createLinkInvitation: async (teamId, teamName, role, maxUses = 10) => {
+      createLinkInvitation: async (teamId, teamName, role, createdBy, maxUses = 10) => {
         if (!db) return null
 
         try {
@@ -155,7 +157,7 @@ export const useInvitationStore = create<InvitationState>()(
             teamName,
             type: 'link' as InvitationType,
             role,
-            createdBy: '', // Will be set by the caller or auth context
+            createdBy,
             createdAt: serverTimestamp(),
             expiresAt: Timestamp.fromDate(createExpirationDate()),
             status: 'pending' as InvitationStatus,

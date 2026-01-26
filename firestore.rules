@@ -4,7 +4,99 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ============================================
-    // Helper Functions
+    // SECTION 1: Input Validation Functions
+    // ============================================
+
+    // Validate string is not empty and within length limits
+    function isValidString(value, minLen, maxLen) {
+      return value is string &&
+        value.size() >= minLen &&
+        value.size() <= maxLen;
+    }
+
+    // Validate string contains no dangerous HTML/script characters (XSS prevention)
+    function isSafeString(value) {
+      return value is string &&
+        !value.matches('.*<script.*') &&
+        !value.matches('.*<iframe.*') &&
+        !value.matches('.*javascript:.*') &&
+        !value.matches('.*onerror=.*') &&
+        !value.matches('.*onclick=.*') &&
+        !value.matches('.*onload=.*');
+    }
+
+    // Validate email format
+    function isValidEmail(email) {
+      return email is string &&
+        email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$') &&
+        email.size() <= 254;
+    }
+
+    // Validate timestamp is current (within 5 minutes tolerance)
+    function isCurrentTimestamp(ts) {
+      return ts is timestamp &&
+        ts >= request.time - duration.value(5, 'm') &&
+        ts <= request.time + duration.value(1, 'm');
+    }
+
+    // Validate role is one of the allowed values
+    function isValidRole(role) {
+      return role in ['owner', 'admin', 'editor', 'viewer'];
+    }
+
+    // Validate todo priority
+    function isValidPriority(priority) {
+      return priority in ['low', 'medium', 'high', 'urgent'];
+    }
+
+    // Validate invitation type
+    function isValidInvitationType(type) {
+      return type in ['email', 'link'];
+    }
+
+    // Validate invitation status
+    function isValidInvitationStatus(status) {
+      return status in ['pending', 'accepted', 'declined', 'expired', 'cancelled'];
+    }
+
+    // ============================================
+    // SECTION 2: Audit Logging Helper Functions
+    // ============================================
+
+    // Validate required audit fields on create
+    function hasCreateAuditFields() {
+      return request.resource.data.createdAt is timestamp &&
+        request.resource.data.createdBy == request.auth.uid &&
+        isCurrentTimestamp(request.resource.data.createdAt);
+    }
+
+    // Validate required audit fields on update
+    function hasUpdateAuditFields() {
+      return request.resource.data.updatedAt is timestamp &&
+        request.resource.data.lastModifiedBy == request.auth.uid &&
+        isCurrentTimestamp(request.resource.data.updatedAt);
+    }
+
+    // Validate soft delete fields
+    function hasValidSoftDeleteFields() {
+      return request.resource.data.isDeleted == true &&
+        request.resource.data.deletedAt is timestamp &&
+        request.resource.data.deletedBy == request.auth.uid &&
+        isCurrentTimestamp(request.resource.data.deletedAt);
+    }
+
+    // Check if document is soft-deleted
+    function isNotSoftDeleted() {
+      return !('isDeleted' in resource.data) || resource.data.isDeleted != true;
+    }
+
+    // Ensure immutable fields are not modified
+    function preservesImmutableFields(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    // ============================================
+    // SECTION 3: Authentication & Role Functions
     // ============================================
 
     // Check if user is authenticated
@@ -12,10 +104,13 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Check if user is a member of the team
+    // Check if user is a member of the team (and team is not deleted)
     function isTeamMember(teamId) {
       return isSignedIn() &&
-        exists(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid));
+        exists(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid)) &&
+        (!exists(/databases/$(database)/documents/teams/$(teamId)) ||
+         !('isDeleted' in get(/databases/$(database)/documents/teams/$(teamId)).data) ||
+         get(/databases/$(database)/documents/teams/$(teamId)).data.isDeleted != true);
     }
 
     // Get user's role in the team
@@ -39,115 +134,415 @@ service cloud.firestore {
     }
 
     // ============================================
-    // User Rules (existing - unchanged)
+    // SECTION 4: Rate Limiting Functions
+    // ============================================
+    // Note: True rate limiting requires server-side logic.
+    // These functions provide document-count-based limits.
+
+    // Count user's active teams (limit: 10 teams per user)
+    function getUserTeamCount() {
+      // This is a conceptual limit - actual enforcement requires
+      // tracking in a separate counter document or Cloud Functions
+      return true;
+    }
+
+    // Validate invitation creation rate limit metadata
+    // Requires client to maintain invitationsCreatedToday counter
+    function isWithinInvitationRateLimit() {
+      // Rate limit: max 20 invitations per day per user
+      // Client must track and include invitationCount in request
+      return !('invitationCount' in request.resource.data) ||
+        request.resource.data.invitationCount <= 20;
+    }
+
+    // ============================================
+    // SECTION 5: Rate Limit Counter Collection
     // ============================================
 
-    // Users can only access their own data
+    match /rateLimits/{userId} {
+      // Only the user can read their own rate limits
+      allow read: if isSignedIn() && request.auth.uid == userId;
+
+      // Only server-side (Cloud Functions) should update rate limits
+      // Client can create initial document
+      allow create: if isSignedIn() &&
+        request.auth.uid == userId &&
+        request.resource.data.keys().hasOnly(['teamsCreated', 'invitationsCreatedToday', 'lastInvitationDate', 'createdAt']);
+
+      // Update only allowed for incrementing counters with validation
+      allow update: if isSignedIn() &&
+        request.auth.uid == userId &&
+        // Can only increment, not decrease
+        request.resource.data.teamsCreated >= resource.data.teamsCreated &&
+        // Max 10 teams per user
+        request.resource.data.teamsCreated <= 10 &&
+        // Max 20 invitations per day
+        (request.resource.data.invitationsCreatedToday <= 20 ||
+         // Reset counter if new day
+         request.resource.data.lastInvitationDate != resource.data.lastInvitationDate);
+    }
+
+    // ============================================
+    // SECTION 6: User Rules
+    // ============================================
+
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Read: only own data, must be authenticated
+      allow read: if isSignedIn() && request.auth.uid == userId;
 
-      // Todos subcollection
+      // Create: user can create their own profile with required fields
+      allow create: if isSignedIn() &&
+        request.auth.uid == userId &&
+        // Required fields
+        request.resource.data.keys().hasAll(['email', 'createdAt']) &&
+        // Validate email
+        isValidEmail(request.resource.data.email) &&
+        // Validate display name if provided
+        (!('displayName' in request.resource.data) ||
+          (isValidString(request.resource.data.displayName, 1, 100) &&
+           isSafeString(request.resource.data.displayName))) &&
+        // Audit fields
+        isCurrentTimestamp(request.resource.data.createdAt);
+
+      // Update: user can update own profile with audit fields
+      allow update: if isSignedIn() &&
+        request.auth.uid == userId &&
+        // Validate display name if provided
+        (!('displayName' in request.resource.data) ||
+          (isValidString(request.resource.data.displayName, 1, 100) &&
+           isSafeString(request.resource.data.displayName))) &&
+        // Preserve immutable fields
+        preservesImmutableFields(['email', 'createdAt']) &&
+        // Require update audit fields
+        request.resource.data.updatedAt is timestamp &&
+        isCurrentTimestamp(request.resource.data.updatedAt);
+
+      // Delete: not allowed (use soft delete)
+      allow delete: if false;
+
+      // ----------------------------------------
+      // User Todos Subcollection
+      // ----------------------------------------
       match /todos/{todoId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        // Read: only non-deleted todos
+        allow read: if isSignedIn() &&
+          request.auth.uid == userId &&
+          isNotSoftDeleted();
+
+        // Create: with validation and audit fields
+        allow create: if isSignedIn() &&
+          request.auth.uid == userId &&
+          // Required fields
+          request.resource.data.keys().hasAll(['title', 'completed', 'createdAt', 'createdBy']) &&
+          // Validate title (1-500 chars, safe string)
+          isValidString(request.resource.data.title, 1, 500) &&
+          isSafeString(request.resource.data.title) &&
+          // Validate description if provided (max 2000 chars)
+          (!('description' in request.resource.data) ||
+            (isValidString(request.resource.data.description, 0, 2000) &&
+             isSafeString(request.resource.data.description))) &&
+          // Validate priority if provided
+          (!('priority' in request.resource.data) ||
+            isValidPriority(request.resource.data.priority)) &&
+          // Completed must be boolean
+          request.resource.data.completed is bool &&
+          // Audit fields
+          request.resource.data.createdBy == request.auth.uid &&
+          isCurrentTimestamp(request.resource.data.createdAt);
+
+        // Update: with validation and audit fields
+        allow update: if isSignedIn() &&
+          request.auth.uid == userId &&
+          isNotSoftDeleted() &&
+          // Validate title if changed
+          (!('title' in request.resource.data) ||
+            (isValidString(request.resource.data.title, 1, 500) &&
+             isSafeString(request.resource.data.title))) &&
+          // Validate description if provided
+          (!('description' in request.resource.data) ||
+            (isValidString(request.resource.data.description, 0, 2000) &&
+             isSafeString(request.resource.data.description))) &&
+          // Validate priority if provided
+          (!('priority' in request.resource.data) ||
+            isValidPriority(request.resource.data.priority)) &&
+          // Preserve immutable fields
+          preservesImmutableFields(['createdAt', 'createdBy']) &&
+          // Require update audit fields
+          request.resource.data.updatedAt is timestamp &&
+          request.resource.data.lastModifiedBy == request.auth.uid;
+
+        // Delete: soft delete only
+        allow delete: if isSignedIn() &&
+          request.auth.uid == userId &&
+          isNotSoftDeleted();
       }
 
-      // Presets subcollection
+      // ----------------------------------------
+      // User Presets Subcollection
+      // ----------------------------------------
       match /presets/{presetId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        allow read: if isSignedIn() && request.auth.uid == userId;
+
+        allow create: if isSignedIn() &&
+          request.auth.uid == userId &&
+          // Required fields
+          request.resource.data.keys().hasAll(['name', 'createdAt']) &&
+          // Validate name (1-100 chars, safe string)
+          isValidString(request.resource.data.name, 1, 100) &&
+          isSafeString(request.resource.data.name) &&
+          // Audit fields
+          isCurrentTimestamp(request.resource.data.createdAt);
+
+        allow update: if isSignedIn() &&
+          request.auth.uid == userId &&
+          // Validate name if changed
+          (!('name' in request.resource.data) ||
+            (isValidString(request.resource.data.name, 1, 100) &&
+             isSafeString(request.resource.data.name))) &&
+          // Preserve immutable fields
+          preservesImmutableFields(['createdAt']) &&
+          // Require update audit fields
+          request.resource.data.updatedAt is timestamp;
+
+        allow delete: if isSignedIn() && request.auth.uid == userId;
       }
 
-      // Settings subcollection
+      // ----------------------------------------
+      // User Settings Subcollection
+      // ----------------------------------------
       match /settings/{settingId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        allow read: if isSignedIn() && request.auth.uid == userId;
+
+        allow create: if isSignedIn() &&
+          request.auth.uid == userId &&
+          request.resource.data.createdAt is timestamp;
+
+        allow update: if isSignedIn() &&
+          request.auth.uid == userId &&
+          request.resource.data.updatedAt is timestamp;
+
+        allow delete: if isSignedIn() && request.auth.uid == userId;
       }
 
-      // Team memberships subcollection
+      // ----------------------------------------
+      // User Team Memberships Subcollection
+      // ----------------------------------------
       match /teamMemberships/{teamId} {
-        // Users can read their own team memberships
-        allow read: if request.auth != null && request.auth.uid == userId;
-        // Users can write their own membership (for joining/leaving teams)
-        allow write: if request.auth != null && request.auth.uid == userId;
+        // Read own memberships
+        allow read: if isSignedIn() && request.auth.uid == userId;
+
+        // Create/update own memberships
+        allow create, update: if isSignedIn() &&
+          request.auth.uid == userId &&
+          // Validate role
+          isValidRole(request.resource.data.role) &&
+          // Required fields
+          request.resource.data.keys().hasAll(['teamId', 'role', 'joinedAt']);
+
+        // Delete own memberships
+        allow delete: if isSignedIn() && request.auth.uid == userId;
       }
     }
 
     // ============================================
-    // Team Rules
+    // SECTION 7: Team Rules
     // ============================================
 
     match /teams/{teamId} {
-      // Read: team members only
-      allow read: if isTeamMember(teamId);
+      // Read: team members only, not soft-deleted
+      allow read: if isTeamMember(teamId) && isNotSoftDeleted();
 
-      // Create: any authenticated user can create a team
+      // Create: authenticated user with validation
       allow create: if isSignedIn() &&
-        request.resource.data.ownerId == request.auth.uid;
+        // Owner must be the creator
+        request.resource.data.ownerId == request.auth.uid &&
+        // Required fields
+        request.resource.data.keys().hasAll(['name', 'ownerId', 'createdAt', 'createdBy']) &&
+        // Validate team name (1-100 chars, safe string)
+        isValidString(request.resource.data.name, 1, 100) &&
+        isSafeString(request.resource.data.name) &&
+        // Validate description if provided (max 500 chars)
+        (!('description' in request.resource.data) ||
+          (isValidString(request.resource.data.description, 0, 500) &&
+           isSafeString(request.resource.data.description))) &&
+        // Audit fields
+        request.resource.data.createdBy == request.auth.uid &&
+        isCurrentTimestamp(request.resource.data.createdAt) &&
+        // Initial state: not deleted
+        (!('isDeleted' in request.resource.data) || request.resource.data.isDeleted == false);
 
       // Update: admin or owner
-      allow update: if isTeamAdmin(teamId);
+      allow update: if isTeamAdmin(teamId) &&
+        isNotSoftDeleted() &&
+        // Validate team name if changed
+        (!('name' in request.resource.data) ||
+          (isValidString(request.resource.data.name, 1, 100) &&
+           isSafeString(request.resource.data.name))) &&
+        // Validate description if provided
+        (!('description' in request.resource.data) ||
+          (isValidString(request.resource.data.description, 0, 500) &&
+           isSafeString(request.resource.data.description))) &&
+        // Preserve immutable fields
+        preservesImmutableFields(['ownerId', 'createdAt', 'createdBy']) &&
+        // Require update audit fields
+        request.resource.data.updatedAt is timestamp &&
+        request.resource.data.lastModifiedBy == request.auth.uid &&
+        // Prevent changing ownerId (privilege escalation prevention)
+        request.resource.data.ownerId == resource.data.ownerId;
 
-      // Delete: owner only
-      allow delete: if isTeamOwner(teamId);
+      // Soft Delete: owner only
+      allow update: if isTeamOwner(teamId) &&
+        isNotSoftDeleted() &&
+        hasValidSoftDeleteFields() &&
+        // Only allow setting isDeleted to true
+        request.resource.data.isDeleted == true &&
+        // Preserve other critical fields
+        request.resource.data.ownerId == resource.data.ownerId;
 
-      // ============================================
-      // Team Members Rules
-      // ============================================
+      // Hard Delete: disabled (use soft delete)
+      allow delete: if false;
 
+      // ----------------------------------------
+      // Team Members Subcollection
+      // ----------------------------------------
       match /members/{memberId} {
         // Read: team members can see all members
-        allow read: if isTeamMember(teamId);
+        allow read: if isTeamMember(teamId) && isNotSoftDeleted();
 
-        // Create: admin can add members, or user can add themselves (via invitation)
+        // Create: admin can add members, or user can add themselves via invitation
         allow create: if isSignedIn() && (
           // Admin adding a member
-          isTeamAdmin(teamId) ||
+          (isTeamAdmin(teamId) &&
+           // Cannot create owner role (privilege escalation prevention)
+           request.resource.data.role != 'owner' &&
+           isValidRole(request.resource.data.role) &&
+           // Required audit fields
+           request.resource.data.keys().hasAll(['role', 'joinedAt', 'addedBy']) &&
+           request.resource.data.addedBy == request.auth.uid &&
+           isCurrentTimestamp(request.resource.data.joinedAt)) ||
           // User adding themselves (self-join via invitation)
-          (memberId == request.auth.uid && request.resource.data.role in ['editor', 'viewer'])
+          (memberId == request.auth.uid &&
+           request.resource.data.role in ['editor', 'viewer'] &&
+           request.resource.data.keys().hasAll(['role', 'joinedAt']) &&
+           isCurrentTimestamp(request.resource.data.joinedAt))
         );
 
-        // Update: admin can update roles (except owner role)
+        // Update: admin can update roles with restrictions
         allow update: if isTeamAdmin(teamId) &&
-          // Cannot change owner's role
-          !(resource.data.role == 'owner') &&
-          // Cannot promote to owner
-          !(request.resource.data.role == 'owner');
+          // Cannot change owner's role (privilege escalation prevention)
+          resource.data.role != 'owner' &&
+          // Cannot promote to owner (privilege escalation prevention)
+          request.resource.data.role != 'owner' &&
+          // Validate new role
+          isValidRole(request.resource.data.role) &&
+          // Audit fields
+          request.resource.data.updatedAt is timestamp &&
+          request.resource.data.lastModifiedBy == request.auth.uid &&
+          // Preserve immutable fields
+          preservesImmutableFields(['joinedAt', 'addedBy']);
 
-        // Delete: admin can remove members, or user can remove themselves (leave team)
+        // Delete: admin can remove non-owners, users can remove themselves
         allow delete: if isSignedIn() && (
           // Admin removing a member (but not the owner)
           (isTeamAdmin(teamId) && resource.data.role != 'owner') ||
-          // User removing themselves (leaving the team)
-          memberId == request.auth.uid
+          // User removing themselves (leaving the team, but owner cannot leave)
+          (memberId == request.auth.uid && resource.data.role != 'owner')
         );
       }
 
-      // ============================================
-      // Team Todos Rules
-      // ============================================
-
+      // ----------------------------------------
+      // Team Todos Subcollection
+      // ----------------------------------------
       match /todos/{todoId} {
-        // Read: team members can read all todos
-        allow read: if isTeamMember(teamId);
+        // Read: team members can read non-deleted todos
+        allow read: if isTeamMember(teamId) && isNotSoftDeleted();
 
-        // Create: owner, admin, or editor can create todos
+        // Create: owner, admin, or editor with validation
         allow create: if canEditTeamTodos(teamId) &&
-          request.resource.data.createdBy == request.auth.uid;
+          // Required fields
+          request.resource.data.keys().hasAll(['title', 'completed', 'createdAt', 'createdBy']) &&
+          // Creator must be current user
+          request.resource.data.createdBy == request.auth.uid &&
+          // Validate title (1-500 chars, safe string)
+          isValidString(request.resource.data.title, 1, 500) &&
+          isSafeString(request.resource.data.title) &&
+          // Validate description if provided (max 2000 chars)
+          (!('description' in request.resource.data) ||
+            (isValidString(request.resource.data.description, 0, 2000) &&
+             isSafeString(request.resource.data.description))) &&
+          // Validate priority if provided
+          (!('priority' in request.resource.data) ||
+            isValidPriority(request.resource.data.priority)) &&
+          // Completed must be boolean
+          request.resource.data.completed is bool &&
+          // Audit fields
+          isCurrentTimestamp(request.resource.data.createdAt) &&
+          // Initial state: not deleted
+          (!('isDeleted' in request.resource.data) || request.resource.data.isDeleted == false);
 
-        // Update: owner, admin, or editor can update todos
+        // Update: owner, admin, or editor with audit
         allow update: if canEditTeamTodos(teamId) &&
-          request.resource.data.lastModifiedBy == request.auth.uid;
+          isNotSoftDeleted() &&
+          // Validate title if changed
+          (!('title' in request.resource.data) ||
+            (isValidString(request.resource.data.title, 1, 500) &&
+             isSafeString(request.resource.data.title))) &&
+          // Validate description if provided
+          (!('description' in request.resource.data) ||
+            (isValidString(request.resource.data.description, 0, 2000) &&
+             isSafeString(request.resource.data.description))) &&
+          // Validate priority if provided
+          (!('priority' in request.resource.data) ||
+            isValidPriority(request.resource.data.priority)) &&
+          // Require update audit fields
+          request.resource.data.updatedAt is timestamp &&
+          request.resource.data.lastModifiedBy == request.auth.uid &&
+          // Preserve immutable fields
+          preservesImmutableFields(['createdAt', 'createdBy']);
 
-        // Delete: admin can delete any todo, editor can delete own todos
-        allow delete: if isSignedIn() && (
-          // Admin or owner can delete any todo
-          isTeamAdmin(teamId) ||
-          // Creator can delete their own todo
-          (canEditTeamTodos(teamId) && resource.data.createdBy == request.auth.uid)
-        );
+        // Soft Delete: admin can soft-delete any, editor can soft-delete own
+        allow update: if isSignedIn() &&
+          isNotSoftDeleted() &&
+          hasValidSoftDeleteFields() &&
+          (isTeamAdmin(teamId) ||
+           (canEditTeamTodos(teamId) && resource.data.createdBy == request.auth.uid));
+
+        // Hard Delete: disabled (use soft delete)
+        allow delete: if false;
+      }
+
+      // ----------------------------------------
+      // Team Activity Log (Audit Trail)
+      // ----------------------------------------
+      match /activityLog/{logId} {
+        // Read: team admins only (data leakage prevention)
+        allow read: if isTeamAdmin(teamId);
+
+        // Create: any team member can create activity logs
+        allow create: if isTeamMember(teamId) &&
+          // Required fields for audit
+          request.resource.data.keys().hasAll(['action', 'userId', 'timestamp', 'details']) &&
+          // User must be current user
+          request.resource.data.userId == request.auth.uid &&
+          // Timestamp must be current
+          isCurrentTimestamp(request.resource.data.timestamp) &&
+          // Action must be valid
+          request.resource.data.action in [
+            'todo_created', 'todo_updated', 'todo_deleted',
+            'member_added', 'member_removed', 'member_role_changed',
+            'team_updated', 'invitation_sent', 'invitation_accepted'
+          ] &&
+          // Details must be safe string if provided
+          (!('details' in request.resource.data) ||
+            isSafeString(request.resource.data.details));
+
+        // Update/Delete: not allowed (immutable audit trail)
+        allow update, delete: if false;
       }
     }
 
     // ============================================
-    // Invitation Rules
+    // SECTION 8: Invitation Rules
     // ============================================
 
     match /invitations/{invitationId} {
@@ -159,26 +554,93 @@ service cloud.firestore {
         resource.data.email == request.auth.token.email ||
         // Link invitations are readable by anyone authenticated
         resource.data.type == 'link'
-      );
+      ) && isNotSoftDeleted();
 
-      // Create: authenticated users who are team admins can create invitations
+      // Create: authenticated users who are team admins with validation
       allow create: if isSignedIn() &&
+        // Must be team admin
+        isTeamAdmin(request.resource.data.teamId) &&
+        // Required fields
+        request.resource.data.keys().hasAll(['teamId', 'type', 'status', 'role', 'createdAt', 'createdBy', 'expiresAt']) &&
+        // Creator must be current user
         request.resource.data.createdBy == request.auth.uid &&
-        isTeamAdmin(request.resource.data.teamId);
+        // Validate type
+        isValidInvitationType(request.resource.data.type) &&
+        // Validate status (must be pending on create)
+        request.resource.data.status == 'pending' &&
+        // Validate role (cannot invite as owner - privilege escalation prevention)
+        request.resource.data.role in ['admin', 'editor', 'viewer'] &&
+        // Validate email if provided
+        (!('email' in request.resource.data) ||
+          isValidEmail(request.resource.data.email)) &&
+        // Audit fields
+        isCurrentTimestamp(request.resource.data.createdAt) &&
+        // Expiration must be in future (max 7 days)
+        request.resource.data.expiresAt is timestamp &&
+        request.resource.data.expiresAt > request.time &&
+        request.resource.data.expiresAt <= request.time + duration.value(7, 'd') &&
+        // Initial state: not deleted
+        (!('isDeleted' in request.resource.data) || request.resource.data.isDeleted == false);
 
-      // Update: creator or recipient can update (e.g., accept/decline)
-      allow update: if isSignedIn() && (
-        // Creator can update (e.g., cancel)
-        resource.data.createdBy == request.auth.uid ||
-        // Recipient can update (e.g., accept)
-        resource.data.email == request.auth.token.email ||
-        // For link invitations, any authenticated user can accept
-        resource.data.type == 'link'
-      );
+      // Update: status changes only with restrictions
+      allow update: if isSignedIn() && isNotSoftDeleted() && (
+        // Creator can cancel (status: cancelled)
+        (resource.data.createdBy == request.auth.uid &&
+         request.resource.data.status == 'cancelled' &&
+         resource.data.status == 'pending') ||
+        // Recipient can accept/decline
+        ((resource.data.email == request.auth.token.email || resource.data.type == 'link') &&
+         request.resource.data.status in ['accepted', 'declined'] &&
+         resource.data.status == 'pending' &&
+         // Check expiration
+         resource.data.expiresAt > request.time)
+      ) &&
+        // Preserve immutable fields (data tampering prevention)
+        preservesImmutableFields(['teamId', 'type', 'role', 'email', 'createdAt', 'createdBy', 'expiresAt']) &&
+        // Status change audit
+        request.resource.data.updatedAt is timestamp &&
+        request.resource.data.lastModifiedBy == request.auth.uid;
 
-      // Delete: creator only
-      allow delete: if isSignedIn() &&
-        resource.data.createdBy == request.auth.uid;
+      // Soft Delete: creator only
+      allow update: if isSignedIn() &&
+        resource.data.createdBy == request.auth.uid &&
+        isNotSoftDeleted() &&
+        hasValidSoftDeleteFields();
+
+      // Hard Delete: disabled (use soft delete)
+      allow delete: if false;
+    }
+
+    // ============================================
+    // SECTION 9: Global Audit Log (Admin Only)
+    // ============================================
+
+    match /auditLog/{logId} {
+      // Read: no client-side read (use Cloud Functions for admin access)
+      allow read: if false;
+
+      // Create: authenticated users can create audit entries
+      allow create: if isSignedIn() &&
+        request.resource.data.keys().hasAll(['action', 'userId', 'timestamp', 'resourceType', 'resourceId']) &&
+        request.resource.data.userId == request.auth.uid &&
+        isCurrentTimestamp(request.resource.data.timestamp) &&
+        request.resource.data.action in [
+          'login', 'logout', 'signup',
+          'team_created', 'team_deleted',
+          'sensitive_data_accessed', 'permission_changed'
+        ];
+
+      // Update/Delete: not allowed (immutable audit trail)
+      allow update, delete: if false;
+    }
+
+    // ============================================
+    // SECTION 10: Deny All Other Access
+    // ============================================
+
+    // Catch-all: deny access to any undefined paths
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

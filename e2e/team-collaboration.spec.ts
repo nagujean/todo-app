@@ -181,47 +181,29 @@ test.describe('Team Collaboration Feature', () => {
 
   test.describe('4. Team Members Modal', () => {
     test('Team Members option appears in user menu when team is selected', async ({ page }) => {
-      // First, need to select a team
+      const testTeamName = `Test Team ${Date.now()}`
+
+      // First, create a team to ensure we have one
       const teamSwitcher = page.locator('button').filter({ hasText: '개인' })
       await expect(teamSwitcher).toBeVisible({ timeout: 15000 })
       await teamSwitcher.click()
 
-      // Check if any team exists in dropdown using role="listbox" and role="option"
-      const dropdownContent = page.locator('[role="listbox"]')
-      const isDropdownVisible = await dropdownContent.isVisible().catch(() => false)
+      // Click "새 팀 만들기" to create a team
+      const newTeamButton = page.getByText('새 팀 만들기')
+      await expect(newTeamButton).toBeVisible({ timeout: 5000 })
+      await newTeamButton.click()
 
-      if (!isDropdownVisible) {
-        // Dropdown might not have role="listbox", try looking for teams directly
-        const teamOptions = page.locator('button[role="option"]').filter({
-          hasNot: page.getByText('개인'),
-        }).filter({
-          hasNot: page.getByText('새 팀 만들기'),
-        })
+      // Fill team details and create
+      await page.fill('input[placeholder="팀 이름을 입력하세요"]', testTeamName)
+      const createButton = page.getByRole('button', { name: '만들기' })
+      await expect(createButton).toBeEnabled({ timeout: 5000 })
+      await createButton.click()
 
-        const teamCount = await teamOptions.count()
-        if (teamCount === 0) {
-          test.skip()
-          return
-        }
+      // Wait for dialog to close and team to be created
+      await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 10000 })
 
-        await teamOptions.first().click()
-      } else {
-        const teamItems = dropdownContent.locator('[role="option"]').filter({
-          hasNot: page.getByText('개인'),
-        }).filter({
-          hasNot: page.getByText('새 팀 만들기'),
-        })
-
-        const teamCount = await teamItems.count()
-        if (teamCount === 0) {
-          test.skip()
-          return
-        }
-
-        await teamItems.first().click()
-      }
-
-      await page.waitForTimeout(500)
+      // The team switcher should now show the new team name
+      await expect(page.locator('button').filter({ hasText: testTeamName })).toBeVisible({ timeout: 5000 })
 
       // Open user menu (button with user icon AND chevron-down, variant="ghost")
       const userMenuButton = page.locator('button[data-variant="ghost"]').filter({
@@ -238,26 +220,29 @@ test.describe('Team Collaboration Feature', () => {
 
   test.describe('5. Invite Dialog', () => {
     test('Invite option appears in user menu when team is selected', async ({ page }) => {
-      // First, need to select a team
+      const testTeamName = `Invite Test Team ${Date.now()}`
+
+      // First, create a team to ensure we have one
       const teamSwitcher = page.locator('button').filter({ hasText: '개인' })
       await expect(teamSwitcher).toBeVisible({ timeout: 15000 })
       await teamSwitcher.click()
 
-      // Check if any team exists in dropdown
-      const teamOptions = page.locator('button[role="option"]').filter({
-        hasNot: page.getByText('개인'),
-      }).filter({
-        hasNot: page.getByText('새 팀 만들기'),
-      })
+      // Click "새 팀 만들기" to create a team
+      const newTeamButton = page.getByText('새 팀 만들기')
+      await expect(newTeamButton).toBeVisible({ timeout: 5000 })
+      await newTeamButton.click()
 
-      const teamCount = await teamOptions.count()
-      if (teamCount === 0) {
-        test.skip()
-        return
-      }
+      // Fill team details and create
+      await page.fill('input[placeholder="팀 이름을 입력하세요"]', testTeamName)
+      const createButton = page.getByRole('button', { name: '만들기' })
+      await expect(createButton).toBeEnabled({ timeout: 5000 })
+      await createButton.click()
 
-      await teamOptions.first().click()
-      await page.waitForTimeout(500)
+      // Wait for dialog to close and team to be created
+      await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 10000 })
+
+      // The team switcher should now show the new team name
+      await expect(page.locator('button').filter({ hasText: testTeamName })).toBeVisible({ timeout: 5000 })
 
       // Open user menu (button with user icon AND chevron-down, variant="ghost")
       const userMenuButton = page.locator('button[data-variant="ghost"]').filter({
@@ -312,26 +297,29 @@ test.describe('Role-Based Access Control (RBAC)', () => {
     await page.goto(E2E_URL)
     await waitForAppReady(page)
 
-    // Check if user has teams where they are owner
+    const testTeamName = `RBAC Test Team ${Date.now()}`
+
+    // Create a team where the user is owner
     const teamSwitcher = page.locator('button').filter({ hasText: '개인' })
     await expect(teamSwitcher).toBeVisible({ timeout: 15000 })
     await teamSwitcher.click()
 
-    // Check for existing teams
-    const teamOptions = page.locator('button[role="option"]').filter({
-      hasNot: page.getByText('개인'),
-    }).filter({
-      hasNot: page.getByText('새 팀 만들기'),
-    })
+    // Click "새 팀 만들기" to create a team
+    const newTeamButton = page.getByText('새 팀 만들기')
+    await expect(newTeamButton).toBeVisible({ timeout: 5000 })
+    await newTeamButton.click()
 
-    const teamCount = await teamOptions.count()
-    if (teamCount === 0) {
-      test.skip()
-      return
-    }
+    // Fill team details and create
+    await page.fill('input[placeholder="팀 이름을 입력하세요"]', testTeamName)
+    const createButton = page.getByRole('button', { name: '만들기' })
+    await expect(createButton).toBeEnabled({ timeout: 5000 })
+    await createButton.click()
 
-    await teamOptions.first().click()
-    await page.waitForTimeout(500)
+    // Wait for dialog to close and team to be created
+    await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 10000 })
+
+    // The team switcher should now show the new team name (user is owner)
+    await expect(page.locator('button').filter({ hasText: testTeamName })).toBeVisible({ timeout: 5000 })
 
     // Open user menu (button with user icon AND chevron-down, variant="ghost")
     const userMenuButton = page.locator('button[data-variant="ghost"]').filter({
