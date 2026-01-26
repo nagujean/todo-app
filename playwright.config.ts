@@ -1,4 +1,9 @@
 import { defineConfig, devices } from '@playwright/test'
+import dotenv from 'dotenv'
+import path from 'path'
+
+// Load test environment variables
+dotenv.config({ path: path.resolve(__dirname, '.env.test') })
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000'
 const isExternalURL = baseURL !== 'http://localhost:3000'
@@ -10,6 +15,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
+  timeout: 60000,
   use: {
     baseURL,
     trace: 'on-first-retry',
@@ -20,14 +26,19 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
+  globalSetup: './e2e/global-setup.ts',
+  globalTeardown: './e2e/global-teardown.ts',
   ...(isExternalURL
     ? {}
     : {
         webServer: {
-          command: 'npx next dev --webpack',
+          command: 'npx next build --webpack && npx next start',
           url: 'http://localhost:3000',
           reuseExistingServer: !process.env.CI,
-          timeout: 120 * 1000,
+          timeout: 180 * 1000,
+          env: {
+            NEXT_PUBLIC_E2E_TEST_MODE: 'true',
+          },
         },
       }),
 })

@@ -68,9 +68,52 @@ export function TodoList() {
 
   if (todos.length === 0) {
     return (
-      <div className="text-center py-12 text-muted-foreground">
-        <p className="text-lg">할 일이 없어요</p>
-        <p className="text-sm mt-1">위에서 새로운 할 일을 추가해보세요!</p>
+      <div className="space-y-4">
+        {/* REQ-FUNC-014: 필터 모드 - 전체/미완료/완료 버튼 (빈 목록에서도 표시) */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1 text-xs">
+            {filterOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => handleFilterClick(option.value)}
+                data-state={filterMode === option.value ? 'active' : 'inactive'}
+                className={`px-2 py-1 rounded-md flex items-center gap-1 transition-colors ${
+                  filterMode === option.value
+                    ? 'bg-primary/10 text-primary font-medium'
+                    : 'text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-1 text-xs">
+            <ArrowUpDown className="h-3 w-3 text-muted-foreground mr-1" />
+            {sortOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => handleSortClick(option.value)}
+                data-state={sortType === option.value ? (sortOrder === 'asc' ? 'active' : 'selected') : 'inactive'}
+                className={`px-2 py-1 rounded-md flex items-center gap-1 transition-colors ${
+                  sortType === option.value
+                    ? 'bg-primary/10 text-primary font-medium'
+                    : 'text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                {option.label}
+                {sortType === option.value && (
+                  sortOrder === 'asc'
+                    ? <ArrowUp className="h-3 w-3" />
+                    : <ArrowDown className="h-3 w-3" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="text-center py-12 text-muted-foreground">
+          <p className="text-lg">할 일이 없어요</p>
+          <p className="text-sm mt-1">위에서 새로운 할 일을 추가해보세요!</p>
+        </div>
       </div>
     )
   }
@@ -103,6 +146,7 @@ export function TodoList() {
               <button
                 key={option.value}
                 onClick={() => handleSortClick(option.value)}
+                data-state={sortType === option.value ? (sortOrder === 'asc' ? 'active' : 'selected') : 'inactive'}
                 className={`px-2 py-1 rounded-md flex items-center gap-1 transition-colors ${
                   sortType === option.value
                     ? 'bg-primary/10 text-primary font-medium'
@@ -157,6 +201,7 @@ export function TodoList() {
             <button
               key={option.value}
               onClick={() => handleSortClick(option.value)}
+              data-state={sortType === option.value ? (sortOrder === 'asc' ? 'active' : 'selected') : 'inactive'}
               className={`px-2 py-1 rounded-md flex items-center gap-1 transition-colors ${
                 sortType === option.value
                   ? 'bg-primary/10 text-primary font-medium'

@@ -255,9 +255,9 @@ test.describe('Todo App', () => {
     // 옵션 설정 버튼 클릭
     await page.getByRole('button', { name: '옵션 설정' }).click()
 
-    // 날짜 필드가 나타남
-    await expect(page.getByText('시작일')).toBeVisible()
-    await expect(page.getByText('종료일')).toBeVisible()
+    // 날짜 필드가 나타남 (form 내 label로 특정)
+    await expect(page.locator('form').getByText('시작일')).toBeVisible()
+    await expect(page.locator('form').getByText('종료일')).toBeVisible()
   })
 
   test('할일에 시작일과 종료일을 설정할 수 있다', async ({ page }) => {
@@ -304,8 +304,8 @@ test.describe('Todo App', () => {
     // 옵션 열기
     await page.getByRole('button', { name: '옵션 설정' }).click()
 
-    // 우선순위 옵션들이 표시됨
-    await expect(page.getByText('우선순위')).toBeVisible()
+    // 우선순위 옵션들이 표시됨 (폼 내부의 라벨을 지정하여 정렬 버튼과 구분)
+    await expect(page.locator('form').getByText('우선순위')).toBeVisible()
     await expect(page.getByRole('button', { name: '없음' })).toBeVisible()
     await expect(page.getByRole('button', { name: '높음' })).toBeVisible()
     await expect(page.getByRole('button', { name: '중간' })).toBeVisible()
@@ -419,7 +419,8 @@ test.describe('Todo App', () => {
     await expect(priorityButton).toHaveClass(/text-primary/)
   })
 
-  test('완료된 항목 숨기기 버튼이 표시된다', async ({ page }) => {
+  // Skip: "완료 숨기기" 버튼이 "미완료" 필터로 대체됨. story-1-4-filter-todo.spec.ts에서 테스트됨
+  test.skip('완료된 항목 숨기기 버튼이 표시된다', async ({ page }) => {
     const input = page.getByPlaceholder('할 일을 입력하세요...')
     await input.fill('숨기기 테스트')
     await input.press('Enter')
@@ -432,7 +433,8 @@ test.describe('Todo App', () => {
     await expect(page.getByRole('button', { name: /완료 숨기기/ })).toBeVisible()
   })
 
-  test('완료된 항목을 숨길 수 있다', async ({ page }) => {
+  // Skip: "완료 숨기기" 버튼이 "미완료" 필터로 대체됨. story-1-4-filter-todo.spec.ts에서 테스트됨
+  test.skip('완료된 항목을 숨길 수 있다', async ({ page }) => {
     const input = page.getByPlaceholder('할 일을 입력하세요...')
 
     // 할일 2개 추가
@@ -456,7 +458,8 @@ test.describe('Todo App', () => {
     await expect(page.getByText(/1개 숨김/)).toBeVisible()
   })
 
-  test('숨긴 완료 항목을 다시 보이게 할 수 있다', async ({ page }) => {
+  // Skip: "완료 숨기기" 버튼이 "미완료" 필터로 대체됨. story-1-4-filter-todo.spec.ts에서 테스트됨
+  test.skip('숨긴 완료 항목을 다시 보이게 할 수 있다', async ({ page }) => {
     const input = page.getByPlaceholder('할 일을 입력하세요...')
     await input.fill('토글 테스트')
     await input.press('Enter')
@@ -474,7 +477,8 @@ test.describe('Todo App', () => {
     await expect(page.getByText('토글 테스트')).toBeVisible()
   })
 
-  test('완료 숨김 설정이 새로고침 후에도 유지된다', async ({ page }) => {
+  // Skip: "완료 숨기기" 버튼이 "미완료" 필터로 대체됨. story-1-5-persistence.spec.ts에서 테스트됨
+  test.skip('완료 숨김 설정이 새로고침 후에도 유지된다', async ({ page }) => {
     const input = page.getByPlaceholder('할 일을 입력하세요...')
     await input.fill('영속화 숨김 테스트')
     await input.press('Enter')

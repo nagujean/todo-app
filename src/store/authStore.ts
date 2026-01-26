@@ -10,6 +10,71 @@ import {
 } from 'firebase/auth'
 import { auth, isFirebaseConfigured } from '@/lib/firebase'
 
+// E2E Test Mode detection - checks at runtime
+function checkE2ETestMode(): boolean {
+  // Check build-time env var
+  if (process.env.NEXT_PUBLIC_E2E_TEST_MODE === 'true') {
+    console.log('[E2E] Detected via env var')
+    return true
+  }
+
+  // Check runtime indicators (browser only)
+  if (typeof window !== 'undefined') {
+    console.log('[E2E] Checking browser indicators, URL:', window.location.href)
+
+    // Check URL parameter
+    const urlParams = new URLSearchParams(window.location.search)
+    const e2eParam = urlParams.get('e2e')
+    console.log('[E2E] URL param e2e:', e2eParam)
+    if (e2eParam === 'true') {
+      console.log('[E2E] Detected via URL param')
+      return true
+    }
+
+    // Check localStorage (can be set by Playwright before navigation)
+    const localStorageFlag = localStorage.getItem('E2E_TEST_MODE')
+    console.log('[E2E] localStorage flag:', localStorageFlag)
+    if (localStorageFlag === 'true') {
+      console.log('[E2E] Detected via localStorage')
+      return true
+    }
+  } else {
+    console.log('[E2E] Running on server (window undefined)')
+  }
+
+  console.log('[E2E] Not in E2E test mode')
+  return false
+}
+
+// Mock user for E2E testing
+const mockUser = {
+  uid: 'test-user-uid-12345',
+  email: 'test@example.com',
+  displayName: 'Test User',
+  emailVerified: true,
+  isAnonymous: false,
+  metadata: {},
+  providerData: [],
+  refreshToken: '',
+  tenantId: null,
+  delete: async () => {},
+  getIdToken: async () => 'mock-token',
+  getIdTokenResult: async () => ({
+    token: 'mock-token',
+    claims: {},
+    expirationTime: '',
+    issuedAtTime: '',
+    signInProvider: 'password',
+    signInSecondFactor: null,
+    authTime: '',
+  }),
+  reload: async () => {},
+  toJSON: () => ({}),
+  phoneNumber: null,
+  photoURL: null,
+  providerId: 'firebase',
+} as unknown as User
+
 interface AuthState {
   user: User | null
   loading: boolean
@@ -25,11 +90,30 @@ interface AuthState {
   setInitialized: (initialized: boolean) => void
 }
 
+// Check E2E mode at store creation time (runs on client only after hydration)
+const getInitialState = () => {
+  if (typeof window !== 'undefined') {
+    const isE2E = checkE2ETestMode()
+    if (isE2E) {
+      console.log('[E2E] Setting initial state with mock user')
+      return {
+        user: mockUser,
+        loading: false,
+        error: null,
+        initialized: true,
+      }
+    }
+  }
+  return {
+    user: null,
+    loading: false,
+    error: null,
+    initialized: false,
+  }
+}
+
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  loading: false,
-  error: null,
-  initialized: false,
+  ...getInitialState(),
 
   signIn: async (email: string, password: string) => {
     if (!auth) {
@@ -109,6 +193,16 @@ export const useAuthStore = create<AuthState>((set) => ({
 // Auth state listener setup function
 export function setupAuthListener() {
   const { setUser, setLoading, setInitialized } = useAuthStore.getState()
+
+  // E2E Test Mode - use mock user (runtime check)
+  const isE2ETestMode = checkE2ETestMode()
+  if (isE2ETestMode) {
+    setUser(mockUser)
+    setLoading(false)
+    setInitialized(true)
+    console.log('E2E Test Mode: Using mock user')
+    return () => {}
+  }
 
   if (!auth) {
     // If Firebase is not configured, immediately set initialized

@@ -1,5 +1,6 @@
 'use client'
 
+import { useSyncExternalStore } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TodoInput } from '@/components/todo/TodoInput'
 import { TodoList } from '@/components/todo/TodoList'
@@ -13,13 +14,52 @@ import { useTodoStore } from '@/store/todoStore'
 import { useAuthStore } from '@/store/authStore'
 import { useTeamStore } from '@/store/teamStore'
 
+// Check if E2E test mode is enabled (client-side only)
+function isE2ETestMode(): boolean {
+  if (typeof window === 'undefined') return false
+  const urlParams = new URLSearchParams(window.location.search)
+  if (urlParams.get('e2e') === 'true') return true
+  if (localStorage.getItem('E2E_TEST_MODE') === 'true') return true
+  if (process.env.NEXT_PUBLIC_E2E_TEST_MODE === 'true') return true
+  return false
+}
+
+// Custom hook for client-side hydration state
+function useClientReady() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  )
+}
+
 export default function Home() {
+  // Track client readiness using useSyncExternalStore to avoid hydration mismatch
+  const clientReady = useClientReady()
+  // Check E2E mode only on client side after hydration
+  const isE2E = clientReady && isE2ETestMode()
+
   const viewMode = useTodoStore((state) => state.viewMode)
   const user = useAuthStore((state) => state.user)
+  const initialized = useAuthStore((state) => state.initialized)
   const currentTeam = useTeamStore((state) => state.currentTeam)
 
-  if (!user) {
+  // Wait for client-side initialization
+  if (!clientReady) {
     return null
+  }
+
+  // In E2E mode, skip auth checks and render immediately
+  if (!isE2E) {
+    // Wait for auth to initialize before rendering
+    if (!initialized) {
+      return null
+    }
+
+    // If user is not logged in after initialization, AuthProvider will redirect to /login
+    if (!user) {
+      return null
+    }
   }
 
   const title = currentTeam ? currentTeam.name : '할 일 목록'

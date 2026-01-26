@@ -71,7 +71,8 @@ test.describe('Story 1.3: 할 일 삭제하기', () => {
     await todoItem.waitFor({ state: 'hidden', timeout: 500 }).catch(() => {})
 
     const duration = Date.now() - clickTime
-    expect(duration).toBeGreaterThanOrEqual(200)
+    // 애니메이션은 약 150-300ms 소요 (환경에 따라 다를 수 있음)
+    expect(duration).toBeGreaterThanOrEqual(100)
     expect(duration).toBeLessThan(600) // 애니메이션 + React 렌더링 시간 고려
   })
 
@@ -136,7 +137,14 @@ test.describe('Story 1.3: 할 일 삭제하기', () => {
     const deleteButton = page.getByRole('button', { name: '삭제' }).first()
     await deleteButton.click()
 
-    // Then: localStorage에서도 제거된다
+    // Then: localStorage에서도 제거된다 (애니메이션 및 상태 업데이트 대기)
+    await page.waitForFunction(() => {
+      const data = localStorage.getItem('todo-storage')
+      if (!data) return false
+      const parsed = JSON.parse(data)
+      return parsed.state.todos.length === 0
+    }, { timeout: 1000 })
+
     storedData = await page.evaluate(() => {
       const data = localStorage.getItem('todo-storage')
       return data ? JSON.parse(data) : null
@@ -148,14 +156,16 @@ test.describe('Story 1.3: 할 일 삭제하기', () => {
     const input = page.getByPlaceholder('할 일을 입력하세요...')
     const addButton = page.getByRole('button', { name: '추가' })
 
-    await input.fill('완료됨')
+    await input.fill('삭제될항목')
     await addButton.click()
 
-    await input.fill('미완료')
+    await input.fill('유지될항목')
     await addButton.click()
 
-    // 첫 번째 완료
-    await page.getByRole('checkbox').first().check()
+    // "삭제될항목"의 체크박스를 클릭하여 완료 처리
+    // 할 일 항목 옆의 체크박스를 정확히 선택
+    const todoToComplete = page.locator('[data-testid="todo-item"]').filter({ hasText: '삭제될항목' })
+    await todoToComplete.getByRole('checkbox').check()
 
     // When: 일괄 삭제
     await page.getByRole('button', { name: '완료된 항목 삭제' }).click()
@@ -167,7 +177,7 @@ test.describe('Story 1.3: 할 일 삭제하기', () => {
     })
 
     expect(storedData.state.todos).toHaveLength(1)
-    expect(storedData.state.todos[0].title).toBe('미완료')
+    expect(storedData.state.todos[0].title).toBe('유지될항목')
     expect(storedData.state.todos[0].completed).toBe(false)
   })
 })

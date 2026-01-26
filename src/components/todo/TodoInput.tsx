@@ -82,6 +82,7 @@ export function TodoInput() {
           size="icon"
           onClick={() => setShowOptions(!showOptions)}
           title={showOptions ? '옵션 숨기기' : '옵션 설정'}
+          aria-label={showOptions ? '옵션 숨기기' : '옵션 설정'}
         >
           {showOptions ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </Button>

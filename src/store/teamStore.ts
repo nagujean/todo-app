@@ -81,6 +81,16 @@ function convertTimestamp(timestamp: Timestamp | string | null | undefined): str
   return timestamp.toDate().toISOString()
 }
 
+// Check if E2E test mode is enabled
+function isE2ETestMode(): boolean {
+  if (typeof window === 'undefined') return false
+  if (process.env.NEXT_PUBLIC_E2E_TEST_MODE === 'true') return true
+  const urlParams = new URLSearchParams(window.location.search)
+  if (urlParams.get('e2e') === 'true') return true
+  if (localStorage.getItem('E2E_TEST_MODE') === 'true') return true
+  return false
+}
+
 // Helper to get collection references
 function getTeamsCollection() {
   if (!db) throw new Error('Firestore not initialized')
@@ -118,11 +128,37 @@ export const useTeamStore = create<TeamState>()(
       },
 
       createTeam: async (name, description) => {
-        const { userId } = get()
-        if (!userId || !db) return null
+        let { userId } = get()
+        const { teams, setTeams } = get()
 
         const trimmedName = name.trim().slice(0, 100)
         if (!trimmedName) return null
+
+        // E2E mock mode: create team locally without Firestore
+        if (isE2ETestMode()) {
+          // In E2E mode, use mock user ID if userId is not set
+          if (!userId) {
+            userId = 'test-user-uid-12345' // Same as mockUser.uid in authStore
+          }
+          const mockTeamId = `mock-team-${Date.now()}`
+          const mockTeam: Team = {
+            id: mockTeamId,
+            name: trimmedName,
+            description: description?.trim() || undefined,
+            ownerId: userId,
+            memberCount: 1,
+            createdAt: new Date().toISOString(),
+            settings: {
+              defaultRole: 'editor',
+              allowInviteLinks: true,
+            },
+          }
+          setTeams([...teams, mockTeam])
+          console.log('[E2E] Created mock team:', mockTeamId)
+          return mockTeamId
+        }
+
+        if (!userId || !db) return null
 
         try {
           const batch = writeBatch(db)

@@ -34,9 +34,9 @@ test.describe('Story 1.4: 할 일 필터링하기', () => {
     await input.fill('완료된 과제')
     await addButton.click()
 
-    // 세 번째 항목 완료
-    const checkboxes = page.getByRole('checkbox')
-    await checkboxes.nth(2).check()
+    // '완료된 과제' 항목 완료 (특정 항목의 체크박스를 선택)
+    const todoToComplete = page.locator('[data-testid="todo-item"]').filter({ hasText: '완료된 과제' })
+    await todoToComplete.getByRole('checkbox').check()
 
     // When: "미완료" 필터를 선택하면
     const filterIncomplete = page.getByRole('button', { name: '미완료' })
@@ -55,7 +55,7 @@ test.describe('Story 1.4: 할 일 필터링하기', () => {
     // Then: 필터 버튼들이 표시된다
     await expect(page.getByRole('button', { name: '전체' })).toBeVisible()
     await expect(page.getByRole('button', { name: '미완료' })).toBeVisible()
-    await expect(page.getByRole('button', { name: '완료' })).toBeVisible()
+    await expect(page.getByRole('button', { name: '완료', exact: true })).toBeVisible()
   })
 
   test('REQ-FUNC-015: "완료" 필터를 선택하면 완료된 항목만 표시된다', async ({ page }) => {
@@ -68,11 +68,12 @@ test.describe('Story 1.4: 할 일 필터링하기', () => {
     await input.fill('미완료 과제')
     await addButton.click()
 
-    // 첫 번째 항목 완료
-    await page.getByRole('checkbox').first().check()
+    // '완료될 과제' 항목 완료 (특정 항목의 체크박스를 선택)
+    const todoToComplete = page.locator('[data-testid="todo-item"]').filter({ hasText: '완료될 과제' })
+    await todoToComplete.getByRole('checkbox').check()
 
     // When: "완료" 필터를 선택하면
-    const filterCompleted = page.getByRole('button', { name: '완료' })
+    const filterCompleted = page.getByRole('button', { name: '완료', exact: true })
     await filterCompleted.click()
 
     // Then: 완료된 항목만 표시된다
@@ -111,10 +112,12 @@ test.describe('Story 1.4: 할 일 필터링하기', () => {
     await input.fill('완료될 과제')
     await addButton.click()
 
-    await page.getByRole('checkbox').nth(1).check()
+    // '완료될 과제' 항목 완료 (특정 항목의 체크박스를 선택)
+    const todoToComplete = page.locator('[data-testid="todo-item"]').filter({ hasText: '완료될 과제' })
+    await todoToComplete.getByRole('checkbox').check()
 
     // "완료" 필터 선택
-    const filterCompleted = page.getByRole('button', { name: '완료' })
+    const filterCompleted = page.getByRole('button', { name: '완료', exact: true })
     await filterCompleted.click()
 
     // When: 페이지를 새로고침하면
@@ -140,12 +143,12 @@ test.describe('Story 1.4: 할 일 필터링하기', () => {
     })
 
     expect(storedData).toBeTruthy()
-    expect(storedData.state.hideCompleted).toBe(true)
+    expect(storedData.state.filterMode).toBe('incomplete')
   })
 
   test('빈 목록에서 필터를 변경해도 안내 메시지가 표시된다', async ({ page }) => {
     // Given: 빈 목록에서 "완료" 필터를 선택하면
-    const filterCompleted = page.getByRole('button', { name: '완료' })
+    const filterCompleted = page.getByRole('button', { name: '완료', exact: true })
     await filterCompleted.click()
 
     // Then: 빈 상태 안내 메시지가 표시된다
@@ -165,7 +168,9 @@ test.describe('Story 1.4: 할 일 필터링하기', () => {
     await input.fill('완료됨')
     await addButton.click()
 
-    await page.getByRole('checkbox').nth(2).check()
+    // '완료됨' 항목 완료 (특정 항목의 체크박스를 선택)
+    const todoToComplete = page.locator('[data-testid="todo-item"]').filter({ hasText: '완료됨' })
+    await todoToComplete.getByRole('checkbox').check()
 
     // "미완료" 필터 선택
     const filterIncomplete = page.getByRole('button', { name: '미완료' })
