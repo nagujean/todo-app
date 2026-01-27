@@ -169,6 +169,7 @@ export const useTeamStore = create<TeamState>()(
             ownerId: userId,
             memberCount: 1,
             createdAt: Timestamp.now(),
+            createdBy: userId,
             settings: {
               defaultRole: 'editor' as const,
               allowInviteLinks: true,
