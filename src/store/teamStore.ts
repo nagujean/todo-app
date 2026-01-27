@@ -163,9 +163,9 @@ export const useTeamStore = create<TeamState>()(
           const batch = writeBatch(db)
 
           const teamRef = doc(getTeamsCollection())
-          const teamData = {
+          const trimmedDescription = description?.trim()
+          const teamData: Record<string, unknown> = {
             name: trimmedName,
-            description: description?.trim() || null,
             ownerId: userId,
             memberCount: 1,
             createdAt: Timestamp.now(),
@@ -174,6 +174,10 @@ export const useTeamStore = create<TeamState>()(
               defaultRole: 'editor' as const,
               allowInviteLinks: true,
             },
+          }
+          // Only include description if it has a value (not null/undefined/empty)
+          if (trimmedDescription) {
+            teamData.description = trimmedDescription
           }
           batch.set(teamRef, teamData)
 
