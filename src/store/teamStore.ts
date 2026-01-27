@@ -188,6 +188,7 @@ export const useTeamStore = create<TeamState>()(
 
           const membershipRef = doc(getUserMembershipsCollection(userId), teamRef.id)
           const membershipData = {
+            teamId: teamRef.id,
             teamName: trimmedName,
             role: 'owner' as TeamRole,
             joinedAt: Timestamp.now(),
