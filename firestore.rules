@@ -409,7 +409,7 @@ service cloud.firestore {
         // Read: team members can see all members
         allow read: if isTeamMember(teamId) && isNotSoftDeleted();
 
-        // Create: admin can add members, or user can add themselves via invitation
+        // Create: admin can add members, owner can add themselves during team creation, or user can add themselves via invitation
         allow create: if isSignedIn() && (
           // Admin adding a member
           (isTeamAdmin(teamId) &&
@@ -419,6 +419,12 @@ service cloud.firestore {
            // Required audit fields
            request.resource.data.keys().hasAll(['role', 'joinedAt', 'addedBy']) &&
            request.resource.data.addedBy == request.auth.uid &&
+           isCurrentTimestamp(request.resource.data.joinedAt)) ||
+          // Team owner adding themselves during initial team creation
+          (memberId == request.auth.uid &&
+           request.resource.data.role == 'owner' &&
+           getAfter(/databases/$(database)/documents/teams/$(teamId)).data.ownerId == request.auth.uid &&
+           request.resource.data.keys().hasAll(['role', 'joinedAt']) &&
            isCurrentTimestamp(request.resource.data.joinedAt)) ||
           // User adding themselves (self-join via invitation)
           (memberId == request.auth.uid &&
