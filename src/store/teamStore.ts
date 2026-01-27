@@ -9,7 +9,6 @@ import {
   Timestamp,
   writeBatch,
   Unsubscribe,
-  serverTimestamp,
   increment,
   getDoc,
 } from 'firebase/firestore'
@@ -169,7 +168,7 @@ export const useTeamStore = create<TeamState>()(
             description: description?.trim() || null,
             ownerId: userId,
             memberCount: 1,
-            createdAt: serverTimestamp(),
+            createdAt: Timestamp.now(),
             settings: {
               defaultRole: 'editor' as const,
               allowInviteLinks: true,
@@ -182,7 +181,7 @@ export const useTeamStore = create<TeamState>()(
             role: 'owner' as TeamRole,
             displayName: '',
             email: '',
-            joinedAt: serverTimestamp(),
+            joinedAt: Timestamp.now(),
           }
           batch.set(memberRef, memberData)
 
@@ -190,7 +189,7 @@ export const useTeamStore = create<TeamState>()(
           const membershipData = {
             teamName: trimmedName,
             role: 'owner' as TeamRole,
-            joinedAt: serverTimestamp(),
+            joinedAt: Timestamp.now(),
           }
           batch.set(membershipRef, membershipData)
 
