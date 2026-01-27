@@ -11,7 +11,9 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useTeamStore, type TeamRole } from '@/store/teamStore'
+import { useTeamStore } from '@/store/teamStore'
+import { useInvitationStore, generateInvitationLink, type InvitationRole } from '@/store/invitationStore'
+import { useAuthStore } from '@/store/authStore'
 import { cn } from '@/lib/utils'
 
 interface InviteDialogProps {
@@ -21,24 +23,25 @@ interface InviteDialogProps {
 }
 
 type InviteMethod = 'email' | 'link'
-type InviteRole = Exclude<TeamRole, 'owner'>
 
-const ROLE_OPTIONS: { value: InviteRole; label: string }[] = [
-  { value: 'admin', label: '관리자' },
-  { value: 'editor', label: '편집자' },
-  { value: 'viewer', label: '뷰어' },
+const ROLE_OPTIONS: { value: InvitationRole; label: string; description: string }[] = [
+  { value: 'editor', label: '편집자', description: '할 일을 추가, 수정, 삭제할 수 있습니다' },
+  { value: 'viewer', label: '뷰어', description: '할 일을 볼 수만 있습니다' },
 ]
 
 export function InviteDialog({ teamId, open, onOpenChange }: InviteDialogProps) {
   const [method, setMethod] = useState<InviteMethod>('email')
   const [email, setEmail] = useState('')
-  const [role, setRole] = useState<InviteRole>('editor')
+  const [role, setRole] = useState<InvitationRole>('editor')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [inviteLink, setInviteLink] = useState<string | null>(null)
 
   const { currentTeam } = useTeamStore()
+  const { createEmailInvitation, createLinkInvitation } = useInvitationStore()
+  const { user } = useAuthStore()
 
   const handleClose = () => {
     setEmail('')
@@ -46,6 +49,7 @@ export function InviteDialog({ teamId, open, onOpenChange }: InviteDialogProps) 
     setError(null)
     setSuccess(null)
     setCopied(false)
+    setInviteLink(null)
     onOpenChange(false)
   }
 
@@ -73,11 +77,25 @@ export function InviteDialog({ teamId, open, onOpenChange }: InviteDialogProps) 
     setSuccess(null)
 
     try {
-      // TODO: Implement actual email invite functionality
-      // This would typically call a Firebase Cloud Function or similar
-      await new Promise((resolve) => setTimeout(resolve, 1000)) // Simulate API call
-      setSuccess(`${trimmedEmail}에 초대 이메일을 보냈습니다.`)
-      setEmail('')
+      if (!user?.uid) {
+        setError('로그인이 필요합니다.')
+        return
+      }
+
+      const invitationId = await createEmailInvitation(
+        teamId,
+        currentTeam?.name || '',
+        trimmedEmail,
+        role,
+        user.uid
+      )
+
+      if (invitationId) {
+        setSuccess(`${trimmedEmail}에 초대 이메일을 보냈습니다.`)
+        setEmail('')
+      } else {
+        setError('초대 생성에 실패했습니다.')
+      }
     } catch {
       setError('초대 이메일 전송에 실패했습니다.')
     } finally {
@@ -85,25 +103,50 @@ export function InviteDialog({ teamId, open, onOpenChange }: InviteDialogProps) 
     }
   }
 
-  const generateInviteLink = (): string => {
-    // Generate a unique invite link
-    // In production, this would create a secure token in the backend
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
-    const inviteToken = btoa(`${teamId}:${role}:${Date.now()}`)
-    return `${baseUrl}/invite/${inviteToken}`
+  const handleGenerateLink = async () => {
+    if (!user?.uid) {
+      setError('로그인이 필요합니다.')
+      return
+    }
+
+    setIsSubmitting(true)
+    setError(null)
+
+    try {
+      const invitationId = await createLinkInvitation(
+        teamId,
+        currentTeam?.name || '',
+        role,
+        user.uid
+      )
+
+      if (invitationId) {
+        const link = generateInvitationLink(invitationId)
+        setInviteLink(link)
+      } else {
+        setError('초대 링크 생성에 실패했습니다.')
+      }
+    } catch {
+      setError('초대 링크 생성에 실패했습니다.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleCopyLink = async () => {
-    const link = generateInviteLink()
+    if (!inviteLink) {
+      await handleGenerateLink()
+      return
+    }
 
     try {
-      await navigator.clipboard.writeText(link)
+      await navigator.clipboard.writeText(inviteLink)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
       // Fallback for browsers that don't support clipboard API
       const textArea = document.createElement('textarea')
-      textArea.value = link
+      textArea.value = inviteLink
       document.body.appendChild(textArea)
       textArea.select()
       document.execCommand('copy')
@@ -232,26 +275,36 @@ export function InviteDialog({ teamId, open, onOpenChange }: InviteDialogProps) 
           <div className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">초대 링크</label>
-              <div className="flex gap-2">
-                <Input
-                  value={generateInviteLink()}
-                  readOnly
-                  className="flex-1 text-sm"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={handleCopyLink}
-                  title="링크 복사"
-                >
-                  {copied ? (
-                    <Check className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
+              {inviteLink ? (
+                <div className="flex gap-2">
+                  <Input
+                    value={inviteLink}
+                    readOnly
+                    className="flex-1 text-sm"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={handleCopyLink}
+                    title="링크 복사"
+                    disabled={isSubmitting}
+                  >
+                    {copied ? (
+                      <Check className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  링크 생성 버튼을 눌러 초대 링크를 만드세요.
+                </p>
+              )}
+              {error && (
+                <p className="text-sm text-destructive">{error}</p>
+              )}
               <p className="text-xs text-muted-foreground">
                 이 링크를 통해 가입하는 사람은 {ROLE_OPTIONS.find((o) => o.value === role)?.label}{' '}
                 역할로 팀에 참여합니다.
@@ -260,10 +313,11 @@ export function InviteDialog({ teamId, open, onOpenChange }: InviteDialogProps) 
 
             <Button
               type="button"
-              onClick={handleCopyLink}
+              onClick={inviteLink ? handleCopyLink : handleGenerateLink}
               className="w-full"
+              disabled={isSubmitting}
             >
-              {copied ? '복사됨!' : '링크 복사'}
+              {isSubmitting ? '생성 중...' : inviteLink ? (copied ? '복사됨!' : '링크 복사') : '초대 링크 생성'}
             </Button>
           </div>
         )}
