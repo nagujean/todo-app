@@ -121,10 +121,16 @@ export const useInvitationStore = create<InvitationState>()(
       isLoading: false,
 
       createEmailInvitation: async (teamId, teamName, email, role, createdBy) => {
-        if (!db) return null
+        if (!db) {
+          console.error('Error creating email invitation: Firestore not initialized')
+          return null
+        }
 
         const trimmedEmail = email.trim().toLowerCase()
-        if (!trimmedEmail) return null
+        if (!trimmedEmail) {
+          console.error('Error creating email invitation: Email is empty')
+          return null
+        }
 
         try {
           const invitationData = {
@@ -139,16 +145,33 @@ export const useInvitationStore = create<InvitationState>()(
             status: 'pending' as InvitationStatus,
           }
 
+          console.log('Creating email invitation with data:', {
+            teamId,
+            teamName,
+            email: trimmedEmail,
+            role,
+            createdBy,
+          })
+
           const docRef = await addDoc(getInvitationsCollection(), invitationData)
+          console.log('Email invitation created successfully:', docRef.id)
           return docRef.id
         } catch (error) {
-          console.error('Error creating email invitation:', error)
+          const firebaseError = error as { code?: string; message?: string }
+          console.error('Error creating email invitation:', {
+            code: firebaseError.code,
+            message: firebaseError.message,
+            fullError: error,
+          })
           return null
         }
       },
 
       createLinkInvitation: async (teamId, teamName, role, createdBy, maxUses = 10) => {
-        if (!db) return null
+        if (!db) {
+          console.error('Error creating link invitation: Firestore not initialized')
+          return null
+        }
 
         try {
           const invitationData = {
@@ -164,10 +187,24 @@ export const useInvitationStore = create<InvitationState>()(
             uses: 0,
           }
 
+          console.log('Creating link invitation with data:', {
+            teamId,
+            teamName,
+            role,
+            createdBy,
+            maxUses,
+          })
+
           const docRef = await addDoc(getInvitationsCollection(), invitationData)
+          console.log('Link invitation created successfully:', docRef.id)
           return docRef.id
         } catch (error) {
-          console.error('Error creating link invitation:', error)
+          const firebaseError = error as { code?: string; message?: string }
+          console.error('Error creating link invitation:', {
+            code: firebaseError.code,
+            message: firebaseError.message,
+            fullError: error,
+          })
           return null
         }
       },
