@@ -106,10 +106,13 @@ export function isInvitationExpired(expiresAt: string): boolean {
   return new Date(expiresAt) < new Date()
 }
 
-// Helper to create expiration date (7 days from now)
+// Helper to create expiration date (6 days 23 hours from now)
+// Note: Using slightly less than 7 days to account for clock skew between client and server
+// Firestore rules validate: expiresAt <= request.time + 7 days
 function createExpirationDate(): Date {
   const date = new Date()
-  date.setDate(date.getDate() + 7)
+  // 6 days 23 hours = 167 hours = 6 * 24 + 23 hours
+  date.setTime(date.getTime() + (6 * 24 + 23) * 60 * 60 * 1000)
   return date
 }
 
@@ -132,7 +135,41 @@ export const useInvitationStore = create<InvitationState>()(
           return null
         }
 
+        // Validate email format (same regex as Firestore rules)
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+        if (!emailRegex.test(trimmedEmail)) {
+          console.error('Error creating email invitation: Invalid email format')
+          return null
+        }
+
         try {
+          // Pre-validation: Check if member document exists
+          console.log('=== Pre-validation Check ===')
+          const memberRef = doc(db, 'teams', teamId, 'members', createdBy)
+          const memberDoc = await getDoc(memberRef)
+
+          if (!memberDoc.exists()) {
+            console.error('CRITICAL: Member document does not exist!')
+            console.error('Path:', `teams/${teamId}/members/${createdBy}`)
+            console.error('This means the user is not a team member.')
+            console.error('Solution: The team creation may have failed partially. Try recreating the team.')
+            return null
+          }
+
+          const memberData = memberDoc.data()
+          const memberRole = memberData?.role
+          console.log('Member document found:', { role: memberRole, data: memberData })
+
+          if (!['owner', 'admin', 'editor'].includes(memberRole)) {
+            console.error('CRITICAL: User role does not allow invitation creation')
+            console.error('Current role:', memberRole)
+            console.error('Required roles: owner, admin, or editor')
+            return null
+          }
+
+          console.log('Pre-validation passed. User has permission to create invitations.')
+
+          const expirationDate = createExpirationDate()
           const invitationData = {
             teamId,
             teamName,
@@ -141,7 +178,7 @@ export const useInvitationStore = create<InvitationState>()(
             role,
             createdBy,
             createdAt: Timestamp.now(),
-            expiresAt: Timestamp.fromDate(createExpirationDate()),
+            expiresAt: Timestamp.fromDate(expirationDate),
             status: 'pending' as InvitationStatus,
           }
 
@@ -151,6 +188,8 @@ export const useInvitationStore = create<InvitationState>()(
             email: trimmedEmail,
             role,
             createdBy,
+            expiresAt: expirationDate.toISOString(),
+            createdAtClient: new Date().toISOString(),
           })
 
           const docRef = await addDoc(getInvitationsCollection(), invitationData)
@@ -161,8 +200,25 @@ export const useInvitationStore = create<InvitationState>()(
           console.error('Error creating email invitation:', {
             code: firebaseError.code,
             message: firebaseError.message,
-            fullError: error,
+            teamId,
+            createdBy,
+            role,
           })
+
+          // Log specific error hints
+          if (firebaseError.code === 'permission-denied') {
+            console.error('Permission denied - possible causes:')
+            console.error('1. User is not a team member with owner/admin/editor role')
+            console.error('2. createdBy does not match current authenticated user')
+            console.error('3. Timestamp validation failed (client clock might be off)')
+            console.error('4. Invalid invitation data format')
+            console.error('')
+            console.error('Debug info:')
+            console.error('- teamId:', teamId)
+            console.error('- createdBy:', createdBy)
+            console.error('- Current time:', new Date().toISOString())
+          }
+
           return null
         }
       },
@@ -174,6 +230,33 @@ export const useInvitationStore = create<InvitationState>()(
         }
 
         try {
+          // Pre-validation: Check if member document exists
+          console.log('=== Pre-validation Check (Link Invitation) ===')
+          const memberRef = doc(db, 'teams', teamId, 'members', createdBy)
+          const memberDoc = await getDoc(memberRef)
+
+          if (!memberDoc.exists()) {
+            console.error('CRITICAL: Member document does not exist!')
+            console.error('Path:', `teams/${teamId}/members/${createdBy}`)
+            console.error('This means the user is not a team member.')
+            console.error('Solution: The team creation may have failed partially. Try recreating the team.')
+            return null
+          }
+
+          const memberData = memberDoc.data()
+          const memberRole = memberData?.role
+          console.log('Member document found:', { role: memberRole, data: memberData })
+
+          if (!['owner', 'admin', 'editor'].includes(memberRole)) {
+            console.error('CRITICAL: User role does not allow invitation creation')
+            console.error('Current role:', memberRole)
+            console.error('Required roles: owner, admin, or editor')
+            return null
+          }
+
+          console.log('Pre-validation passed. User has permission to create invitations.')
+
+          const expirationDate = createExpirationDate()
           const invitationData = {
             teamId,
             teamName,
@@ -181,7 +264,7 @@ export const useInvitationStore = create<InvitationState>()(
             role,
             createdBy,
             createdAt: Timestamp.now(),
-            expiresAt: Timestamp.fromDate(createExpirationDate()),
+            expiresAt: Timestamp.fromDate(expirationDate),
             status: 'pending' as InvitationStatus,
             maxUses,
             uses: 0,
@@ -193,6 +276,8 @@ export const useInvitationStore = create<InvitationState>()(
             role,
             createdBy,
             maxUses,
+            expiresAt: expirationDate.toISOString(),
+            createdAtClient: new Date().toISOString(),
           })
 
           const docRef = await addDoc(getInvitationsCollection(), invitationData)
@@ -203,8 +288,25 @@ export const useInvitationStore = create<InvitationState>()(
           console.error('Error creating link invitation:', {
             code: firebaseError.code,
             message: firebaseError.message,
-            fullError: error,
+            teamId,
+            createdBy,
+            role,
           })
+
+          // Log specific error hints
+          if (firebaseError.code === 'permission-denied') {
+            console.error('Permission denied - possible causes:')
+            console.error('1. User is not a team member with owner/admin/editor role')
+            console.error('2. createdBy does not match current authenticated user')
+            console.error('3. Timestamp validation failed (client clock might be off)')
+            console.error('4. Invalid invitation data format')
+            console.error('')
+            console.error('Debug info:')
+            console.error('- teamId:', teamId)
+            console.error('- createdBy:', createdBy)
+            console.error('- Current time:', new Date().toISOString())
+          }
+
           return null
         }
       },

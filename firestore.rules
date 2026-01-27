@@ -562,10 +562,10 @@ service cloud.firestore {
         resource.data.type == 'link'
       ) && isNotSoftDeleted();
 
-      // Create: authenticated users who are team admins with validation
+      // Create: authenticated users who can edit team todos (owner, admin, or editor)
       allow create: if isSignedIn() &&
-        // Must be team admin
-        isTeamAdmin(request.resource.data.teamId) &&
+        // Must be team member with edit permission (owner, admin, or editor)
+        canEditTeamTodos(request.resource.data.teamId) &&
         // Required fields
         request.resource.data.keys().hasAll(['teamId', 'type', 'status', 'role', 'createdAt', 'createdBy', 'expiresAt']) &&
         // Creator must be current user

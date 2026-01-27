@@ -82,9 +82,22 @@ export function InviteDialog({ teamId, open, onOpenChange }: InviteDialogProps) 
         return
       }
 
+      if (!currentTeam?.name) {
+        setError('팀 정보를 불러올 수 없습니다.')
+        return
+      }
+
+      console.log('Attempting to create invitation:', {
+        teamId,
+        teamName: currentTeam.name,
+        email: trimmedEmail,
+        role,
+        userId: user.uid,
+      })
+
       const invitationId = await createEmailInvitation(
         teamId,
-        currentTeam?.name || '',
+        currentTeam.name,
         trimmedEmail,
         role,
         user.uid
@@ -94,10 +107,11 @@ export function InviteDialog({ teamId, open, onOpenChange }: InviteDialogProps) 
         setSuccess(`${trimmedEmail}에 초대 이메일을 보냈습니다.`)
         setEmail('')
       } else {
-        setError('초대 생성에 실패했습니다.')
+        setError('초대 생성에 실패했습니다. 브라우저 콘솔(F12)에서 상세 오류를 확인하세요.')
       }
-    } catch {
-      setError('초대 이메일 전송에 실패했습니다.')
+    } catch (err) {
+      console.error('Invitation creation error:', err)
+      setError('초대 이메일 전송에 실패했습니다. 브라우저 콘솔(F12)에서 상세 오류를 확인하세요.')
     } finally {
       setIsSubmitting(false)
     }
@@ -109,13 +123,25 @@ export function InviteDialog({ teamId, open, onOpenChange }: InviteDialogProps) 
       return
     }
 
+    if (!currentTeam?.name) {
+      setError('팀 정보를 불러올 수 없습니다.')
+      return
+    }
+
     setIsSubmitting(true)
     setError(null)
 
     try {
+      console.log('Attempting to create link invitation:', {
+        teamId,
+        teamName: currentTeam.name,
+        role,
+        userId: user.uid,
+      })
+
       const invitationId = await createLinkInvitation(
         teamId,
-        currentTeam?.name || '',
+        currentTeam.name,
         role,
         user.uid
       )
@@ -124,10 +150,11 @@ export function InviteDialog({ teamId, open, onOpenChange }: InviteDialogProps) 
         const link = generateInvitationLink(invitationId)
         setInviteLink(link)
       } else {
-        setError('초대 링크 생성에 실패했습니다.')
+        setError('초대 링크 생성에 실패했습니다. 브라우저 콘솔(F12)에서 상세 오류를 확인하세요.')
       }
-    } catch {
-      setError('초대 링크 생성에 실패했습니다.')
+    } catch (err) {
+      console.error('Link invitation creation error:', err)
+      setError('초대 링크 생성에 실패했습니다. 브라우저 콘솔(F12)에서 상세 오류를 확인하세요.')
     } finally {
       setIsSubmitting(false)
     }
