@@ -170,3 +170,4 @@ Thumbs.db
 # Credential patterns in environment files
 *.sw?
 .claude/plans/
+.playwright-mcp/
