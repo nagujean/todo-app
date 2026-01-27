@@ -11,7 +11,6 @@ import {
   Timestamp,
   writeBatch,
   Unsubscribe,
-  serverTimestamp,
   increment,
   getDoc,
   addDoc,
@@ -135,7 +134,7 @@ export const useInvitationStore = create<InvitationState>()(
             email: trimmedEmail,
             role,
             createdBy,
-            createdAt: serverTimestamp(),
+            createdAt: Timestamp.now(),
             expiresAt: Timestamp.fromDate(createExpirationDate()),
             status: 'pending' as InvitationStatus,
           }
@@ -158,7 +157,7 @@ export const useInvitationStore = create<InvitationState>()(
             type: 'link' as InvitationType,
             role,
             createdBy,
-            createdAt: serverTimestamp(),
+            createdAt: Timestamp.now(),
             expiresAt: Timestamp.fromDate(createExpirationDate()),
             status: 'pending' as InvitationStatus,
             maxUses,
@@ -222,7 +221,7 @@ export const useInvitationStore = create<InvitationState>()(
             role: invitationData.role,
             displayName: displayName || '',
             email: userEmail,
-            joinedAt: serverTimestamp(),
+            joinedAt: Timestamp.now(),
           }
           batch.set(memberRef, memberData)
 
@@ -231,7 +230,7 @@ export const useInvitationStore = create<InvitationState>()(
           const membershipData = {
             teamName: invitationData.teamName,
             role: invitationData.role,
-            joinedAt: serverTimestamp(),
+            joinedAt: Timestamp.now(),
           }
           batch.set(membershipRef, membershipData)
 
