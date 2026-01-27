@@ -228,6 +228,7 @@ export const useInvitationStore = create<InvitationState>()(
           // Add team to user memberships
           const membershipRef = doc(getUserMembershipsCollection(userId), invitationData.teamId)
           const membershipData = {
+            teamId: invitationData.teamId,
             teamName: invitationData.teamName,
             role: invitationData.role,
             joinedAt: Timestamp.now(),
