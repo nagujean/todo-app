@@ -83,15 +83,21 @@ todo-app/
 │   │
 │   ├── lib/                   # 유틸리티
 │   │   ├── firebase.ts       # Firebase 설정
-│   │   └── utils.ts          # 공통 유틸리티
+│   │   ├── logger.ts         # 조건부 로깅 유틸리티
+│   │   ├── utils.ts          # 공통 유틸리티
+│   │   └── utils.test.ts     # 유틸리티 테스트
 │   │
 │   └── store/                 # Zustand 스토어
-│       ├── authStore.ts      # 인증 상태
+│       ├── authStore.ts          # 인증 상태
+│       ├── authStore.test.ts     # 인증 테스트
 │       ├── invitationStore.ts    # 초대 상태
-│       ├── presetStore.ts    # 프리셋 상태
-│       ├── teamStore.ts      # 팀 상태
-│       ├── themeStore.ts     # 테마 상태
-│       └── todoStore.ts      # 할 일 상태
+│       ├── presetStore.ts        # 프리셋 상태
+│       ├── presetStore.test.ts   # 프리셋 테스트
+│       ├── teamStore.ts          # 팀 상태
+│       ├── teamStore.test.ts     # 팀 테스트
+│       ├── themeStore.ts         # 테마 상태
+│       ├── todoStore.ts          # 할 일 상태
+│       └── todoStore.test.ts     # 할 일 테스트
 │
 ├── .gitignore                 # Git 제외 파일
 ├── CLAUDE.md                  # AI 어시스턴트 지침
@@ -151,7 +157,9 @@ Zustand를 사용한 전역 상태 관리 스토어입니다.
 | 파일 | 설명 |
 |------|------|
 | `firebase.ts` | Firebase 앱 초기화 및 Firestore/Auth 인스턴스 |
-| `utils.ts` | 클래스명 병합 등 공통 유틸리티 함수 |
+| `logger.ts` | 조건부 로깅 유틸리티 (개발/프로덕션 분기) |
+| `utils.ts` | 공통 유틸리티 함수 (cn, isE2ETestMode, convertTimestamp) |
+| `utils.test.ts` | 유틸리티 함수 테스트 |
 
 ### e2e/ - E2E 테스트
 
@@ -215,4 +223,4 @@ Firebase Firestore (업데이트)
 
 ---
 
-마지막 업데이트: 2026-01-25
+마지막 업데이트: 2026-01-29

@@ -13,7 +13,9 @@
 | 백엔드 | Firebase | 12.8.0 | 인증 및 데이터베이스 |
 | 스타일링 | Tailwind CSS | 4.x | 유틸리티 기반 CSS |
 | UI 컴포넌트 | Radix UI | - | 접근성 있는 UI 프리미티브 |
+| 테스트 | Vitest | 4.0.18 | 유닛 테스트 |
 | 테스트 | Playwright | 1.57.0 | E2E 테스트 |
+| 테스트 | @testing-library/react | 16.3.2 | React 컴포넌트 테스트 |
 | PWA | Serwist | 9.5.0 | 서비스 워커 및 오프라인 지원 |
 
 ## 프레임워크 및 라이브러리 선택 이유
@@ -215,6 +217,15 @@ npm run start
 ### 테스트 실행
 
 ```bash
+# 유닛 테스트 실행
+npm run test:unit
+
+# 유닛 테스트 (watch 모드)
+npm run test:unit -- --watch
+
+# 커버리지 리포트
+npm run test:coverage
+
 # E2E 테스트 실행
 npm run test
 
@@ -320,4 +331,4 @@ npm run lint
 
 ---
 
-마지막 업데이트: 2026-01-25
+마지막 업데이트: 2026-01-29
