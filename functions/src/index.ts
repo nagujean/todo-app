@@ -215,6 +215,9 @@ If you did not expect this invitation, you can safely ignore this email.
  */
 export const sendInvitationEmail = functions
   .region("asia-northeast3") // Seoul region - change as needed
+  .runWith({
+    secrets: ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "SMTP_FROM", "APP_URL"],
+  })
   .firestore.document("invitations/{invitationId}")
   .onCreate(async (snapshot, context) => {
     const invitationId = context.params.invitationId;
