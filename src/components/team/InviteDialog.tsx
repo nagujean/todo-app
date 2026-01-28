@@ -15,6 +15,7 @@ import { useTeamStore } from '@/store/teamStore'
 import { useInvitationStore, generateInvitationLink, type InvitationRole } from '@/store/invitationStore'
 import { useAuthStore } from '@/store/authStore'
 import { cn } from '@/lib/utils'
+import { logger } from '@/lib/logger'
 
 interface InviteDialogProps {
   teamId: string
@@ -87,14 +88,6 @@ export function InviteDialog({ teamId, open, onOpenChange }: InviteDialogProps) 
         return
       }
 
-      console.log('Attempting to create invitation:', {
-        teamId,
-        teamName: currentTeam.name,
-        email: trimmedEmail,
-        role,
-        userId: user.uid,
-      })
-
       const invitationId = await createEmailInvitation(
         teamId,
         currentTeam.name,
@@ -110,7 +103,7 @@ export function InviteDialog({ teamId, open, onOpenChange }: InviteDialogProps) 
         setError('초대 생성에 실패했습니다. 브라우저 콘솔(F12)에서 상세 오류를 확인하세요.')
       }
     } catch (err) {
-      console.error('Invitation creation error:', err)
+      logger.error('Invitation creation error:', err)
       setError('초대 이메일 전송에 실패했습니다. 브라우저 콘솔(F12)에서 상세 오류를 확인하세요.')
     } finally {
       setIsSubmitting(false)
@@ -132,13 +125,6 @@ export function InviteDialog({ teamId, open, onOpenChange }: InviteDialogProps) 
     setError(null)
 
     try {
-      console.log('Attempting to create link invitation:', {
-        teamId,
-        teamName: currentTeam.name,
-        role,
-        userId: user.uid,
-      })
-
       const invitationId = await createLinkInvitation(
         teamId,
         currentTeam.name,
@@ -153,7 +139,7 @@ export function InviteDialog({ teamId, open, onOpenChange }: InviteDialogProps) 
         setError('초대 링크 생성에 실패했습니다. 브라우저 콘솔(F12)에서 상세 오류를 확인하세요.')
       }
     } catch (err) {
-      console.error('Link invitation creation error:', err)
+      logger.error('Link invitation creation error:', err)
       setError('초대 링크 생성에 실패했습니다. 브라우저 콘솔(F12)에서 상세 오류를 확인하세요.')
     } finally {
       setIsSubmitting(false)
