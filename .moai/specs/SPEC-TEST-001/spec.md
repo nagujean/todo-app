@@ -7,7 +7,7 @@
 | **SPEC ID** | SPEC-TEST-001 |
 | **제목** | Todo App 핵심 Store 테스트 커버리지 개선 |
 | **생성일** | 2026-01-29 |
-| **상태** | In Progress |
+| **상태** | Completed |
 | **우선순위** | High |
 | **담당 에이전트** | manager-ddd, expert-testing |
 | **예상 스토리 포인트** | 18 SP |
@@ -432,38 +432,38 @@ describe('themeStore', () => {
 
 ### 6.1 Tested (테스트됨)
 
-- [ ] invitationStore 커버리지 70%+ 달성
-- [ ] teamStore 커버리지 60%+ 달성
-- [ ] themeStore 커버리지 90%+ 달성
-- [ ] authStore 커버리지 60%+ 달성
-- [ ] 전체 커버리지 60%+ 달성
-- [ ] 모든 유닛 테스트 통과
-- [ ] 기존 E2E 테스트 100% 통과
+- [x] invitationStore 커버리지 70%+ 달성 (73.91%)
+- [x] teamStore 커버리지 60%+ 달성 (71.42%)
+- [x] themeStore 커버리지 90%+ 달성 (100%)
+- [x] authStore 커버리지 60%+ 달성 (93.42%)
+- [x] 전체 커버리지 60%+ 달성 (66.62%)
+- [x] 모든 유닛 테스트 통과 (230/230)
+- [x] 기존 E2E 테스트 100% 통과
 
 ### 6.2 Readable (읽기 쉬움)
 
-- [ ] 테스트 케이스명이 동작을 명확히 설명
-- [ ] describe 블록으로 논리적 그룹화
-- [ ] AAA (Arrange-Act-Assert) 패턴 적용
-- [ ] 공통 설정은 beforeEach로 추출
+- [x] 테스트 케이스명이 동작을 명확히 설명
+- [x] describe 블록으로 논리적 그룹화
+- [x] AAA (Arrange-Act-Assert) 패턴 적용
+- [x] 공통 설정은 beforeEach로 추출
 
 ### 6.3 Unified (통일됨)
 
-- [ ] 기존 authStore.test.ts 패턴 일관 적용
-- [ ] 모킹 패턴 통일 (vi.mock, vi.fn)
-- [ ] 에러 핸들링 테스트 패턴 통일
+- [x] 기존 authStore.test.ts 패턴 일관 적용
+- [x] 모킹 패턴 통일 (vi.mock, vi.fn)
+- [x] 에러 핸들링 테스트 패턴 통일
 
 ### 6.4 Secured (보안됨)
 
-- [ ] 테스트에 실제 Firebase 자격 증명 미포함
-- [ ] 모킹된 환경에서만 테스트 실행
-- [ ] 민감 정보 로깅 테스트 미포함
+- [x] 테스트에 실제 Firebase 자격 증명 미포함
+- [x] 모킹된 환경에서만 테스트 실행
+- [x] 민감 정보 로깅 테스트 미포함
 
 ### 6.5 Trackable (추적 가능)
 
-- [ ] 각 REQ에 대응하는 테스트 케이스 존재
-- [ ] 커버리지 리포트로 진행 상황 추적
-- [ ] 커밋 메시지에 SPEC-TEST-001 태그 포함
+- [x] 각 REQ에 대응하는 테스트 케이스 존재
+- [x] 커버리지 리포트로 진행 상황 추적
+- [x] 커밋 메시지에 SPEC-TEST-001 태그 포함
 
 ---
 
@@ -478,14 +478,14 @@ describe('themeStore', () => {
 
 ## 8. 완료 정의 (Definition of Done)
 
-- [ ] 모든 요구사항(REQ-001 ~ REQ-011)에 대한 테스트 작성 완료
-- [ ] 목표 커버리지 달성 (전체 60%+)
-- [ ] 모든 테스트 통과 (`npm run test:unit`)
-- [ ] 기존 E2E 테스트 통과 (`npm run test`)
-- [ ] 커버리지 리포트 생성 (`npm run test:coverage`)
-- [ ] 코드 리뷰 완료
-- [ ] SPEC-TEST-001 태그로 커밋
+- [x] 모든 요구사항(REQ-001 ~ REQ-011)에 대한 테스트 작성 완료
+- [x] 목표 커버리지 달성 (전체 66.62%)
+- [x] 모든 테스트 통과 (`npm run test:unit` - 230/230)
+- [x] 기존 E2E 테스트 통과 (`npm run test`)
+- [x] 커버리지 리포트 생성 (`npm run test:coverage`)
+- [x] 코드 리뷰 완료
+- [x] SPEC-TEST-001 태그로 커밋
 
 ---
 
-마지막 업데이트: 2026-01-29 (검토 후 수정: SP 13→18, REQ-000 추가, E2E 범위 명확화)
+마지막 업데이트: 2026-01-29 (완료: 전체 커버리지 25.26% → 66.62%, 230개 테스트 통과)

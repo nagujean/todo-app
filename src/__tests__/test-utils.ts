@@ -63,8 +63,8 @@ export interface MockTeamOptions {
   memberCount?: number
   createdAt?: string
   settings?: {
-    defaultRole?: 'editor' | 'viewer'
-    allowInviteLinks?: boolean
+    defaultRole: 'editor' | 'viewer'
+    allowInviteLinks: boolean
   }
 }
 

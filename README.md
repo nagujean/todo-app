@@ -103,6 +103,27 @@ npm run start
 
 ## Testing
 
+### Unit Tests
+
+```bash
+# Run unit tests
+npm run test:unit
+
+# Run unit tests with coverage report
+npm run test:coverage
+```
+
+Unit test coverage (66.62% overall):
+
+| Store | Coverage |
+|-------|----------|
+| authStore.ts | 93.42% |
+| themeStore.ts | 100% |
+| invitationStore.ts | 73.91% |
+| teamStore.ts | 71.42% |
+
+### E2E Tests
+
 ```bash
 # Run E2E tests
 npm run test
@@ -120,6 +141,8 @@ Test coverage includes:
 - Data persistence
 - Team collaboration
 - Authentication flows
+- Invitation management (email and link)
+- Theme toggling and persistence
 
 ## Deployment
 
@@ -174,6 +197,8 @@ src/
 │   ├── todoStore.ts       # Todo state management
 │   ├── authStore.ts       # Auth state management
 │   ├── teamStore.ts       # Team state management
+│   ├── invitationStore.ts # Invitation state management
+│   ├── themeStore.ts      # Theme state management
 │   └── presetStore.ts     # Preset state management
 └── lib/
     ├── firebase.ts        # Firebase configuration

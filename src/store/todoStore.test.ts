@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { useTodoStore, sortTodos, type Todo, type Priority } from './todoStore';
+import { useTodoStore, sortTodos, type Todo } from './todoStore';
 
 // Mock Firebase modules
 vi.mock('firebase/firestore', () => ({

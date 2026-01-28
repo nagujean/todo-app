@@ -6,7 +6,6 @@ import {
   createMockDocSnapshot,
   createMockInvitationDoc,
   createMockMemberDoc,
-  createTrackedWriteBatchMock,
 } from '@/__tests__/test-utils'
 
 // Track E2E mode for runtime switching

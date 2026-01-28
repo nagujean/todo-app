@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { useTeamStore, type Team, type TeamMember } from './teamStore';
 import {
   createMockDocSnapshot,
-  createMockMemberDoc,
 } from '@/__tests__/test-utils';
 
 // Track E2E mode and db state for runtime switching
@@ -88,10 +87,6 @@ function setE2EMode(enabled: boolean) {
 }
 
 // Helper to set mock Firebase responses
-function setMockGetDocResponse(response: ReturnType<typeof createMockDocSnapshot> | null) {
-  mockGetDocResponse = response;
-}
-
 function setMockUpdateDocError(error: Error | null) {
   mockUpdateDocError = error;
 }
