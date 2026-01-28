@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { LogOut, User, Users, UserPlus, Settings, ChevronDown } from 'lucide-react'
+import { LogOut, User, Users, UserPlus, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/store/authStore'
 import { useTeamStore } from '@/store/teamStore'

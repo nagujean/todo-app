@@ -16,7 +16,24 @@ const eslintConfig = defineConfig([
     "public/sw.js",
     // Backup files
     ".moai-backups/**",
+    // Claude skills (external files)
+    ".claude/**",
+    // Generated functions build output
+    "functions/lib/**",
   ]),
+  // Allow underscore-prefixed unused variables (intentionally unused)
+  {
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;
