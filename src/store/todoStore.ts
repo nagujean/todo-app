@@ -13,6 +13,8 @@ import {
   Unsubscribe,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
+import { convertTimestamp } from '@/lib/utils'
+import { logger } from '@/lib/logger'
 
 export type Priority = 'high' | 'medium' | 'low'
 export type SortType = 'created' | 'priority' | 'startDate' | 'endDate'
@@ -132,13 +134,6 @@ export function sortTodos(todos: Todo[], sortType: SortType, sortOrder: SortOrde
 function getTodosCollection(userId: string) {
   if (!db) throw new Error('Firestore not initialized')
   return collection(db, 'users', userId, 'todos')
-}
-
-// Helper to convert Firestore timestamp to ISO string
-function convertTimestamp(timestamp: Timestamp | string | null | undefined): string {
-  if (!timestamp) return new Date().toISOString()
-  if (typeof timestamp === 'string') return timestamp
-  return timestamp.toDate().toISOString()
 }
 
 export const useTodoStore = create<TodoState>()(
@@ -363,7 +358,7 @@ export function subscribeToTodos(userId: string) {
       setLoading(false)
     },
     (error) => {
-      console.error('Error subscribing to todos:', error)
+      logger.error('Error subscribing to todos:', error)
       setLoading(false)
     }
   )

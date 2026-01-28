@@ -13,6 +13,8 @@ import {
   getDoc,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
+import { isE2ETestMode, convertTimestamp } from '@/lib/utils'
+import { logger } from '@/lib/logger'
 
 // Types
 export type TeamRole = 'owner' | 'admin' | 'editor' | 'viewer'
@@ -71,23 +73,6 @@ interface TeamState {
   setTeams: (teams: Team[]) => void
   setMembers: (members: TeamMember[]) => void
   setLoading: (loading: boolean) => void
-}
-
-// Helper to convert Firestore timestamp to ISO string
-function convertTimestamp(timestamp: Timestamp | string | null | undefined): string {
-  if (!timestamp) return new Date().toISOString()
-  if (typeof timestamp === 'string') return timestamp
-  return timestamp.toDate().toISOString()
-}
-
-// Check if E2E test mode is enabled
-function isE2ETestMode(): boolean {
-  if (typeof window === 'undefined') return false
-  if (process.env.NEXT_PUBLIC_E2E_TEST_MODE === 'true') return true
-  const urlParams = new URLSearchParams(window.location.search)
-  if (urlParams.get('e2e') === 'true') return true
-  if (localStorage.getItem('E2E_TEST_MODE') === 'true') return true
-  return false
 }
 
 // Helper to get collection references
@@ -153,7 +138,7 @@ export const useTeamStore = create<TeamState>()(
             },
           }
           setTeams([...teams, mockTeam])
-          console.log('[E2E] Created mock team:', mockTeamId)
+          logger.debug('[E2E] Created mock team:', mockTeamId)
           return mockTeamId
         }
 
@@ -202,7 +187,7 @@ export const useTeamStore = create<TeamState>()(
           await batch.commit()
           return teamRef.id
         } catch (error) {
-          console.error('Error creating team:', error)
+          logger.error('Error creating team:', error)
           return null
         }
       },
@@ -233,7 +218,7 @@ export const useTeamStore = create<TeamState>()(
 
           await updateDoc(teamRef, updateData)
         } catch (error) {
-          console.error('Error updating team:', error)
+          logger.error('Error updating team:', error)
           throw error
         }
       },
@@ -257,7 +242,7 @@ export const useTeamStore = create<TeamState>()(
             set({ currentTeamId: null, currentTeam: null, members: [] })
           }
         } catch (error) {
-          console.error('Error deleting team:', error)
+          logger.error('Error deleting team:', error)
           throw error
         }
       },
@@ -284,7 +269,7 @@ export const useTeamStore = create<TeamState>()(
             set({ currentTeamId: null, currentTeam: null, members: [] })
           }
         } catch (error) {
-          console.error('Error leaving team:', error)
+          logger.error('Error leaving team:', error)
           throw error
         }
       },
@@ -306,7 +291,7 @@ export const useTeamStore = create<TeamState>()(
 
           await batch.commit()
         } catch (error) {
-          console.error('Error updating member role:', error)
+          logger.error('Error updating member role:', error)
           throw error
         }
       },
@@ -332,7 +317,7 @@ export const useTeamStore = create<TeamState>()(
 
           await batch.commit()
         } catch (error) {
-          console.error('Error removing member:', error)
+          logger.error('Error removing member:', error)
           throw error
         }
       },
@@ -407,7 +392,7 @@ export function subscribeToTeams(userId: string) {
             })
           }
         } catch (error) {
-          console.error('Error fetching team ' + teamId + ':', error)
+          logger.error('Error fetching team ' + teamId + ':', error)
         }
       }
 
@@ -415,7 +400,7 @@ export function subscribeToTeams(userId: string) {
       setLoading(false)
     },
     (error) => {
-      console.error('Error subscribing to teams:', error)
+      logger.error('Error subscribing to teams:', error)
       setLoading(false)
     }
   )
@@ -453,7 +438,7 @@ export function subscribeToTeamMembers(teamId: string) {
       setMembers(members)
     },
     (error) => {
-      console.error('Error subscribing to team members:', error)
+      logger.error('Error subscribing to team members:', error)
     }
   )
 
