@@ -18,6 +18,16 @@ import {
 import { db } from '@/lib/firebase'
 import { TeamRole } from './teamStore'
 
+// Check if E2E test mode is enabled (must match teamStore.ts)
+function isE2ETestMode(): boolean {
+  if (typeof window === 'undefined') return false
+  if (process.env.NEXT_PUBLIC_E2E_TEST_MODE === 'true') return true
+  const urlParams = new URLSearchParams(window.location.search)
+  if (urlParams.get('e2e') === 'true') return true
+  if (localStorage.getItem('E2E_TEST_MODE') === 'true') return true
+  return false
+}
+
 // Types
 export type InvitationType = 'email' | 'link'
 export type InvitationStatus = 'pending' | 'accepted' | 'declined'
@@ -142,6 +152,28 @@ export const useInvitationStore = create<InvitationState>()(
           return null
         }
 
+        // E2E mock mode: create invitation locally without Firestore
+        if (isE2ETestMode()) {
+          const mockInvitationId = `mock-invitation-${Date.now()}`
+          const expirationDate = createExpirationDate()
+          const mockInvitation: Invitation = {
+            id: mockInvitationId,
+            teamId,
+            teamName,
+            type: 'email',
+            email: trimmedEmail,
+            role,
+            createdBy,
+            createdAt: new Date().toISOString(),
+            expiresAt: expirationDate.toISOString(),
+            status: 'pending',
+          }
+          const { teamInvitations } = get()
+          set({ teamInvitations: [...teamInvitations, mockInvitation] })
+          console.log('[E2E] Created mock email invitation:', mockInvitationId)
+          return mockInvitationId
+        }
+
         try {
           // Pre-validation: Check if member document exists
           console.log('=== Pre-validation Check ===')
@@ -227,6 +259,29 @@ export const useInvitationStore = create<InvitationState>()(
         if (!db) {
           console.error('Error creating link invitation: Firestore not initialized')
           return null
+        }
+
+        // E2E mock mode: create invitation locally without Firestore
+        if (isE2ETestMode()) {
+          const mockInvitationId = `mock-link-invitation-${Date.now()}`
+          const expirationDate = createExpirationDate()
+          const mockInvitation: Invitation = {
+            id: mockInvitationId,
+            teamId,
+            teamName,
+            type: 'link',
+            role,
+            createdBy,
+            createdAt: new Date().toISOString(),
+            expiresAt: expirationDate.toISOString(),
+            status: 'pending',
+            maxUses,
+            uses: 0,
+          }
+          const { teamInvitations } = get()
+          set({ teamInvitations: [...teamInvitations, mockInvitation] })
+          console.log('[E2E] Created mock link invitation:', mockInvitationId)
+          return mockInvitationId
         }
 
         try {
