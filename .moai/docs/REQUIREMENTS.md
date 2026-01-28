@@ -1,9 +1,10 @@
 # Todo App 요구사항 명세서
 
-**버전:** 0.1.0
+**버전:** 0.2.0
 **작성일:** 2026-01-16
+**최종 수정:** 2026-01-28
 **프로젝트:** Todo App
-**기술 스택:** Next.js 16, React 19, TypeScript 5, Tailwind CSS v4, shadcn/ui, Zustand
+**기술 스택:** Next.js 16.1.2, React 19.2.3, TypeScript 5, Tailwind CSS v4, shadcn/ui, Zustand 5.0.10, Firebase 12.8.0, Serwist 9.5.0
 
 ---
 
@@ -225,6 +226,222 @@
 **[EARS]** WHEN 사용자가 JSON 파일을 업로드하면, THE SYSTEM SHALL 스키마 검증 후 기존 데이터와 병합하여야 한다.
 
 **ID**: REQ-FUNC-021
+**우선순위**: P1
+
+---
+
+### 2.7 인증 시스템
+
+#### REQ-FUNC-022: 이메일/비밀번호 인증
+**[EARS]** WHEN 사용자가 이메일과 비밀번호를 입력하고 로그인 버튼을 클릭하면, THE SYSTEM SHALL Firebase Authentication을 통해 인증을 수행하고 성공 시 메인 페이지로 이동하여야 한다.
+
+**ID**: REQ-FUNC-022
+**우선순위**: P0
+
+**상세 사항:**
+- Firebase Authentication 연동
+- 이메일 형식 검증
+- 비밀번호 최소 6자 이상
+- 인증 실패 시 에러 메시지 표시
+
+#### REQ-FUNC-023: 회원가입
+**[EARS]** WHEN 사용자가 이메일과 비밀번호를 입력하고 회원가입 버튼을 클릭하면, THE SYSTEM SHALL Firebase에 새로운 계정을 생성하고 자동 로그인하여야 한다.
+
+**ID**: REQ-FUNC-023
+**우선순위**: P0
+
+#### REQ-FUNC-024: Google OAuth 로그인
+**[EARS]** WHEN 사용자가 Google 로그인 버튼을 클릭하면, THE SYSTEM SHALL Google OAuth 팝업을 표시하고 인증 완료 시 로그인 처리하여야 한다.
+
+**ID**: REQ-FUNC-024
+**우선순위**: P1
+
+#### REQ-FUNC-025: 로그아웃
+**[EARS]** WHEN 사용자가 로그아웃 버튼을 클릭하면, THE SYSTEM SHALL Firebase 세션을 종료하고 로그인 페이지로 이동하여야 한다.
+
+**ID**: REQ-FUNC-025
+**우선순위**: P0
+
+---
+
+### 2.8 팀 워크스페이스
+
+#### REQ-FUNC-026: 팀 생성
+**[EARS]** WHEN 인증된 사용자가 팀 이름을 입력하고 생성 버튼을 클릭하면, THE SYSTEM SHALL 새로운 팀을 생성하고 사용자를 owner 역할로 추가하여야 한다.
+
+**ID**: REQ-FUNC-026
+**우선순위**: P1
+
+**상세 사항:**
+- 팀 이름: 최대 100자
+- 팀 설명: 선택 사항
+- 기본 설정: defaultRole (editor), allowInviteLinks (true)
+
+#### REQ-FUNC-027: 팀 전환
+**[EARS]** WHEN 사용자가 팀 선택 드롭다운에서 다른 팀을 선택하면, THE SYSTEM SHALL 해당 팀의 할 일 목록으로 전환하여야 한다.
+
+**ID**: REQ-FUNC-027
+**우선순위**: P1
+
+#### REQ-FUNC-028: 팀 설정 수정
+**[EARS]** WHEN owner 또는 admin 역할의 사용자가 팀 설정을 수정하면, THE SYSTEM SHALL 변경 사항을 Firestore에 저장하여야 한다.
+
+**ID**: REQ-FUNC-028
+**우선순위**: P1
+
+#### REQ-FUNC-029: 팀 삭제
+**[EARS]** WHEN owner 역할의 사용자가 팀 삭제를 확인하면, THE SYSTEM SHALL 팀과 관련 데이터를 삭제하여야 한다.
+
+**ID**: REQ-FUNC-029
+**우선순위**: P1
+
+---
+
+### 2.9 팀 멤버 관리
+
+#### REQ-FUNC-030: 멤버 초대 (이메일)
+**[EARS]** WHEN admin 이상의 역할을 가진 사용자가 이메일 주소를 입력하고 초대 버튼을 클릭하면, THE SYSTEM SHALL Cloud Function을 통해 초대 이메일을 발송하여야 한다.
+
+**ID**: REQ-FUNC-030
+**우선순위**: P1
+
+**상세 사항:**
+- 초대 역할: editor 또는 viewer
+- 초대 만료: 7일
+- 중복 초대 방지
+
+#### REQ-FUNC-031: 멤버 초대 (링크)
+**[EARS]** WHEN admin 이상의 역할을 가진 사용자가 초대 링크 생성을 요청하면, THE SYSTEM SHALL 고유한 초대 링크를 생성하여야 한다.
+
+**ID**: REQ-FUNC-031
+**우선순위**: P1
+
+**상세 사항:**
+- 최대 사용 횟수 설정 가능
+- 만료일 설정 가능
+
+#### REQ-FUNC-032: 초대 수락
+**[EARS]** WHEN 사용자가 초대 링크를 클릭하고 로그인하면, THE SYSTEM SHALL 사용자를 해당 팀에 추가하고 초대 상태를 accepted로 변경하여야 한다.
+
+**ID**: REQ-FUNC-032
+**우선순위**: P1
+
+#### REQ-FUNC-033: 역할 변경
+**[EARS]** WHEN owner 또는 admin이 멤버의 역할 변경을 요청하면, THE SYSTEM SHALL 해당 멤버의 역할을 변경하여야 한다.
+
+**ID**: REQ-FUNC-033
+**우선순위**: P1
+
+**상세 사항:**
+- 역할: owner, admin, editor, viewer
+- owner는 역할 변경 불가
+- admin은 editor/viewer만 변경 가능
+
+#### REQ-FUNC-034: 멤버 제거
+**[EARS]** WHEN owner 또는 admin이 멤버 제거를 요청하면, THE SYSTEM SHALL 해당 멤버를 팀에서 제거하고 memberCount를 감소시켜야 한다.
+
+**ID**: REQ-FUNC-034
+**우선순위**: P1
+
+---
+
+### 2.10 할 일 확장 기능
+
+#### REQ-FUNC-035: 우선순위 설정
+**[EARS]** WHEN 사용자가 할 일의 우선순위를 선택하면, THE SYSTEM SHALL 해당 우선순위(high/medium/low)를 저장하고 시각적으로 구분하여야 한다.
+
+**ID**: REQ-FUNC-035
+**우선순위**: P1
+
+**상세 사항:**
+- 우선순위 옵션: high (높음), medium (보통), low (낮음)
+- 시각적 구분: 색상 또는 아이콘
+
+#### REQ-FUNC-036: 날짜 범위 설정
+**[EARS]** WHEN 사용자가 할 일의 시작일과 종료일을 설정하면, THE SYSTEM SHALL 해당 날짜를 저장하고 캘린더 뷰에 표시하여야 한다.
+
+**ID**: REQ-FUNC-036
+**우선순위**: P1
+
+**상세 사항:**
+- startDate: 시작 날짜 (선택)
+- endDate: 종료 날짜 (선택)
+- ISO 8601 형식 저장
+
+#### REQ-FUNC-037: 정렬 기능
+**[EARS]** WHEN 사용자가 정렬 옵션을 선택하면, THE SYSTEM SHALL 해당 기준(생성일/우선순위/시작일/종료일)과 방향(오름차순/내림차순)으로 목록을 정렬하여야 한다.
+
+**ID**: REQ-FUNC-037
+**우선순위**: P1
+
+#### REQ-FUNC-038: 캘린더 뷰
+**[EARS]** WHEN 사용자가 캘린더 뷰 모드로 전환하면, THE SYSTEM SHALL 할 일을 날짜 기반으로 캘린더 형식에 표시하여야 한다.
+
+**ID**: REQ-FUNC-038
+**우선순위**: P2
+
+---
+
+### 2.11 프리셋 기능
+
+#### REQ-FUNC-039: 프리셋 저장
+**[EARS]** WHEN 사용자가 현재 할 일을 프리셋으로 저장 요청하면, THE SYSTEM SHALL 할 일 정보를 템플릿으로 저장하여야 한다.
+
+**ID**: REQ-FUNC-039
+**우선순위**: P2
+
+#### REQ-FUNC-040: 프리셋으로 할 일 생성
+**[EARS]** WHEN 사용자가 프리셋을 선택하면, THE SYSTEM SHALL 해당 템플릿 정보로 새로운 할 일을 생성하여야 한다.
+
+**ID**: REQ-FUNC-040
+**우선순위**: P2
+
+#### REQ-FUNC-041: 프리셋 삭제
+**[EARS]** WHEN 사용자가 프리셋 삭제를 요청하면, THE SYSTEM SHALL 해당 프리셋을 삭제하여야 한다.
+
+**ID**: REQ-FUNC-041
+**우선순위**: P2
+
+---
+
+### 2.12 실시간 동기화
+
+#### REQ-FUNC-042: Firestore 실시간 구독
+**[EARS]** WHEN 인증된 사용자가 앱에 접속하면, THE SYSTEM SHALL Firestore onSnapshot을 통해 실시간으로 데이터 변경을 구독하여야 한다.
+
+**ID**: REQ-FUNC-042
+**우선순위**: P0
+
+**상세 사항:**
+- 할 일 목록 실시간 동기화
+- 팀 멤버십 실시간 동기화
+- 팀 멤버 목록 실시간 동기화
+
+#### REQ-FUNC-043: 오프라인 폴백
+**[EARS]** WHEN 사용자가 로그인하지 않았거나 오프라인 상태일 때, THE SYSTEM SHALL localStorage를 사용하여 데이터를 저장하여야 한다.
+
+**ID**: REQ-FUNC-043
+**우선순위**: P1
+
+---
+
+### 2.13 PWA 지원
+
+#### REQ-FUNC-044: 앱 설치
+**[EARS]** WHEN 사용자가 PWA 설치를 요청하면, THE SYSTEM SHALL 앱을 홈 화면에 추가할 수 있도록 하여야 한다.
+
+**ID**: REQ-FUNC-044
+**우선순위**: P1
+
+**상세 사항:**
+- 서비스 워커 등록 (Serwist)
+- Web App Manifest 제공
+- 오프라인 캐싱
+
+#### REQ-FUNC-045: 오프라인 사용
+**[EARS]** WHEN 사용자가 오프라인 상태에서 앱을 사용하면, THE SYSTEM SHALL 캐시된 데이터와 기능을 제공하여야 한다.
+
+**ID**: REQ-FUNC-045
 **우선순위**: P1
 
 ---
@@ -510,34 +727,202 @@
 **우선순위**: P0
 
 ```typescript
+type Priority = 'high' | 'medium' | 'low';
+
 interface Todo {
-  id: string;              // UUID v4
-  title: string;           // 최대 200자
-  completed: boolean;      // 완료 상태
-  createdAt: string;       // ISO 8601
-  updatedAt: string;       // ISO 8601
-  completedAt: string | null;  // ISO 8601 또는 null
+  id: string;                    // UUID v4
+  title: string;                 // 최대 200자
+  description?: string;          // 상세 설명 (선택)
+  completed: boolean;            // 완료 상태
+  createdAt: string;             // ISO 8601
+  updatedAt: string;             // ISO 8601
+  completedAt: string | null;    // ISO 8601 또는 null
+  startDate?: string;            // 시작 날짜 (선택)
+  endDate?: string;              // 종료 날짜 (선택)
+  priority?: Priority;           // 우선순위 (선택)
 }
 ```
 
-#### REQ-DATA-002: Zustand Store 상태
-**[EARS]** WHEN 전역 상태를 정의하면, THE SYSTEM SHALL 다음 구조를 따라야 한다.
+#### REQ-DATA-002: Team 인터페이스
+**[EARS]** WHEN 팀 데이터를 정의하면, THE SYSTEM SHALL 다음 인터페이스를 따라야 한다.
 
 **ID**: REQ-DATA-002
+**우선순위**: P1
+
+```typescript
+type TeamRole = 'owner' | 'admin' | 'editor' | 'viewer';
+
+interface TeamSettings {
+  defaultRole: 'editor' | 'viewer';
+  allowInviteLinks: boolean;
+}
+
+interface Team {
+  id: string;                    // Firestore document ID
+  name: string;                  // 최대 100자
+  description?: string;          // 팀 설명 (선택)
+  ownerId: string;               // 팀 소유자 UID
+  memberCount: number;           // 멤버 수
+  createdAt: string;             // ISO 8601
+  settings: TeamSettings;        // 팀 설정
+}
+
+interface TeamMember {
+  id: string;                    // 사용자 UID
+  role: TeamRole;                // 역할
+  displayName: string;           // 표시 이름
+  email: string;                 // 이메일
+  joinedAt: string;              // ISO 8601
+}
+
+interface TeamMembership {
+  teamId: string;                // 팀 ID
+  teamName: string;              // 팀 이름
+  role: TeamRole;                // 사용자의 역할
+  joinedAt: string;              // ISO 8601
+}
+```
+
+#### REQ-DATA-003: Invitation 인터페이스
+**[EARS]** WHEN 초대 데이터를 정의하면, THE SYSTEM SHALL 다음 인터페이스를 따라야 한다.
+
+**ID**: REQ-DATA-003
+**우선순위**: P1
+
+```typescript
+type InvitationType = 'email' | 'link';
+type InvitationStatus = 'pending' | 'accepted' | 'expired' | 'cancelled';
+
+interface Invitation {
+  id: string;                    // Firestore document ID
+  teamId: string;                // 팀 ID
+  teamName: string;              // 팀 이름
+  type: InvitationType;          // 초대 유형
+  email?: string;                // 초대 이메일 (email 유형)
+  role: 'editor' | 'viewer';     // 초대된 역할
+  status: InvitationStatus;      // 초대 상태
+  invitedBy: string;             // 초대자 UID
+  invitedByName?: string;        // 초대자 이름
+  createdAt: string;             // ISO 8601
+  expiresAt: string;             // ISO 8601 (만료일)
+  acceptedAt?: string;           // ISO 8601 (수락일)
+  acceptedBy?: string;           // 수락자 UID
+  maxUses?: number;              // 최대 사용 횟수 (link 유형)
+  usedCount?: number;            // 사용 횟수 (link 유형)
+}
+```
+
+#### REQ-DATA-004: Preset 인터페이스
+**[EARS]** WHEN 프리셋 데이터를 정의하면, THE SYSTEM SHALL 다음 인터페이스를 따라야 한다.
+
+**ID**: REQ-DATA-004
+**우선순위**: P2
+
+```typescript
+interface Preset {
+  id: string;                    // UUID v4
+  title: string;                 // 템플릿 제목
+  description?: string;          // 설명 (선택)
+  priority?: Priority;           // 기본 우선순위 (선택)
+  createdAt: string;             // ISO 8601
+}
+```
+
+#### REQ-DATA-005: Zustand Store 구조
+**[EARS]** WHEN 전역 상태를 정의하면, THE SYSTEM SHALL 다음 Store 구조를 따라야 한다.
+
+**ID**: REQ-DATA-005
 **우선순위**: P0
 
 ```typescript
-interface TodoStore {
+// Todo Store (src/store/todoStore.ts)
+interface TodoState {
   todos: Todo[];
-  filter: 'all' | 'active' | 'completed';
-  theme: 'light' | 'dark';
-  addTodo: (title: string) => void;
-  toggleTodo: (id: string) => void;
-  deleteTodo: (id: string) => void;
-  editTodo: (id: string, title: string) => void;
-  clearCompleted: () => void;
-  setFilter: (filter: Filter) => void;
-  setTheme: (theme: Theme) => void;
+  filter: FilterMode;           // 'all' | 'incomplete' | 'completed'
+  sortType: SortType;           // 'createdAt' | 'priority' | 'startDate' | 'endDate'
+  sortDirection: 'asc' | 'desc';
+  viewMode: ViewMode;           // 'list' | 'calendar'
+  userId: string | null;
+  teamId: string | null;
+  isLoading: boolean;
+
+  // Actions
+  addTodo: (title: string, options?: TodoOptions) => Promise<string | null>;
+  toggleTodo: (id: string) => Promise<void>;
+  deleteTodo: (id: string) => Promise<void>;
+  updateTodo: (id: string, updates: Partial<Todo>) => Promise<void>;
+  clearCompleted: () => Promise<void>;
+  setFilter: (filter: FilterMode) => void;
+  setSortType: (sortType: SortType) => void;
+  setSortDirection: (direction: 'asc' | 'desc') => void;
+  setViewMode: (viewMode: ViewMode) => void;
+}
+
+// Auth Store (src/store/authStore.ts)
+interface AuthState {
+  user: User | null;
+  loading: boolean;
+  error: string | null;
+  initialized: boolean;
+
+  // Actions
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  logout: () => Promise<void>;
+  clearError: () => void;
+}
+
+// Team Store (src/store/teamStore.ts)
+interface TeamState {
+  teams: Team[];
+  currentTeamId: string | null;
+  currentTeam: Team | null;
+  members: TeamMember[];
+  userId: string | null;
+  isLoading: boolean;
+
+  // Actions
+  setCurrentTeam: (teamId: string | null) => void;
+  createTeam: (name: string, description?: string) => Promise<string | null>;
+  updateTeam: (teamId: string, updates: Partial<Team>) => Promise<void>;
+  deleteTeam: (teamId: string) => Promise<void>;
+  leaveTeam: (teamId: string) => Promise<void>;
+  updateMemberRole: (teamId: string, memberId: string, role: TeamRole) => Promise<void>;
+  removeMember: (teamId: string, memberId: string) => Promise<void>;
+}
+
+// Invitation Store (src/store/invitationStore.ts)
+interface InvitationState {
+  invitations: Invitation[];
+  currentInvitation: Invitation | null;
+  isLoading: boolean;
+  error: string | null;
+
+  // Actions
+  createInvitation: (options: CreateInvitationOptions) => Promise<Invitation | null>;
+  fetchInvitation: (invitationId: string) => Promise<Invitation | null>;
+  acceptInvitation: (invitationId: string) => Promise<AcceptResult>;
+  cancelInvitation: (invitationId: string) => Promise<void>;
+}
+
+// Preset Store (src/store/presetStore.ts)
+interface PresetState {
+  presets: Preset[];
+
+  // Actions
+  addPreset: (preset: Omit<Preset, 'id' | 'createdAt'>) => void;
+  deletePreset: (id: string) => void;
+  applyPreset: (id: string) => Partial<Todo> | null;
+}
+
+// Theme Store (src/store/themeStore.ts)
+interface ThemeState {
+  theme: 'light' | 'dark' | 'system';
+  resolvedTheme: 'light' | 'dark';
+
+  // Actions
+  setTheme: (theme: 'light' | 'dark' | 'system') => void;
 }
 ```
 
@@ -545,66 +930,66 @@ interface TodoStore {
 
 ### 5.2 저장 방식
 
-#### REQ-DATA-003: localStorage 키
+#### REQ-DATA-006: localStorage 키
 **[EARS]** WHEN 데이터를 저장하면, THE SYSTEM SHALL `todo-app-data` 키를 사용하여야 한다.
-
-**ID**: REQ-DATA-003
-**우선순위**: P0
-
-#### REQ-DATA-004: JSON 직렬화
-**[EARS]** WHEN 데이터를 저장하면, THE SYSTEM SHALL JSON 형식으로 직렬화하여야 한다.
-
-**ID**: REQ-DATA-004
-**우선순위**: P0
-
----
-
-### 5.3 데이터 검증
-
-#### REQ-DATA-005: 제목 길이 검증
-**[EARS]** WHEN 사용자가 제목을 입력하면, THE SYSTEM SHALL 최대 200자로 제한하여야 한다.
-
-**ID**: REQ-DATA-005
-**우선순위**: P0
-
-#### REQ-DATA-006: UUID 검증
-**[EARS]** WHEN 할 일 ID를 생성하면, THE SYSTEM SHALL UUID v4 형식을 따라야 한다.
 
 **ID**: REQ-DATA-006
 **우선순위**: P0
 
-#### REQ-DATA-007: 날짜 형식 검증
-**[EARS]** WHEN 날짜를 저장하면, THE SYSTEM SHALL ISO 8601 형식을 따라야 한다.
+#### REQ-DATA-007: JSON 직렬화
+**[EARS]** WHEN 데이터를 저장하면, THE SYSTEM SHALL JSON 형식으로 직렬화하여야 한다.
 
 **ID**: REQ-DATA-007
 **우선순위**: P0
 
 ---
 
-### 5.4 내보내기/가져오기
+### 5.3 데이터 검증
 
-#### REQ-DATA-008: 내보내기 파일 형식
-**[EARS]** WHEN 사용자가 데이터를 내보내면, THE SYSTEM SHALL JSON 파일 형식으로 제공하여야 한다.
+#### REQ-DATA-008: 제목 길이 검증
+**[EARS]** WHEN 사용자가 제목을 입력하면, THE SYSTEM SHALL 최대 200자로 제한하여야 한다.
 
 **ID**: REQ-DATA-008
-**우선순위**: P1
+**우선순위**: P0
 
-#### REQ-DATA-009: 파일명 형식
-**[EARS]** WHEN 내보내기 파일을 생성하면, THE SYSTEM SHALL `todo-app-backup-YYYY-MM-DD.json` 형식을 사용하여야 한다.
+#### REQ-DATA-009: UUID 검증
+**[EARS]** WHEN 할 일 ID를 생성하면, THE SYSTEM SHALL UUID v4 형식을 따라야 한다.
 
 **ID**: REQ-DATA-009
-**우선순위**: P1
+**우선순위**: P0
 
-#### REQ-DATA-010: 스키마 검증
-**[EARS]** WHEN 사용자가 파일을 가져오면, THE SYSTEM SHALL 파일 스키마를 검증하여야 한다.
+#### REQ-DATA-010: 날짜 형식 검증
+**[EARS]** WHEN 날짜를 저장하면, THE SYSTEM SHALL ISO 8601 형식을 따라야 한다.
 
 **ID**: REQ-DATA-010
-**우선순위**: P1
+**우선순위**: P0
 
-#### REQ-DATA-011: 병합 전략
-**[EARS]** WHEN 가져오기 데이터가 기존 데이터와 충돌하면, THE SYSTEM SHALL ID 기반 병합을 수행하여야 한다.
+---
+
+### 5.4 내보내기/가져오기
+
+#### REQ-DATA-011: 내보내기 파일 형식
+**[EARS]** WHEN 사용자가 데이터를 내보내면, THE SYSTEM SHALL JSON 파일 형식으로 제공하여야 한다.
 
 **ID**: REQ-DATA-011
+**우선순위**: P1
+
+#### REQ-DATA-012: 파일명 형식
+**[EARS]** WHEN 내보내기 파일을 생성하면, THE SYSTEM SHALL `todo-app-backup-YYYY-MM-DD.json` 형식을 사용하여야 한다.
+
+**ID**: REQ-DATA-012
+**우선순위**: P1
+
+#### REQ-DATA-013: 스키마 검증
+**[EARS]** WHEN 사용자가 파일을 가져오면, THE SYSTEM SHALL 파일 스키마를 검증하여야 한다.
+
+**ID**: REQ-DATA-013
+**우선순위**: P1
+
+#### REQ-DATA-014: 병합 전략
+**[EARS]** WHEN 가져오기 데이터가 기존 데이터와 충돌하면, THE SYSTEM SHALL ID 기반 병합을 수행하여야 한다.
+
+**ID**: REQ-DATA-014
 **우선순위**: P1
 
 ---
@@ -732,3 +1117,4 @@ interface TodoStore {
 | 버전 | 날짜 | 변경 사항 | 작성자 |
 |-----|------|---------|-------|
 | 0.1.0 | 2026-01-16 | 초안 작성 | AI Assistant |
+| 0.2.0 | 2026-01-28 | 인증, 팀, PWA, 프리셋, 실시간 동기화 요구사항 추가. 데이터 구조 확장. | AI Assistant |
