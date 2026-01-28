@@ -7,10 +7,10 @@
 | **SPEC ID** | SPEC-TEST-001 |
 | **제목** | Todo App 핵심 Store 테스트 커버리지 개선 |
 | **생성일** | 2026-01-29 |
-| **상태** | Planned |
+| **상태** | In Progress |
 | **우선순위** | High |
 | **담당 에이전트** | manager-ddd, expert-testing |
-| **예상 스토리 포인트** | 13 SP |
+| **예상 스토리 포인트** | 18 SP |
 | **라이프사이클** | spec-anchored |
 | **선행 SPEC** | SPEC-REFACTOR-001 (Completed - 85%) |
 
@@ -120,6 +120,27 @@ RELATED: None
 
 ## 3. 요구사항 (Requirements)
 
+### 3.0 P0 - Prerequisite: 테스트 유틸리티 생성 (2 SP)
+
+#### REQ-000: 공통 테스트 유틸리티 생성
+
+**EARS 패턴**: 편재적 (Ubiquitous)
+
+> 시스템은 **항상** 공통 테스트 유틸리티가 사전에 준비되어 있어야 한다.
+
+**필수 구현 항목:**
+- `src/__tests__/test-utils.ts`: 공통 테스트 유틸리티
+- Firebase mock factory 함수 (`createFirestoreMock`, `createAuthMock`)
+- Store state reset 유틸리티 (`resetAllStores`)
+- Mock data factories (`createMockUser`, `createMockTeam`, `createMockInvitation`)
+- Timestamp mock helpers
+
+**테스트 시나리오:**
+- 모든 스토어 테스트 파일에서 유틸리티 import 및 사용 가능
+- beforeEach에서 상태 초기화 패턴 일관성 보장
+
+---
+
 ### 3.1 P1 - Critical: invitationStore 테스트 (5 SP)
 
 #### REQ-001: 이메일 초대 생성 테스트
@@ -184,7 +205,10 @@ RELATED: None
 **테스트 시나리오:**
 - 정상 케이스: 이름만으로 팀 생성
 - 정상 케이스: 이름과 설명으로 팀 생성
-- E2E 모드: 모킹된 팀 생성
+- E2E 모드: 모킹된 팀 생성 (Line 122-143)
+  - Mock user fallback 로직 검증
+  - `mock-team-${Date.now()}` 형식 ID 반환 검증
+  - 로컬 상태 즉시 업데이트 검증
 - 오류 케이스: 빈 이름
 - 오류 케이스: 이름 100자 초과 (truncation 검증)
 
@@ -242,6 +266,13 @@ RELATED: None
 > **IF** E2E 테스트 모드가 활성화되면 **THEN** 인증 함수들은 모킹된 사용자 데이터를 반환해야 한다.
 
 **테스트 시나리오:**
+- `getInitialState()` E2E 분기 (Line 61-72):
+  - isE2ETestMode() true 시 mockUser 반환
+  - user, loading=false, initialized=true 상태 설정
+- `setupAuthListener()` E2E 분기 (Line 164-170):
+  - E2E 모드에서 조기 반환
+  - mockUser 설정 및 initialized=true
+  - logger.debug 호출 검증
 - E2E 모드에서 signIn: mockUser 반환
 - E2E 모드에서 signUp: mockUser 반환
 - E2E 모드에서 logout: user null 설정
@@ -364,12 +395,15 @@ describe('themeStore', () => {
 
 | 우선순위 | 요구사항 | 스토리 포인트 | 의존성 |
 |----------|----------|---------------|--------|
-| 1 | REQ-008, REQ-009 (themeStore) | 1 SP | 없음 |
-| 2 | REQ-001, REQ-004 (invitation 헬퍼/이메일) | 2 SP | 없음 |
+| 0 | REQ-000 (테스트 유틸리티) | 2 SP | 없음 (선행 필수) |
+| 1 | REQ-008, REQ-009 (themeStore) | 1 SP | REQ-000 |
+| 2 | REQ-001, REQ-004 (invitation 헬퍼/이메일) | 2 SP | REQ-000 |
 | 3 | REQ-002, REQ-003 (invitation 링크/수락) | 3 SP | REQ-001 |
-| 4 | REQ-005 (team 생성) | 2 SP | 없음 |
+| 4 | REQ-005 (team 생성 + E2E) | 2 SP | REQ-000 |
 | 5 | REQ-006, REQ-007 (team CRUD/멤버) | 2 SP | REQ-005 |
-| 6 | REQ-010, REQ-011 (authStore 확장) | 3 SP | 없음 |
+| 6 | REQ-010, REQ-011 (authStore E2E/에러) | 3 SP | REQ-000 |
+
+**총 스토리 포인트**: 18 SP (검토 후 조정됨, 기존 13 SP)
 
 ---
 
@@ -454,4 +488,4 @@ describe('themeStore', () => {
 
 ---
 
-마지막 업데이트: 2026-01-29
+마지막 업데이트: 2026-01-29 (검토 후 수정: SP 13→18, REQ-000 추가, E2E 범위 명확화)
