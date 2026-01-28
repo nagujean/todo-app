@@ -13,16 +13,7 @@ import { TeamSwitcher } from '@/components/team'
 import { useTodoStore } from '@/store/todoStore'
 import { useAuthStore } from '@/store/authStore'
 import { useTeamStore } from '@/store/teamStore'
-
-// Check if E2E test mode is enabled (client-side only)
-function isE2ETestMode(): boolean {
-  if (typeof window === 'undefined') return false
-  const urlParams = new URLSearchParams(window.location.search)
-  if (urlParams.get('e2e') === 'true') return true
-  if (localStorage.getItem('E2E_TEST_MODE') === 'true') return true
-  if (process.env.NEXT_PUBLIC_E2E_TEST_MODE === 'true') return true
-  return false
-}
+import { isE2ETestMode } from '@/lib/utils'
 
 // Custom hook for client-side hydration state
 function useClientReady() {
