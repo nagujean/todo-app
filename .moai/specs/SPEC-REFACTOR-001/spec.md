@@ -7,7 +7,7 @@
 | **SPEC ID** | SPEC-REFACTOR-001 |
 | **제목** | Todo App 코드 품질 및 유지보수성 개선 |
 | **생성일** | 2026-01-28 |
-| **상태** | In Progress |
+| **상태** | Completed |
 | **우선순위** | High |
 | **담당 에이전트** | manager-ddd, expert-refactoring, expert-testing |
 | **예상 스토리 포인트** | 25 SP |
