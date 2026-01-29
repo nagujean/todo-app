@@ -18,8 +18,6 @@ export default defineConfig({
         'src/**/*.test.tsx',
         'src/app/sw.ts',
         'src/**/*.d.ts',
-        'src/components/**/*',
-        'src/app/**/*'
       ],
       thresholds: {
         // Thresholds for tested files (lib + store)
