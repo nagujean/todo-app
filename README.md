@@ -40,6 +40,7 @@ Modern task management web application with real-time sync and team collaboratio
 | Backend | Firebase (Auth + Firestore) | 12.8.0 |
 | Styling | Tailwind CSS | 4.x |
 | UI Components | Radix UI | - |
+| Unit Testing | Vitest | 4.0.18 |
 | Testing | Playwright | 1.57.0 |
 | PWA | Serwist | 9.5.0 |
 | Language | TypeScript | 5.x |
@@ -113,14 +114,16 @@ npm run test:unit
 npm run test:coverage
 ```
 
-Unit test coverage (66.62% overall):
+Unit test coverage (67.6% overall, 445 tests):
 
-| Store | Coverage |
-|-------|----------|
-| authStore.ts | 93.42% |
-| themeStore.ts | 100% |
-| invitationStore.ts | 73.91% |
-| teamStore.ts | 71.42% |
+| Category | Coverage |
+|----------|----------|
+| Store Tests | authStore 93.42%, themeStore 100%, invitationStore 73.91%, teamStore 71.42% |
+| UI Components | button, input, checkbox, card, dialog, textarea (95%+) |
+| Todo Components | TodoItem, TodoList, TodoInput, TodoDetail (84%+) |
+| Auth Components | LoginForm, SignupForm, UserMenu, AuthProvider (88%+) |
+| Team Components | TeamSwitcher, CreateTeamDialog, InviteDialog, TeamMembers (67%+) |
+| Other Components | CalendarView, PresetList, ThemeToggle, ViewToggle, pages |
 
 ### E2E Tests
 
