@@ -46,7 +46,7 @@ export function TodoItem({ todo, onOpenDetail }: TodoItemProps) {
 
   return (
     <div
-      className={`flex items-center gap-3 p-3 bg-card rounded-lg border group hover:border-primary/30 transition-all cursor-pointer ${
+      className={`flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-card rounded-lg border group hover:border-primary/30 transition-all cursor-pointer ${
         todo.completed ? 'opacity-60' : ''
       }`}
       data-testid="todo-item"

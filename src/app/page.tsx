@@ -57,18 +57,18 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-8">
-      <main className={`mx-auto ${viewMode === 'calendar' ? 'max-w-4xl' : 'max-w-xl'}`}>
+      <main className={`mx-auto w-full ${viewMode === 'calendar' ? 'md:max-w-4xl' : 'md:max-w-xl'}`}>
         <Card className="shadow-sm">
           <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+            <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 justify-between">
+              <div className="flex items-center gap-2 order-1">
                 <ThemeToggle />
                 <TeamSwitcher />
               </div>
-              <CardTitle className="text-2xl font-semibold truncate max-w-[200px]">
+              <CardTitle className="text-xl md:text-2xl font-semibold truncate text-center md:text-left w-full md:w-auto md:max-w-[200px] order-3 md:order-2">
                 {title}
               </CardTitle>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 order-2 md:order-3">
                 <ViewToggle />
                 <UserMenu />
               </div>
