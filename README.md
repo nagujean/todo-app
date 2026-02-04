@@ -2,6 +2,14 @@
 
 Modern task management web application with real-time sync and team collaboration.
 
+## Version 0.2.0 Highlights
+
+### New Features
+- **Mobile Responsive Design**: Enhanced mobile experience with responsive layout
+- **Code Quality Improvements**: Refactored components for better maintainability
+- **Security Enhancements**: Improved error handling and input validation
+- **Accessibility**: WCAG 2.1 Level AA compliance improvements
+
 ## Features
 
 ### Core Features
@@ -11,6 +19,7 @@ Modern task management web application with real-time sync and team collaboratio
 - **Sorting**: Sort by creation date, priority, start date, or end date
 - **Filtering**: Filter by all, incomplete, or completed tasks
 - **Batch Delete**: Clear all completed tasks at once
+- **FilterSortBar Component**: Unified filter and sort controls (v0.2.0)
 
 ### Collaboration
 
@@ -29,6 +38,7 @@ Modern task management web application with real-time sync and team collaboratio
 - **Dark Mode**: Toggle between light and dark themes
 - **PWA Support**: Install as app, works offline
 - **Real-time Sync**: Firebase-powered data synchronization
+- **Mobile Optimized**: Responsive design for mobile devices (v0.2.0)
 
 ## Tech Stack
 
