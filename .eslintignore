@@ -1,0 +1,31 @@
+# Test and debug files
+*.test.js
+*.test.ts
+*.test.tsx
+*.spec.js
+*.spec.ts
+auth-test-fixed.js
+authenticated-screenshots.js
+check-userid.js
+debug-auth.js
+debug-firebase.js
+e2e-authenticated-screenshots.js
+manual-test.js
+screenshot-all-pages.js
+screenshot-test.js
+test-firebase-rules.js
+test-real-firebase.js
+test-todo-creation.js
+verify-fix.js
+
+# Build outputs
+node_modules/
+.next/
+out/
+dist/
+build/
+coverage/
+
+# Temporary files
+*.log
+nul

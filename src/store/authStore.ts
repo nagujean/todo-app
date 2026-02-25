@@ -7,6 +7,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   onAuthStateChanged,
+  getAuth,
 } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import { isE2ETestMode } from '@/lib/utils'
@@ -67,6 +68,20 @@ const getInitialState = () => {
         loading: false,
         error: null,
         initialized: true,
+      }
+    }
+
+    // Check if there's already a logged-in Firebase user (e.g., after HMR)
+    if (auth) {
+      const currentUser = auth.currentUser
+      if (currentUser) {
+        logger.debug('[AuthStore] Found existing Firebase user:', currentUser.uid)
+        return {
+          user: currentUser,
+          loading: false,
+          error: null,
+          initialized: true,
+        }
       }
     }
   }
@@ -157,8 +172,15 @@ export const useAuthStore = create<AuthState>((set) => ({
 }))
 
 // Auth state listener setup function
+let authListenerSetup = false
 export function setupAuthListener() {
-  const { setUser, setLoading, setInitialized } = useAuthStore.getState()
+  const { setUser, setLoading, setInitialized, initialized } = useAuthStore.getState()
+
+  // Prevent duplicate listeners
+  if (authListenerSetup) {
+    logger.debug('[AuthStore] Auth listener already setup, skipping')
+    return () => {}
+  }
 
   // E2E Test Mode - use mock user (runtime check)
   const isE2E = isE2ETestMode()
@@ -166,6 +188,7 @@ export function setupAuthListener() {
     setUser(mockUser)
     setLoading(false)
     setInitialized(true)
+    authListenerSetup = true
     logger.debug('E2E Test Mode: Using mock user')
     return () => {}
   }
@@ -180,10 +203,18 @@ export function setupAuthListener() {
   setLoading(true)
 
   const unsubscribe = onAuthStateChanged(auth, (user) => {
+    logger.debug('[AuthStore] onAuthStateChanged fired:', user?.uid || 'null')
     setUser(user)
     setLoading(false)
     setInitialized(true)
   })
 
+  authListenerSetup = true
   return unsubscribe
+}
+
+// Test helper to reset the auth listener setup flag
+// Exported only for testing purposes
+export function resetAuthListenerSetup() {
+  authListenerSetup = false
 }

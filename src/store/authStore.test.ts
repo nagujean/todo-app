@@ -42,7 +42,7 @@ vi.mock('@/lib/logger', () => ({
 }));
 
 // Import after mocks are set up
-import { useAuthStore, setupAuthListener } from './authStore';
+import { useAuthStore, setupAuthListener, resetAuthListenerSetup } from './authStore';
 
 // Import Firebase auth functions for mocking assertions
 import {
@@ -108,6 +108,8 @@ describe('authStore', () => {
     setE2EMode(false);
     mockState.authStateCallback = null;
     mockState.mockUnsubscribe = vi.fn();
+    // Reset the auth listener setup flag to ensure each test can set up a new listener
+    resetAuthListenerSetup();
   });
 
   afterEach(() => {
