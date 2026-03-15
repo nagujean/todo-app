@@ -47,6 +47,7 @@ Modern task management web application with real-time sync and team collaboratio
 - **PWA Support**: Install as app, works offline
 - **Real-time Sync**: Firebase-powered data synchronization
 - **Mobile Optimized**: Responsive design for mobile devices (v0.2.0)
+- **GitHub Automatic Deployment**: Automated CI/CD pipeline with Vercel integration (SPEC-DEPLOY-001)
 
 ## Tech Stack
 
