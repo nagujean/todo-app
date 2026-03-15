@@ -5,7 +5,7 @@ import { LogOut, User, Users, UserPlus, Settings, ChevronDown } from 'lucide-rea
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/store/authStore'
 import { useTeamStore } from '@/store/teamStore'
-import { TeamMembers, InviteDialog } from '@/components/team'
+import { TeamMembers, InviteDialog, IntegratedTeamManagementSheet } from '@/components/team'
 
 export function UserMenu() {
   const { user, logout, loading } = useAuthStore()
@@ -13,6 +13,7 @@ export function UserMenu() {
   const [isOpen, setIsOpen] = useState(false)
   const [showMembers, setShowMembers] = useState(false)
   const [showInvite, setShowInvite] = useState(false)
+  const [showTeamManagement, setShowTeamManagement] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -62,23 +63,13 @@ export function UserMenu() {
               <div className="p-1 border-b">
                 <button
                   onClick={() => {
-                    setShowMembers(true)
+                    setShowTeamManagement(true)
                     setIsOpen(false)
                   }}
                   className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-accent"
                 >
-                  <Users className="h-4 w-4" />
-                  팀 멤버
-                </button>
-                <button
-                  onClick={() => {
-                    setShowInvite(true)
-                    setIsOpen(false)
-                  }}
-                  className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-accent"
-                >
-                  <UserPlus className="h-4 w-4" />
-                  팀원 초대
+                  <Settings className="h-4 w-4" />
+                  팀 관리
                 </button>
               </div>
             )}
@@ -98,18 +89,11 @@ export function UserMenu() {
       </div>
 
       {currentTeamId && (
-        <>
-          <TeamMembers
-            teamId={currentTeamId}
-            open={showMembers}
-            onOpenChange={setShowMembers}
-          />
-          <InviteDialog
-            teamId={currentTeamId}
-            open={showInvite}
-            onOpenChange={setShowInvite}
-          />
-        </>
+        <IntegratedTeamManagementSheet
+          teamId={currentTeamId}
+          open={showTeamManagement}
+          onOpenChange={setShowTeamManagement}
+        />
       )}
     </>
   )

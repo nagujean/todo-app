@@ -6,6 +6,7 @@ import { doc, getDoc, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuthStore } from '@/store/authStore'
 import { useInvitationStore, isInvitationExpired } from '@/store/invitationStore'
+import { logger } from '@/lib/logger'
 
 interface InvitationData {
   id: string
@@ -95,7 +96,7 @@ export default function JoinPage() {
 
         setPageState('valid')
       } catch (error) {
-        console.error('Error fetching invitation:', error)
+        logger.error('Error fetching invitation:', error)
         setPageState('error')
         setErrorMessage('Failed to load invitation')
       }
@@ -127,7 +128,7 @@ export default function JoinPage() {
         setErrorMessage('Failed to accept invitation. Please try again.')
       }
     } catch (error) {
-      console.error('Error accepting invitation:', error)
+      logger.error('Error accepting invitation:', error)
       setPageState('error')
       setErrorMessage('An error occurred while accepting the invitation.')
     }

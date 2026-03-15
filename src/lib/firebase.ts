@@ -1,6 +1,7 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app'
 import { getAuth, Auth, connectAuthEmulator } from 'firebase/auth'
 import { getFirestore, Firestore, connectFirestoreEmulator } from 'firebase/firestore'
+import { logger } from '@/lib/logger'
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -33,7 +34,7 @@ if (isFirebaseConfigured) {
     connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true })
     connectFirestoreEmulator(db, '127.0.0.1', 8080)
     emulatorsConnected = true
-    console.log('🔥 Firebase Emulators connected')
+    logger.info('Firebase Emulators connected')
   }
 }
 

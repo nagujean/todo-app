@@ -1,6 +1,6 @@
 import { FullConfig } from '@playwright/test'
 
-async function globalSetup(config: FullConfig) {
+async function globalSetup(_config: FullConfig) {
   console.log('E2E Test Setup: Using mock authentication mode')
   console.log('No Firebase emulator required - tests will run with mock user')
 }

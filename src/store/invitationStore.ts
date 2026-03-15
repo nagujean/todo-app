@@ -16,17 +16,9 @@ import {
   addDoc,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
+import { isE2ETestMode, convertTimestamp } from '@/lib/utils'
 import { TeamRole } from './teamStore'
-
-// Check if E2E test mode is enabled (must match teamStore.ts)
-function isE2ETestMode(): boolean {
-  if (typeof window === 'undefined') return false
-  if (process.env.NEXT_PUBLIC_E2E_TEST_MODE === 'true') return true
-  const urlParams = new URLSearchParams(window.location.search)
-  if (urlParams.get('e2e') === 'true') return true
-  if (localStorage.getItem('E2E_TEST_MODE') === 'true') return true
-  return false
-}
+import { logger } from '@/lib/logger'
 
 // Types
 export type InvitationType = 'email' | 'link'
@@ -80,13 +72,6 @@ interface InvitationState {
   setLoading: (loading: boolean) => void
 }
 
-// Helper to convert Firestore timestamp to ISO string
-function convertTimestamp(timestamp: Timestamp | string | null | undefined): string {
-  if (!timestamp) return new Date().toISOString()
-  if (typeof timestamp === 'string') return timestamp
-  return timestamp.toDate().toISOString()
-}
-
 // Helper to get invitations collection reference
 function getInvitationsCollection() {
   if (!db) throw new Error('Firestore not initialized')
@@ -135,20 +120,20 @@ export const useInvitationStore = create<InvitationState>()(
 
       createEmailInvitation: async (teamId, teamName, email, role, createdBy) => {
         if (!db) {
-          console.error('Error creating email invitation: Firestore not initialized')
+          logger.error('Error creating email invitation: Firestore not initialized')
           return null
         }
 
         const trimmedEmail = email.trim().toLowerCase()
         if (!trimmedEmail) {
-          console.error('Error creating email invitation: Email is empty')
+          logger.error('Error creating email invitation: Email is empty')
           return null
         }
 
         // Validate email format (same regex as Firestore rules)
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
         if (!emailRegex.test(trimmedEmail)) {
-          console.error('Error creating email invitation: Invalid email format')
+          logger.error('Error creating email invitation: Invalid email format')
           return null
         }
 
@@ -170,36 +155,27 @@ export const useInvitationStore = create<InvitationState>()(
           }
           const { teamInvitations } = get()
           set({ teamInvitations: [...teamInvitations, mockInvitation] })
-          console.log('[E2E] Created mock email invitation:', mockInvitationId)
+          logger.debug('[E2E] Created mock email invitation:', mockInvitationId)
           return mockInvitationId
         }
 
         try {
           // Pre-validation: Check if member document exists
-          console.log('=== Pre-validation Check ===')
           const memberRef = doc(db, 'teams', teamId, 'members', createdBy)
           const memberDoc = await getDoc(memberRef)
 
           if (!memberDoc.exists()) {
-            console.error('CRITICAL: Member document does not exist!')
-            console.error('Path:', `teams/${teamId}/members/${createdBy}`)
-            console.error('This means the user is not a team member.')
-            console.error('Solution: The team creation may have failed partially. Try recreating the team.')
+            logger.error('Member document does not exist. User is not a team member.')
             return null
           }
 
           const memberData = memberDoc.data()
           const memberRole = memberData?.role
-          console.log('Member document found:', { role: memberRole, data: memberData })
 
           if (!['owner', 'admin', 'editor'].includes(memberRole)) {
-            console.error('CRITICAL: User role does not allow invitation creation')
-            console.error('Current role:', memberRole)
-            console.error('Required roles: owner, admin, or editor')
+            logger.error('User role does not allow invitation creation. Current role:', memberRole)
             return null
           }
-
-          console.log('Pre-validation passed. User has permission to create invitations.')
 
           const expirationDate = createExpirationDate()
           const invitationData = {
@@ -214,22 +190,12 @@ export const useInvitationStore = create<InvitationState>()(
             status: 'pending' as InvitationStatus,
           }
 
-          console.log('Creating email invitation with data:', {
-            teamId,
-            teamName,
-            email: trimmedEmail,
-            role,
-            createdBy,
-            expiresAt: expirationDate.toISOString(),
-            createdAtClient: new Date().toISOString(),
-          })
-
           const docRef = await addDoc(getInvitationsCollection(), invitationData)
-          console.log('Email invitation created successfully:', docRef.id)
+          logger.debug('Email invitation created:', docRef.id)
           return docRef.id
         } catch (error) {
           const firebaseError = error as { code?: string; message?: string }
-          console.error('Error creating email invitation:', {
+          logger.error('Error creating email invitation:', {
             code: firebaseError.code,
             message: firebaseError.message,
             teamId,
@@ -237,27 +203,13 @@ export const useInvitationStore = create<InvitationState>()(
             role,
           })
 
-          // Log specific error hints
-          if (firebaseError.code === 'permission-denied') {
-            console.error('Permission denied - possible causes:')
-            console.error('1. User is not a team member with owner/admin/editor role')
-            console.error('2. createdBy does not match current authenticated user')
-            console.error('3. Timestamp validation failed (client clock might be off)')
-            console.error('4. Invalid invitation data format')
-            console.error('')
-            console.error('Debug info:')
-            console.error('- teamId:', teamId)
-            console.error('- createdBy:', createdBy)
-            console.error('- Current time:', new Date().toISOString())
-          }
-
           return null
         }
       },
 
       createLinkInvitation: async (teamId, teamName, role, createdBy, maxUses = 10) => {
         if (!db) {
-          console.error('Error creating link invitation: Firestore not initialized')
+          logger.error('Error creating link invitation: Firestore not initialized')
           return null
         }
 
@@ -280,36 +232,27 @@ export const useInvitationStore = create<InvitationState>()(
           }
           const { teamInvitations } = get()
           set({ teamInvitations: [...teamInvitations, mockInvitation] })
-          console.log('[E2E] Created mock link invitation:', mockInvitationId)
+          logger.debug('[E2E] Created mock link invitation:', mockInvitationId)
           return mockInvitationId
         }
 
         try {
           // Pre-validation: Check if member document exists
-          console.log('=== Pre-validation Check (Link Invitation) ===')
           const memberRef = doc(db, 'teams', teamId, 'members', createdBy)
           const memberDoc = await getDoc(memberRef)
 
           if (!memberDoc.exists()) {
-            console.error('CRITICAL: Member document does not exist!')
-            console.error('Path:', `teams/${teamId}/members/${createdBy}`)
-            console.error('This means the user is not a team member.')
-            console.error('Solution: The team creation may have failed partially. Try recreating the team.')
+            logger.error('Member document does not exist. User is not a team member.')
             return null
           }
 
           const memberData = memberDoc.data()
           const memberRole = memberData?.role
-          console.log('Member document found:', { role: memberRole, data: memberData })
 
           if (!['owner', 'admin', 'editor'].includes(memberRole)) {
-            console.error('CRITICAL: User role does not allow invitation creation')
-            console.error('Current role:', memberRole)
-            console.error('Required roles: owner, admin, or editor')
+            logger.error('User role does not allow invitation creation. Current role:', memberRole)
             return null
           }
-
-          console.log('Pre-validation passed. User has permission to create invitations.')
 
           const expirationDate = createExpirationDate()
           const invitationData = {
@@ -325,42 +268,18 @@ export const useInvitationStore = create<InvitationState>()(
             uses: 0,
           }
 
-          console.log('Creating link invitation with data:', {
-            teamId,
-            teamName,
-            role,
-            createdBy,
-            maxUses,
-            expiresAt: expirationDate.toISOString(),
-            createdAtClient: new Date().toISOString(),
-          })
-
           const docRef = await addDoc(getInvitationsCollection(), invitationData)
-          console.log('Link invitation created successfully:', docRef.id)
+          logger.debug('Link invitation created:', docRef.id)
           return docRef.id
         } catch (error) {
           const firebaseError = error as { code?: string; message?: string }
-          console.error('Error creating link invitation:', {
+          logger.error('Error creating link invitation:', {
             code: firebaseError.code,
             message: firebaseError.message,
             teamId,
             createdBy,
             role,
           })
-
-          // Log specific error hints
-          if (firebaseError.code === 'permission-denied') {
-            console.error('Permission denied - possible causes:')
-            console.error('1. User is not a team member with owner/admin/editor role')
-            console.error('2. createdBy does not match current authenticated user')
-            console.error('3. Timestamp validation failed (client clock might be off)')
-            console.error('4. Invalid invitation data format')
-            console.error('')
-            console.error('Debug info:')
-            console.error('- teamId:', teamId)
-            console.error('- createdBy:', createdBy)
-            console.error('- Current time:', new Date().toISOString())
-          }
 
           return null
         }
@@ -374,7 +293,7 @@ export const useInvitationStore = create<InvitationState>()(
           const invitationDoc = await getDoc(invitationRef)
 
           if (!invitationDoc.exists()) {
-            console.error('Invitation not found')
+            logger.error('Invitation not found')
             return false
           }
 
@@ -383,27 +302,27 @@ export const useInvitationStore = create<InvitationState>()(
           // Check expiration
           const expiresAt = convertTimestamp(invitationData.expiresAt)
           if (isInvitationExpired(expiresAt)) {
-            console.error('Invitation has expired')
+            logger.error('Invitation has expired')
             return false
           }
 
           // Check status
           if (invitationData.status !== 'pending') {
-            console.error('Invitation is no longer pending')
+            logger.error('Invitation is no longer pending')
             return false
           }
 
           // Check max uses for link invitations
           if (invitationData.type === 'link') {
             if (invitationData.maxUses && invitationData.uses >= invitationData.maxUses) {
-              console.error('Invitation has reached maximum uses')
+              logger.error('Invitation has reached maximum uses')
               return false
             }
           }
 
           // Check email match for email invitations
           if (invitationData.type === 'email' && invitationData.email !== userEmail.toLowerCase()) {
-            console.error('Email does not match invitation')
+            logger.error('Email does not match invitation')
             return false
           }
 
@@ -443,7 +362,7 @@ export const useInvitationStore = create<InvitationState>()(
           await batch.commit()
           return true
         } catch (error) {
-          console.error('Error accepting invitation:', error)
+          logger.error('Error accepting invitation:', error)
           return false
         }
       },
@@ -455,7 +374,7 @@ export const useInvitationStore = create<InvitationState>()(
           const invitationRef = doc(db, 'invitations', invitationId)
           await updateDoc(invitationRef, { status: 'declined' })
         } catch (error) {
-          console.error('Error declining invitation:', error)
+          logger.error('Error declining invitation:', error)
           throw error
         }
       },
@@ -467,7 +386,7 @@ export const useInvitationStore = create<InvitationState>()(
           const invitationRef = doc(db, 'invitations', invitationId)
           await deleteDoc(invitationRef)
         } catch (error) {
-          console.error('Error revoking invitation:', error)
+          logger.error('Error revoking invitation:', error)
           throw error
         }
       },
@@ -537,7 +456,7 @@ export function subscribeToUserInvitations(email: string) {
       setLoading(false)
     },
     (error) => {
-      console.error('Error subscribing to user invitations:', error)
+      logger.error('Error subscribing to user invitations:', error)
       setLoading(false)
     }
   )
@@ -585,7 +504,7 @@ export function subscribeToTeamInvitations(teamId: string) {
       setTeamInvitations(invitations)
     },
     (error) => {
-      console.error('Error subscribing to team invitations:', error)
+      logger.error('Error subscribing to team invitations:', error)
     }
   )
 

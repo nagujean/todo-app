@@ -76,7 +76,7 @@ interface CalendarDayProps {
   onOpenDetail: (todo: Todo) => void
 }
 
-function CalendarDay({ day, dateStr, todos, isToday, hideCompleted, onOpenDetail }: CalendarDayProps) {
+function CalendarDay({ day, dateStr: _dateStr, todos, isToday, hideCompleted, onOpenDetail }: CalendarDayProps) {
   const filteredTodos = hideCompleted ? todos.filter((t) => !t.completed) : todos
   const displayTodos = filteredTodos.slice(0, 3)
   const remainingCount = filteredTodos.length - 3

@@ -1,8 +1,9 @@
 {
   "name": "todo-app",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
+    "claude:glm": "dotenv -e .env.glm -- claude --model glm-4.7",
     "dev": "next dev",
     "build": "next build --webpack",
     "start": "next start",
@@ -10,6 +11,9 @@
     "test": "playwright test",
     "test:ui": "playwright test --ui",
     "test:report": "playwright show-report",
+    "test:unit": "vitest",
+    "test:unit:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "emulators": "firebase emulators:start",
     "emulators:export": "firebase emulators:export ./firebase-export",
     "emulators:import": "firebase emulators:start --import=./firebase-export"
@@ -32,16 +36,24 @@
   "devDependencies": {
     "@playwright/test": "^1.57.0",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^5.1.2",
+    "@vitest/coverage-v8": "^4.0.18",
     "dotenv": "^17.2.3",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.2",
     "firebase-tools": "^15.4.0",
+    "jsdom": "^27.4.0",
     "serwist": "^9.5.0",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.4.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.0.18"
   }
 }

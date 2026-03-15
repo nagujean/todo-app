@@ -8,6 +8,7 @@ const withSerwist = withSerwistInit({
 
 const nextConfig: NextConfig = {
   /* config options here */
+  turbopack: {}, // Enable Turbopack with empty config to resolve Serwist compatibility
 };
 
 export default withSerwist(nextConfig);

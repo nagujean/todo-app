@@ -12,6 +12,7 @@ import {
 import { useTeamStore, type TeamRole, subscribeToTeamMembers, unsubscribeFromTeamMembers } from '@/store/teamStore'
 import { useAuthStore } from '@/store/authStore'
 import { cn } from '@/lib/utils'
+import { logger } from '@/lib/logger'
 
 export interface TeamMembersProps {
   teamId: string
@@ -70,7 +71,7 @@ export function TeamMembers({ teamId, open, onOpenChange, className }: TeamMembe
     try {
       await updateMemberRole(teamId, memberId, newRole)
     } catch (error) {
-      console.error('Failed to update member role:', error)
+      logger.error('Failed to update member role:', error)
     } finally {
       setIsUpdating(null)
     }
@@ -85,7 +86,7 @@ export function TeamMembers({ teamId, open, onOpenChange, className }: TeamMembe
     try {
       await removeMember(teamId, memberId)
     } catch (error) {
-      console.error('Failed to remove member:', error)
+      logger.error('Failed to remove member:', error)
     } finally {
       setIsUpdating(null)
     }

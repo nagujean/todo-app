@@ -6,6 +6,8 @@ import { setupAuthListener, useAuthStore } from '@/store/authStore'
 import { subscribeToTodos, unsubscribeFromTodos } from '@/store/todoStore'
 import { subscribeToPresets, unsubscribeFromPresets } from '@/store/presetStore'
 import { subscribeToTeams, unsubscribeFromTeams } from '@/store/teamStore'
+import { isE2ETestMode } from '@/lib/utils'
+import { logger } from '@/lib/logger'
 
 interface AuthProviderProps {
   children: React.ReactNode
@@ -15,16 +17,6 @@ interface AuthProviderProps {
 const emptySubscribe = () => () => {}
 const getClientSnapshot = () => true
 const getServerSnapshot = () => false
-
-// Check if E2E test mode is enabled
-function isE2ETestMode(): boolean {
-  if (typeof window === 'undefined') return false
-  if (process.env.NEXT_PUBLIC_E2E_TEST_MODE === 'true') return true
-  const urlParams = new URLSearchParams(window.location.search)
-  if (urlParams.get('e2e') === 'true') return true
-  if (localStorage.getItem('E2E_TEST_MODE') === 'true') return true
-  return false
-}
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const router = useRouter()
@@ -40,7 +32,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Debug logging
   useEffect(() => {
-    console.log('[AuthProvider] State:', { isClient, initialized, loading, hasUser: !!user })
+    logger.debug('[AuthProvider] State:', { isClient, initialized, loading, hasUser: !!user })
   }, [isClient, initialized, loading, user])
 
   // Setup auth listener for non-E2E mode
@@ -50,11 +42,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     // If already initialized (E2E mode sets this at store creation), skip setup
     if (initialized && user) {
-      console.log('[AuthProvider] Already initialized with user, skipping auth setup')
+      logger.debug('[AuthProvider] Already initialized with user, skipping auth setup')
       return
     }
 
-    console.log('[AuthProvider] Setting up auth listener')
+    logger.debug('[AuthProvider] Setting up auth listener')
     const unsubscribe = setupAuthListener()
     return () => unsubscribe()
   }, [isClient, initialized, user])
@@ -63,7 +55,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     // Skip Firestore subscriptions in E2E mode
     if (isE2ETestMode()) {
-      console.log('[AuthProvider] E2E mode - skipping Firestore subscriptions')
+      logger.debug('[AuthProvider] E2E mode - skipping Firestore subscriptions')
       return
     }
 

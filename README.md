@@ -2,6 +2,14 @@
 
 Modern task management web application with real-time sync and team collaboration.
 
+## Version 0.2.0 Highlights
+
+### New Features
+- **Mobile Responsive Design**: Enhanced mobile experience with responsive layout
+- **Code Quality Improvements**: Refactored components for better maintainability
+- **Security Enhancements**: Improved error handling and input validation
+- **Accessibility**: WCAG 2.1 Level AA compliance improvements
+
 ## Features
 
 ### Core Features
@@ -11,12 +19,18 @@ Modern task management web application with real-time sync and team collaboratio
 - **Sorting**: Sort by creation date, priority, start date, or end date
 - **Filtering**: Filter by all, incomplete, or completed tasks
 - **Batch Delete**: Clear all completed tasks at once
+- **FilterSortBar Component**: Unified filter and sort controls (v0.2.0)
 
 ### Collaboration
 
 - **Team Workspaces**: Create and manage team workspaces
 - **Role-Based Access Control**: Owner, Admin, Editor, Viewer roles
 - **Member Invitation**: Invite team members via email
+- **Integrated Team Management**: Unified team management interface (v0.2.0)
+  - Single entry point for all team operations
+  - Member list with role management
+  - Team settings (name, description)
+  - Team deletion (Owner only) / Team leave (Non-owner)
 
 ### Views
 
@@ -29,6 +43,7 @@ Modern task management web application with real-time sync and team collaboratio
 - **Dark Mode**: Toggle between light and dark themes
 - **PWA Support**: Install as app, works offline
 - **Real-time Sync**: Firebase-powered data synchronization
+- **Mobile Optimized**: Responsive design for mobile devices (v0.2.0)
 
 ## Tech Stack
 
@@ -40,6 +55,7 @@ Modern task management web application with real-time sync and team collaboratio
 | Backend | Firebase (Auth + Firestore) | 12.8.0 |
 | Styling | Tailwind CSS | 4.x |
 | UI Components | Radix UI | - |
+| Unit Testing | Vitest | 4.0.18 |
 | Testing | Playwright | 1.57.0 |
 | PWA | Serwist | 9.5.0 |
 | Language | TypeScript | 5.x |
@@ -103,6 +119,29 @@ npm run start
 
 ## Testing
 
+### Unit Tests
+
+```bash
+# Run unit tests
+npm run test:unit
+
+# Run unit tests with coverage report
+npm run test:coverage
+```
+
+Unit test coverage (67.6% overall, 445 tests):
+
+| Category | Coverage |
+|----------|----------|
+| Store Tests | authStore 93.42%, themeStore 100%, invitationStore 73.91%, teamStore 71.42% |
+| UI Components | button, input, checkbox, card, dialog, textarea (95%+) |
+| Todo Components | TodoItem, TodoList, TodoInput, TodoDetail (84%+) |
+| Auth Components | LoginForm, SignupForm, UserMenu, AuthProvider (88%+) |
+| Team Components | TeamSwitcher, CreateTeamDialog, InviteDialog, TeamMembers (67%+) |
+| Other Components | CalendarView, PresetList, ThemeToggle, ViewToggle, pages |
+
+### E2E Tests
+
 ```bash
 # Run E2E tests
 npm run test
@@ -120,6 +159,8 @@ Test coverage includes:
 - Data persistence
 - Team collaboration
 - Authentication flows
+- Invitation management (email and link)
+- Theme toggling and persistence
 
 ## Deployment
 
@@ -174,6 +215,8 @@ src/
 │   ├── todoStore.ts       # Todo state management
 │   ├── authStore.ts       # Auth state management
 │   ├── teamStore.ts       # Team state management
+│   ├── invitationStore.ts # Invitation state management
+│   ├── themeStore.ts      # Theme state management
 │   └── presetStore.ts     # Preset state management
 └── lib/
     ├── firebase.ts        # Firebase configuration

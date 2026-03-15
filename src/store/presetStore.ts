@@ -10,7 +10,9 @@ import {
   Timestamp,
   Unsubscribe,
 } from 'firebase/firestore'
-import { db, isFirebaseConfigured } from '@/lib/firebase'
+import { db } from '@/lib/firebase'
+import { convertTimestamp } from '@/lib/utils'
+import { logger } from '@/lib/logger'
 
 export interface Preset {
   id: string
@@ -37,13 +39,6 @@ function getTimestamp(): string {
 function getPresetsCollection(userId: string) {
   if (!db) throw new Error('Firestore not initialized')
   return collection(db, 'users', userId, 'presets')
-}
-
-// Helper to convert Firestore timestamp to ISO string
-function convertTimestamp(timestamp: Timestamp | string | null | undefined): string {
-  if (!timestamp) return new Date().toISOString()
-  if (typeof timestamp === 'string') return timestamp
-  return timestamp.toDate().toISOString()
 }
 
 export const usePresetStore = create<PresetState>()(
@@ -140,7 +135,7 @@ export function subscribeToPresets(userId: string) {
       setLoading(false)
     },
     (error) => {
-      console.error('Error subscribing to presets:', error)
+      logger.error('Error subscribing to presets:', error)
       setLoading(false)
     }
   )

@@ -7,44 +7,11 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   onAuthStateChanged,
+  getAuth,
 } from 'firebase/auth'
-import { auth, isFirebaseConfigured } from '@/lib/firebase'
-
-// E2E Test Mode detection - checks at runtime
-function checkE2ETestMode(): boolean {
-  // Check build-time env var
-  if (process.env.NEXT_PUBLIC_E2E_TEST_MODE === 'true') {
-    console.log('[E2E] Detected via env var')
-    return true
-  }
-
-  // Check runtime indicators (browser only)
-  if (typeof window !== 'undefined') {
-    console.log('[E2E] Checking browser indicators, URL:', window.location.href)
-
-    // Check URL parameter
-    const urlParams = new URLSearchParams(window.location.search)
-    const e2eParam = urlParams.get('e2e')
-    console.log('[E2E] URL param e2e:', e2eParam)
-    if (e2eParam === 'true') {
-      console.log('[E2E] Detected via URL param')
-      return true
-    }
-
-    // Check localStorage (can be set by Playwright before navigation)
-    const localStorageFlag = localStorage.getItem('E2E_TEST_MODE')
-    console.log('[E2E] localStorage flag:', localStorageFlag)
-    if (localStorageFlag === 'true') {
-      console.log('[E2E] Detected via localStorage')
-      return true
-    }
-  } else {
-    console.log('[E2E] Running on server (window undefined)')
-  }
-
-  console.log('[E2E] Not in E2E test mode')
-  return false
-}
+import { auth } from '@/lib/firebase'
+import { isE2ETestMode } from '@/lib/utils'
+import { logger } from '@/lib/logger'
 
 // Mock user for E2E testing
 const mockUser = {
@@ -93,14 +60,28 @@ interface AuthState {
 // Check E2E mode at store creation time (runs on client only after hydration)
 const getInitialState = () => {
   if (typeof window !== 'undefined') {
-    const isE2E = checkE2ETestMode()
+    const isE2E = isE2ETestMode()
     if (isE2E) {
-      console.log('[E2E] Setting initial state with mock user')
+      logger.debug('[E2E] Setting initial state with mock user')
       return {
         user: mockUser,
         loading: false,
         error: null,
         initialized: true,
+      }
+    }
+
+    // Check if there's already a logged-in Firebase user (e.g., after HMR)
+    if (auth) {
+      const currentUser = auth.currentUser
+      if (currentUser) {
+        logger.debug('[AuthStore] Found existing Firebase user:', currentUser.uid)
+        return {
+          user: currentUser,
+          loading: false,
+          error: null,
+          initialized: true,
+        }
       }
     }
   }
@@ -191,16 +172,24 @@ export const useAuthStore = create<AuthState>((set) => ({
 }))
 
 // Auth state listener setup function
+let authListenerSetup = false
 export function setupAuthListener() {
-  const { setUser, setLoading, setInitialized } = useAuthStore.getState()
+  const { setUser, setLoading, setInitialized, initialized } = useAuthStore.getState()
+
+  // Prevent duplicate listeners
+  if (authListenerSetup) {
+    logger.debug('[AuthStore] Auth listener already setup, skipping')
+    return () => {}
+  }
 
   // E2E Test Mode - use mock user (runtime check)
-  const isE2ETestMode = checkE2ETestMode()
-  if (isE2ETestMode) {
+  const isE2E = isE2ETestMode()
+  if (isE2E) {
     setUser(mockUser)
     setLoading(false)
     setInitialized(true)
-    console.log('E2E Test Mode: Using mock user')
+    authListenerSetup = true
+    logger.debug('E2E Test Mode: Using mock user')
     return () => {}
   }
 
@@ -214,10 +203,18 @@ export function setupAuthListener() {
   setLoading(true)
 
   const unsubscribe = onAuthStateChanged(auth, (user) => {
+    logger.debug('[AuthStore] onAuthStateChanged fired:', user?.uid || 'null')
     setUser(user)
     setLoading(false)
     setInitialized(true)
   })
 
+  authListenerSetup = true
   return unsubscribe
+}
+
+// Test helper to reset the auth listener setup flag
+// Exported only for testing purposes
+export function resetAuthListenerSetup() {
+  authListenerSetup = false
 }
