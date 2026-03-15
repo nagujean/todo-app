@@ -26,6 +26,11 @@ Modern task management web application with real-time sync and team collaboratio
 - **Team Workspaces**: Create and manage team workspaces
 - **Role-Based Access Control**: Owner, Admin, Editor, Viewer roles
 - **Member Invitation**: Invite team members via email
+- **Integrated Team Management**: Unified team management interface (v0.2.0)
+  - Single entry point for all team operations
+  - Member list with role management
+  - Team settings (name, description)
+  - Team deletion (Owner only) / Team leave (Non-owner)
 
 ### Views
 

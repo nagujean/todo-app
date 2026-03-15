@@ -1,11 +1,12 @@
 ---
 id: SPEC-TEAM-002
 version: "1.0.0"
-status: draft
+status: completed
 created: 2026-03-15
 updated: 2026-03-15
 author: MoAI
 priority: MEDIUM
+completed_date: 2026-03-15
 ---
 
 # SPEC-TEAM-002: 통합 팀 관리 메뉴
@@ -15,6 +16,7 @@ priority: MEDIUM
 | 날짜 | 버전 | 작성자 | 변경 내용 |
 |------|------|--------|-----------|
 | 2026-03-15 | 1.0.0 | MoAI | 초기 SPEC 생성 |
+| 2026-03-15 | 1.0.0 | MoAI | 구현 완료 - IntegratedTeamManagementSheet 컴포넌트 추가 |
 
 ---
 
