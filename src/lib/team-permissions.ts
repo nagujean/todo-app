@@ -104,17 +104,16 @@ export function getRolePermissions(role: TeamRole): Set<TeamAction> {
 /**
  * 팀을 삭제할 수 있는지 확인합니다.
  *
- * @MX:WARN 마지막 소유자는 팀을 삭제할 수 없습니다
- * 이 제한은 팀이 소유자 없이 남는 것을 방지하기 위함입니다.
+ * @MX:NOTE 삭제는 팀 전체를 제거하는 것이므로 마지막 소유자도 가능합니다
+ * 탈퇴(Leave)는 팀을 유지하므로 소유자에게 차단됩니다.
  *
  * @param role - 사용자의 역할
- * @param isLastOwner - 이 사용자가 마지막 소유자인지 여부
+ * @param isLastOwner - 이 사용자가 마지막 소유자인지 여부 (API 호환성을 위해 유지되나 무시됨)
  * @returns 팀 삭제 가능 여부
  */
 export function canDeleteTeam(role: TeamRole, isLastOwner: boolean): boolean {
-  if (isLastOwner) {
-    return false
-  }
+  // isLastOwner 파라미터는 삭제 권한에 영향을 주지 않습니다
+  // 삭제는 팀 전체를 제거하는 작업이므로 owner 권한만 있으면 가능합니다
   return canPerformAction('delete_team', role)
 }
 

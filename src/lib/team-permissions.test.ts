@@ -95,8 +95,9 @@ describe('team-permissions', () => {
       expect(canDeleteTeam('owner', false)).toBe(true)
     })
 
-    it('owner이 마지막 소유자이면 팀을 삭제할 수 없다', () => {
-      expect(canDeleteTeam('owner', true)).toBe(false)
+    it('owner은 마지막 소유자여도 팀을 삭제할 수 있다', () => {
+      // 삭제는 팀 전체를 제거하는 작업이므로 마지막 소유자도 가능합니다
+      expect(canDeleteTeam('owner', true)).toBe(true)
     })
 
     it('admin은 팀을 삭제할 수 없다', () => {
@@ -107,6 +108,12 @@ describe('team-permissions', () => {
     it('editor와 viewer는 팀을 삭제할 수 없다', () => {
       expect(canDeleteTeam('editor', false)).toBe(false)
       expect(canDeleteTeam('viewer', false)).toBe(false)
+    })
+
+    it('마지막 소유자도 팀을 삭제할 수 있다', () => {
+      // SPEC-TEAM-003: 마지막 소유자도 팀 삭제 가능
+      // 삭제는 팀 전체를 제거하는 작업이므로 소유자 권한만 있으면 됩니다
+      expect(canDeleteTeam('owner', true)).toBe(true)
     })
   })
 
