@@ -21,7 +21,7 @@ export function ViewToggle() {
           <button
             key={option.value}
             onClick={() => setViewMode(option.value)}
-            className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-md transition-colors ${
+            className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 text-sm rounded-md transition-colors ${
               isActive
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'

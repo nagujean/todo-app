@@ -1,18 +1,49 @@
-# Todo App - 프로젝트 구조
+# Todo App - Project Structure
 
-## 디렉터리 트리
+## Directory Tree
 
 ```
 todo-app/
-├── .moai/                      # MoAI 프로젝트 설정
-│   ├── config/                 # 설정 파일
-│   ├── memory/                 # 세션 상태
-│   └── project/                # 프로젝트 문서
-│       ├── product.md          # 제품 개요
-│       ├── structure.md        # 프로젝트 구조 (현재 문서)
-│       └── tech.md             # 기술 문서
+├── .moai/                          # MoAI project configuration
+│   ├── config/                     # Configuration files
+│   │   ├── config.yaml             # Main configuration
+│   │   ├── multilingual-triggers.yaml  # i18n triggers
+│   │   ├── sections/               # Configuration sections
+│   │   │   ├── git-strategy.yaml   # Git workflow settings
+│   │   │   ├── language.yaml       # Language settings (ko)
+│   │   │   ├── llm.yaml            # LLM configuration
+│   │   │   ├── pricing.yaml        # Pricing information
+│   │   │   ├── project.yaml        # Project metadata
+│   │   │   ├── quality.yaml        # Quality gates (TRUST 5)
+│   │   │   ├── system.yaml         # System settings
+│   │   │   └── user.yaml           # User settings
+│   │   └── statusline-config.yaml  # Statusline configuration
+│   ├── docs/                       # Documentation reports
+│   ├── announcements/              # Multilingual announcements
+│   ├── llm-configs/                # LLM configurations
+│   ├── memory/                     # Session state storage
+│   ├── project/                    # Project documentation
+│   │   ├── product.md              # Product overview
+│   │   ├── structure.md            # Project structure (this file)
+│   │   └── tech.md                 # Technical documentation
+│   └── specs/                      # SPEC documents
+│       ├── SPEC-REFACTOR-001/      # Refactoring specifications
+│       ├── SPEC-TEST-001/          # Unit test specifications
+│       ├── SPEC-TEST-002/          # Component test specifications
+│       ├── SPEC-FIX-001/           # Bug fix specifications
+│       └── SPEC-MOBILE-001/        # Mobile responsiveness specifications
 │
-├── e2e/                        # E2E 테스트 (Playwright)
+├── .claude/                        # Claude Code configuration
+│   ├── agents/moai/                # MoAI agents
+│   ├── commands/moai/              # MoAI commands
+│   ├── hooks/moai/                 # MoAI hooks
+│   ├── output-styles/moai/         # Output styles
+│   ├── rules/moai/                 # MoAI rules
+│   ├── skills/moai-*/              # MoAI skills
+│   ├── settings.json               # Claude settings
+│   └── CLAUDE.md                   # Project instructions
+│
+├── e2e/                            # E2E tests (Playwright)
 │   ├── story-1-1-add-todo.spec.ts
 │   ├── story-1-2-complete-todo.spec.ts
 │   ├── story-1-3-delete-todo.spec.ts
@@ -21,206 +52,280 @@ todo-app/
 │   ├── team-collaboration.spec.ts
 │   └── todo.spec.ts
 │
-├── public/                     # 정적 리소스
-│   ├── icon.svg               # 앱 아이콘 (SVG)
-│   ├── icon-192.png           # 앱 아이콘 (192x192)
-│   ├── icon-512.png           # 앱 아이콘 (512x512)
-│   ├── icon-maskable-512.png  # 마스커블 아이콘
-│   └── sw.js                  # 서비스 워커
+├── public/                         # Static resources
+│   ├── icon.svg                    # App icon (SVG)
+│   ├── icon-192.png                # App icon (192x192)
+│   ├── icon-512.png                # App icon (512x512)
+│   ├── icon-maskable-512.png       # Maskable icon
+│   └── sw.js                       # Service worker
 │
-├── src/                        # 소스 코드
-│   ├── app/                   # Next.js App Router
-│   │   ├── (auth)/           # 인증 라우트 그룹
-│   │   │   ├── login/        # 로그인 페이지
+├── src/                            # Source code
+│   ├── app/                        # Next.js App Router
+│   │   ├── (auth)/                 # Auth route group
+│   │   │   ├── login/              # Login page
 │   │   │   │   └── page.tsx
-│   │   │   ├── signup/       # 회원가입 페이지
+│   │   │   ├── signup/             # Signup page
 │   │   │   │   └── page.tsx
-│   │   │   └── layout.tsx    # 인증 레이아웃
-│   │   ├── favicon.ico       # 파비콘
-│   │   ├── globals.css       # 전역 스타일
-│   │   ├── layout.tsx        # 루트 레이아웃
-│   │   ├── manifest.ts       # PWA 매니페스트
-│   │   ├── page.tsx          # 메인 페이지
-│   │   └── sw.ts             # 서비스 워커 등록
+│   │   │   └── layout.tsx          # Auth layout
+│   │   ├── favicon.ico             # Favicon
+│   │   ├── globals.css             # Global styles
+│   │   ├── layout.tsx              # Root layout
+│   │   ├── manifest.ts             # PWA manifest
+│   │   ├── page.tsx                # Main page
+│   │   └── sw.ts                   # Service worker registration
 │   │
-│   ├── components/            # React 컴포넌트
-│   │   ├── auth/             # 인증 관련
-│   │   │   ├── AuthProvider.tsx  # 인증 컨텍스트
-│   │   │   ├── LoginForm.tsx     # 로그인 폼
-│   │   │   ├── SignupForm.tsx    # 회원가입 폼
-│   │   │   └── UserMenu.tsx      # 사용자 메뉴
+│   ├── components/                 # React components
+│   │   ├── auth/                   # Authentication components
+│   │   │   ├── AuthProvider.tsx    # Auth context provider
+│   │   │   ├── LoginForm.tsx       # Login form component
+│   │   │   ├── SignupForm.tsx      # Signup form component
+│   │   │   └── UserMenu.tsx        # User menu component
 │   │   │
-│   │   ├── calendar/         # 캘린더 관련
-│   │   │   └── CalendarView.tsx  # 캘린더 뷰
+│   │   ├── calendar/               # Calendar components
+│   │   │   └── CalendarView.tsx    # Calendar view component
 │   │   │
-│   │   ├── preset/           # 프리셋 관련
-│   │   │   └── PresetList.tsx    # 프리셋 목록
+│   │   ├── preset/                 # Preset components
+│   │   │   └── PresetList.tsx      # Preset list component
 │   │   │
-│   │   ├── team/             # 팀 협업 관련
-│   │   │   ├── CreateTeamDialog.tsx  # 팀 생성 다이얼로그
-│   │   │   ├── index.ts              # 배럴 파일
-│   │   │   ├── InviteDialog.tsx      # 초대 다이얼로그
-│   │   │   ├── TeamMembers.tsx       # 팀원 목록
-│   │   │   └── TeamSwitcher.tsx      # 팀 전환기
+│   │   ├── team/                   # Team collaboration components
+│   │   │   ├── CreateTeamDialog.tsx    # Team creation dialog
+│   │   │   ├── InviteDialog.tsx        # Team invitation dialog
+│   │   │   ├── TeamMembers.tsx         # Team members list
+│   │   │   ├── TeamSwitcher.tsx        # Team switcher component
+│   │   │   └── index.ts                 # Component barrel
 │   │   │
-│   │   ├── todo/             # 할 일 관련
-│   │   │   ├── index.ts      # 배럴 파일
-│   │   │   ├── TodoDetail.tsx    # 할 일 상세
-│   │   │   ├── TodoInput.tsx     # 할 일 입력
-│   │   │   ├── TodoItem.tsx      # 할 일 항목
-│   │   │   └── TodoList.tsx      # 할 일 목록
+│   │   ├── todo/                   # Todo management components
+│   │   │   ├── index.ts             # Component barrel
+│   │   │   ├── TodoDetail.tsx       # Todo detail component
+│   │   │   ├── TodoInput.tsx        # Todo input component (with 200 char limit)
+│   │   │   ├── TodoItem.tsx         # Todo item component
+│   │   │   └── TodoList.tsx         # Todo list component
 │   │   │
-│   │   ├── ui/               # UI 컴포넌트 (Radix 기반)
-│   │   │   ├── button.tsx    # 버튼
-│   │   │   ├── card.tsx      # 카드
-│   │   │   ├── checkbox.tsx  # 체크박스
-│   │   │   ├── dialog.tsx    # 다이얼로그
-│   │   │   ├── input.tsx     # 입력 필드
-│   │   │   └── textarea.tsx  # 텍스트영역
+│   │   ├── ui/                     # UI components (Radix-based)
+│   │   │   ├── button.tsx           # Button component
+│   │   │   ├── card.tsx             # Card component
+│   │   │   ├── checkbox.tsx         # Checkbox component
+│   │   │   ├── dialog.tsx           # Dialog component
+│   │   │   ├── input.tsx            # Input component
+│   │   │   └── textarea.tsx         # Textarea component
 │   │   │
-│   │   ├── ThemeToggle.tsx   # 테마 전환
-│   │   └── ViewToggle.tsx    # 뷰 모드 전환
+│   │   ├── ThemeToggle.tsx          # Theme toggle component
+│   │   └── ViewToggle.tsx           # View mode toggle component
 │   │
-│   ├── lib/                   # 유틸리티
-│   │   ├── firebase.ts       # Firebase 설정
-│   │   ├── logger.ts         # 조건부 로깅 유틸리티
-│   │   ├── utils.ts          # 공통 유틸리티
-│   │   └── utils.test.ts     # 유틸리티 테스트
+│   ├── lib/                         # Utilities
+│   │   ├── firebase.ts              # Firebase configuration
+│   │   ├── logger.ts                # Conditional logging utility
+│   │   ├── utils.ts                 # Common utilities
+│   │   └── utils.test.ts            # Utilities tests
 │   │
-│   └── store/                 # Zustand 스토어
-│       ├── authStore.ts          # 인증 상태
-│       ├── authStore.test.ts     # 인증 테스트
-│       ├── invitationStore.ts    # 초대 상태
-│       ├── presetStore.ts        # 프리셋 상태
-│       ├── presetStore.test.ts   # 프리셋 테스트
-│       ├── teamStore.ts          # 팀 상태
-│       ├── teamStore.test.ts     # 팀 테스트
-│       ├── themeStore.ts         # 테마 상태
-│       ├── todoStore.ts          # 할 일 상태
-│       └── todoStore.test.ts     # 할 일 테스트
+│   └── store/                       # Zustand stores
+│       ├── authStore.ts             # Authentication state
+│       ├── authStore.test.ts        # Auth store tests
+│       ├── invitationStore.ts       # Invitation state
+│       ├── invitationStore.test.ts  # Invitation store tests
+│       ├── presetStore.ts           # Preset state
+│       ├── presetStore.test.ts      # Preset store tests
+│       ├── teamStore.ts             # Team state
+│       ├── teamStore.test.ts        # Team store tests
+│       ├── themeStore.ts            # Theme state
+│       ├── themeStore.test.ts       # Theme store tests
+│       ├── todoStore.ts             # Todo state (with Firestore sync)
+│       └── todoStore.test.ts        # Todo store tests
 │
-├── .gitignore                 # Git 제외 파일
-├── CLAUDE.md                  # AI 어시스턴트 지침
-├── next.config.ts             # Next.js 설정
-├── package.json               # 프로젝트 메타데이터
-├── playwright.config.ts       # Playwright 설정
-├── postcss.config.mjs         # PostCSS 설정
-├── tailwind.config.ts         # Tailwind 설정
-└── tsconfig.json              # TypeScript 설정
+├── .gitignore                       # Git exclusions
+├── CLAUDE.md                        # AI assistant instructions
+├── next.config.ts                   # Next.js configuration
+├── package.json                     # Project metadata and scripts
+├── playwright.config.ts              # Playwright configuration
+├── postcss.config.mjs               # PostCSS configuration
+├── tailwind.config.ts               # Tailwind CSS configuration
+├── tsconfig.json                    # TypeScript configuration
+├── vitest.config.ts                 # Vitest configuration
+└── .env.glm                         # GLM model configuration
 ```
 
-## 주요 디렉터리 설명
+## Key Directory Descriptions
 
 ### src/app/ - Next.js App Router
 
-Next.js 16의 App Router를 사용하는 페이지 디렉터리입니다.
+Page directory using Next.js 16 App Router.
 
-| 경로 | 설명 |
-|------|------|
-| `(auth)/` | 인증 관련 페이지를 그룹화하는 라우트 그룹 |
-| `(auth)/login/` | 로그인 페이지 (`/login`) |
-| `(auth)/signup/` | 회원가입 페이지 (`/signup`) |
-| `layout.tsx` | 루트 레이아웃 (HTML, 폰트, 프로바이더) |
-| `page.tsx` | 메인 페이지 (`/`) |
-| `manifest.ts` | PWA 웹 앱 매니페스트 동적 생성 |
+| Route | Description |
+|-------|-------------|
+| `(auth)/` | Route group for authentication pages |
+| `(auth)/login/` | Login page (`/login`) |
+| `(auth)/signup/` | Signup page (`/signup`) |
+| `layout.tsx` | Root layout (HTML, fonts, providers) |
+| `page.tsx` | Main page (`/`) |
+| `manifest.ts` | Dynamic PWA manifest generation |
+| `sw.ts` | Service worker registration |
 
-### src/components/ - React 컴포넌트
+### src/components/ - React Components
 
-기능별로 구조화된 React 컴포넌트 디렉터리입니다.
+Feature-organized React component directory.
 
-| 디렉터리 | 설명 | 주요 파일 |
-|----------|------|----------|
-| `auth/` | 인증 UI | LoginForm, SignupForm, AuthProvider |
-| `calendar/` | 캘린더 뷰 | CalendarView |
-| `preset/` | 프리셋 기능 | PresetList |
-| `team/` | 팀 협업 기능 | TeamSwitcher, InviteDialog, TeamMembers |
-| `todo/` | 할 일 관리 | TodoList, TodoItem, TodoInput, TodoDetail |
-| `ui/` | 재사용 UI | button, input, dialog, checkbox, card |
+| Directory | Description | Key Files |
+|-----------|-------------|-----------|
+| `auth/` | Authentication UI | LoginForm, SignupForm, AuthProvider, UserMenu |
+| `calendar/` | Calendar view | CalendarView |
+| `preset/` | Preset functionality | PresetList |
+| `team/` | Team collaboration | TeamSwitcher, InviteDialog, TeamMembers, CreateTeamDialog |
+| `todo/` | Todo management | TodoList, TodoItem, TodoInput, TodoDetail |
+| `ui/` | Reusable UI | button, input, dialog, checkbox, card, textarea |
 
-### src/store/ - Zustand 상태 관리
+### src/store/ - Zustand State Management
 
-Zustand를 사용한 전역 상태 관리 스토어입니다.
+Zustand-based global state management stores with Firestore synchronization.
 
-| 스토어 | 역할 | 주요 상태 |
-|--------|------|----------|
-| `todoStore.ts` | 할 일 관리 | todos, sortType, viewMode, filterMode |
-| `authStore.ts` | 인증 상태 | user, isLoading |
-| `teamStore.ts` | 팀 관리 | teams, currentTeam, members |
-| `themeStore.ts` | 테마 설정 | theme (dark/light) |
-| `presetStore.ts` | 프리셋 관리 | presets |
-| `invitationStore.ts` | 초대 관리 | invitations |
+| Store | Purpose | Key State |
+|-------|---------|-----------|
+| `todoStore.ts` | Todo management | todos, sortType, sortOrder, viewMode, filterMode, Firestore sync |
+| `authStore.ts` | Authentication state | user, isLoading |
+| `teamStore.ts` | Team management | teams, currentTeam, members |
+| `themeStore.ts` | Theme settings | theme (dark/light) |
+| `presetStore.ts` | Preset management | presets |
+| `invitationStore.ts` | Invitation management | invitations |
 
-### src/lib/ - 유틸리티
+### src/lib/ - Utilities
 
-공유 유틸리티 및 설정 파일입니다.
+Shared utilities and configuration files.
 
-| 파일 | 설명 |
-|------|------|
-| `firebase.ts` | Firebase 앱 초기화 및 Firestore/Auth 인스턴스 |
-| `logger.ts` | 조건부 로깅 유틸리티 (개발/프로덕션 분기) |
-| `utils.ts` | 공통 유틸리티 함수 (cn, isE2ETestMode, convertTimestamp) |
-| `utils.test.ts` | 유틸리티 함수 테스트 |
+| File | Description |
+|------|-------------|
+| `firebase.ts` | Firebase app initialization and Firestore/Auth instances |
+| `logger.ts` | Conditional logging utility (dev/prod branching) |
+| `utils.ts` | Common utilities (cn, isE2ETestMode, convertTimestamp) |
+| `utils.test.ts` | Utilities function tests |
 
-### e2e/ - E2E 테스트
+### e2e/ - E2E Tests
 
-Playwright 기반 End-to-End 테스트입니다.
+Playwright-based End-to-End tests covering user stories.
 
-| 테스트 파일 | 테스트 범위 |
-|------------|------------|
-| `story-1-1-add-todo.spec.ts` | 할 일 추가 기능 |
-| `story-1-2-complete-todo.spec.ts` | 할 일 완료 기능 |
-| `story-1-3-delete-todo.spec.ts` | 할 일 삭제 기능 |
-| `story-1-4-filter-todo.spec.ts` | 필터링 기능 |
-| `story-1-5-persistence.spec.ts` | 데이터 영속성 |
-| `team-collaboration.spec.ts` | 팀 협업 기능 |
+| Test File | Test Scope |
+|-----------|------------|
+| `story-1-1-add-todo.spec.ts` | Add todo functionality |
+| `story-1-2-complete-todo.spec.ts` | Complete todo functionality |
+| `story-1-3-delete-todo.spec.ts` | Delete todo functionality |
+| `story-1-4-filter-todo.spec.ts` | Filtering functionality |
+| `story-1-5-persistence.spec.ts` | Data persistence |
+| `team-collaboration.spec.ts` | Team collaboration features |
 
-## 모듈 구성
+## Module Architecture
 
-### 컴포넌트 의존성
+### Component Dependency Tree
 
 ```
 App (layout.tsx)
 ├── AuthProvider
-│   └── 인증 상태 관리
+│   └── Firebase authentication state
 ├── ThemeProvider
-│   └── 테마 컨텍스트
+│   └── Theme context (dark/light)
 └── Page (page.tsx)
     ├── ThemeToggle
     ├── UserMenu
     ├── TeamSwitcher
     ├── ViewToggle
     ├── TodoInput
-    │   └── PresetList
-    ├── TodoList (리스트 뷰)
+    │   ├── Title input (200 char limit with counter)
+    │   ├── Description textarea
+    │   ├── Priority selector
+    │   └── Date range picker
+    ├── PresetList
+    ├── TodoList (list view)
     │   └── TodoItem[]
     │       └── TodoDetail
-    └── CalendarView (캘린더 뷰)
+    └── CalendarView (calendar view)
 ```
 
-### 상태 흐름
+### State Flow
 
 ```
-Firebase Firestore
+Firebase Firestore (Real-time)
     ↓
-Zustand Store (실시간 구독)
+onSnapshot() Listener
     ↓
-React Components (상태 소비)
+Zustand Store (Client State)
+    ↓
+React Components (State Consumers)
     ↓
 User Actions
     ↓
-Store Actions
+Store Actions (with Firestore write)
     ↓
-Firebase Firestore (업데이트)
+Firebase Firestore (Update)
 ```
 
-### 라우팅 구조
+### Routing Structure
 
-| URL 경로 | 컴포넌트 | 설명 |
-|----------|----------|------|
-| `/` | `app/page.tsx` | 메인 할 일 관리 페이지 |
-| `/login` | `app/(auth)/login/page.tsx` | 로그인 페이지 |
-| `/signup` | `app/(auth)/signup/page.tsx` | 회원가입 페이지 |
+| URL Path | Component | Description |
+|----------|-----------|-------------|
+| `/` | `app/page.tsx` | Main todo management page |
+| `/login` | `app/(auth)/login/page.tsx` | Login page |
+| `/signup` | `app/(auth)/signup/page.tsx` | Signup page |
+
+## Data Flow Patterns
+
+### Todo CRUD Flow
+
+1. **Create**: User input → TodoInput → addTodo() → Firestore addDoc → onSnapshot → Store update → UI re-render
+2. **Read**: onSnapshot subscription → Firestore query → Store setTodos → Component render
+3. **Update**: User edit → updateTodo() → Firestore updateDoc → onSnapshot → Store update → UI re-render
+4. **Delete**: User delete → deleteTodo() → Firestore deleteDoc → onSnapshot → Store update → UI re-render
+
+### Authentication Flow
+
+1. User login → Firebase Auth → onAuthStateChanged → AuthStore setUser
+2. AuthStore user change → subscribeToTodos() → Firestore subscription
+3. User logout → Firebase signOut → AuthStore setUser(null) → unsubscribeFromTodos()
+
+### Team Collaboration Flow
+
+1. Create team → TeamStore addTeam → Firestore teams collection
+2. Invite member → InvitationStore createInvite → Firestore invites collection
+3. Accept invite → TeamStore addMember → Firestore teams/{id}/members
+
+## Testing Strategy
+
+### Unit Tests (Vitest)
+
+- **Store Tests**: All Zustand stores have corresponding `.test.ts` files
+- **Component Tests**: All React components have corresponding `.test.tsx` files
+- **Utility Tests**: Helper functions tested with `utils.test.ts`
+
+### E2E Tests (Playwright)
+
+- **User Stories**: Organized by feature story (story-1-1, story-1-2, etc.)
+- **Team Collaboration**: Dedicated team collaboration test suite
+- **Coverage**: Critical user paths from signup to task completion
+
+### Test Coverage Goals
+
+- **Target**: 85% code coverage (per TRUST 5 framework)
+- **Unit Tests**: Cover all business logic in stores and utilities
+- **Component Tests**: Cover all user interactions
+- **E2E Tests**: Cover critical user journeys
+
+## Integration Points
+
+### Firebase Integration
+
+- **Authentication**: Firebase Auth with email/password and Google OAuth
+- **Database**: Firestore with real-time listeners
+- **Data Structure**:
+  ```
+  users/{userId}/todos/{todoId}
+  users/{userId}/presets/{presetId}
+  users/{userId}/teamMemberships/{teamId}
+  teams/{teamId}/members/{userId}
+  teams/{teamId}/invitations/{inviteId}
+  ```
+
+### PWA Integration
+
+- **Manifest**: Dynamic generation via `src/app/manifest.ts`
+- **Service Worker**: Compiled from `src/app/sw.ts` to `public/sw.js` via Serwist
+- **Installation**: Native install prompts on supported platforms
 
 ---
 
-마지막 업데이트: 2026-01-29
+Last Updated: 2026-02-25

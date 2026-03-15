@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { TeamMembers } from './TeamMembers'
-import { useTeamStore, subscribeToTeamMembers, unsubscribeFromTeamMembers } from '@/store/teamStore'
+import { useTeamStore, subscribeToTeamMembers, _unsubscribeFromTeamMembers } from '@/store/teamStore'
 import { useAuthStore } from '@/store/authStore'
 
 vi.mock('@/store/teamStore', () => ({

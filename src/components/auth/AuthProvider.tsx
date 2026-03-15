@@ -40,16 +40,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     if (!isClient) return
 
-    // If already initialized (E2E mode sets this at store creation), skip setup
-    if (initialized && user) {
-      logger.debug('[AuthProvider] Already initialized with user, skipping auth setup')
-      return
-    }
-
     logger.debug('[AuthProvider] Setting up auth listener')
     const unsubscribe = setupAuthListener()
-    return () => unsubscribe()
-  }, [isClient, initialized, user])
+    return () => {
+      logger.debug('[AuthProvider] Cleanup: Unsubscribing auth listener')
+      unsubscribe()
+    }
+  }, [isClient]) // Only depend on isClient - setup once when client-side
 
   // Subscribe to Firestore when user logs in (skip in E2E mode)
   useEffect(() => {
@@ -60,21 +57,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     if (user) {
+      logger.debug('[AuthProvider] Subscribing to Firestore for user:', user.uid)
       subscribeToTodos(user.uid)
       subscribeToPresets(user.uid)
       subscribeToTeams(user.uid)
     } else {
+      logger.debug('[AuthProvider] Unsubscribing from Firestore (no user)')
       unsubscribeFromTodos()
       unsubscribeFromPresets()
       unsubscribeFromTeams()
     }
 
     return () => {
+      logger.debug('[AuthProvider] Cleanup: Unsubscribing from Firestore')
       unsubscribeFromTodos()
       unsubscribeFromPresets()
       unsubscribeFromTeams()
     }
-  }, [user])
+  }, [user?.uid]) // Use user.uid as dependency instead of entire user object
 
   // Handle routing based on auth state
   useEffect(() => {

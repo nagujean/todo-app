@@ -70,7 +70,7 @@ export function TodoList() {
     return (
       <div className="space-y-4">
         {/* REQ-FUNC-014: 필터 모드 - 전체/미완료/완료 버튼 (빈 목록에서도 표시) */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-1 text-xs flex-wrap">
             {filterOptions.map((option) => (
               <button
@@ -123,7 +123,7 @@ export function TodoList() {
     return (
       <div className="space-y-4">
         {/* REQ-FUNC-014: 필터 모드 - 전체/미완료/완료 버튼 */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-1 text-xs flex-wrap">
             {filterOptions.map((option) => (
               <button

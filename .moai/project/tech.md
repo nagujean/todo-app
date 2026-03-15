@@ -1,34 +1,35 @@
-# Todo App - 기술 문서
+# Todo App - Technical Documentation
 
-## 기술 스택 개요
+## Technology Stack Overview
 
-### 핵심 기술
+### Core Technologies
 
-| 분류 | 기술 | 버전 | 용도 |
-|------|------|------|------|
-| 언어 | TypeScript | 5.x | 타입 안전성 및 개발 생산성 |
-| 프레임워크 | Next.js | 16.1.2 | React 프레임워크 (App Router) |
-| UI 라이브러리 | React | 19.2.3 | 사용자 인터페이스 |
-| 상태 관리 | Zustand | 5.0.10 | 클라이언트 상태 관리 |
-| 백엔드 | Firebase | 12.8.0 | 인증 및 데이터베이스 |
-| 스타일링 | Tailwind CSS | 4.x | 유틸리티 기반 CSS |
-| UI 컴포넌트 | Radix UI | - | 접근성 있는 UI 프리미티브 |
-| 테스트 | Vitest | 4.0.18 | 유닛 테스트 |
-| 테스트 | Playwright | 1.57.0 | E2E 테스트 |
-| 테스트 | @testing-library/react | 16.3.2 | React 컴포넌트 테스트 |
-| PWA | Serwist | 9.5.0 | 서비스 워커 및 오프라인 지원 |
+| Category | Technology | Version | Purpose |
+|----------|-----------|---------|---------|
+| Language | TypeScript | 5.x | Type safety and developer productivity |
+| Framework | Next.js | 16.1.2 | React framework with App Router |
+| UI Library | React | 19.2.3 | User interface |
+| State Management | Zustand | 5.0.10 | Client-side state management |
+| Backend | Firebase | 12.8.0 | Authentication and database |
+| Styling | Tailwind CSS | 4.x | Utility-first CSS |
+| UI Components | Radix UI | - | Accessible UI primitives |
+| Testing | Vitest | 4.0.18 | Unit testing |
+| Testing | Playwright | 1.57.0 | E2E testing |
+| Testing | @testing-library/react | 16.3.2 | React component testing |
+| PWA | Serwist | 9.5.0 | Service worker and offline support |
+| Icons | Lucide React | 0.562.0 | Icon library |
 
-## 프레임워크 및 라이브러리 선택 이유
+## Framework and Library Selection Rationale
 
 ### Next.js 16 (App Router)
 
-**선택 이유:**
-- **App Router**: 파일 기반 라우팅과 레이아웃 시스템으로 코드 구조화 용이
-- **React Server Components**: 서버 사이드 렌더링 성능 최적화
-- **내장 최적화**: 이미지, 폰트, 스크립트 자동 최적화
-- **API Routes 불필요**: Firebase를 백엔드로 사용하여 별도 API 불필요
+**Why Selected:**
+- **App Router**: File-based routing and layout system for easy code organization
+- **React Server Components**: Server-side rendering performance optimization
+- **Built-in Optimizations**: Automatic image, font, and script optimization
+- **No API Routes Needed**: Firebase as backend eliminates API layer
 
-**주요 설정:**
+**Key Configuration:**
 ```typescript
 // next.config.ts
 import withSerwist from "@serwist/next";
@@ -42,33 +43,32 @@ export default withSerwist({
 
 ### React 19
 
-**선택 이유:**
-- **Concurrent Features**: 향상된 렌더링 성능
-- **Automatic Batching**: 상태 업데이트 자동 배치
-- **Transitions API**: 부드러운 UI 전환
-- **Next.js 16 호환성**: 최신 Next.js와 완벽 호환
+**Why Selected:**
+- **Concurrent Features**: Improved rendering performance
+- **Automatic Batching**: Automatic state update batching
+- **Transitions API**: Smooth UI transitions
+- **Next.js 16 Compatibility**: Full compatibility with latest Next.js
 
 ### Zustand 5
 
-**선택 이유:**
-- **간결한 API**: Redux 대비 보일러플레이트 최소화
-- **TypeScript 친화적**: 타입 추론 우수
-- **미들웨어 지원**: persist 미들웨어로 로컬 저장소 동기화
-- **번들 크기**: 약 1KB로 매우 가벼움
+**Why Selected:**
+- **Concise API**: Minimal boilerplate compared to Redux
+- **TypeScript Friendly**: Excellent type inference
+- **Middleware Support**: persist middleware for local storage sync
+- **Bundle Size**: Approximately 1KB (gzip)
 
-**구현 패턴:**
+**Implementation Pattern:**
 ```typescript
-// 스토어 생성 패턴
+// Store creation pattern
 export const useTodoStore = create<TodoState>()(
   persist(
     (set, get) => ({
       todos: [],
       addTodo: async (params) => { /* ... */ },
-      // ...
     }),
     {
       name: 'todo-storage',
-      partialize: (state) => ({ /* 영속화할 상태 */ }),
+      partialize: (state) => ({ /* persist state */ }),
     }
   )
 );
@@ -76,28 +76,29 @@ export const useTodoStore = create<TodoState>()(
 
 ### Firebase (Authentication + Firestore)
 
-**선택 이유:**
-- **서버리스**: 백엔드 인프라 관리 불필요
-- **실시간 동기화**: Firestore 실시간 리스너로 즉각적인 UI 반영
-- **인증 통합**: 다양한 인증 제공자 (이메일, Google) 지원
-- **확장성**: 사용량에 따른 자동 스케일링
-- **오프라인 지원**: Firestore 오프라인 캐싱
+**Why Selected:**
+- **Serverless**: No backend infrastructure management
+- **Real-time Sync**: Firestore real-time listeners for instant UI updates
+- **Auth Integration**: Multiple auth providers (email, Google)
+- **Scalability**: Auto-scaling with usage
+- **Offline Support**: Firestore offline caching
 
-**데이터 구조:**
+**Data Structure:**
 ```
 Firestore Database
 ├── users/
 │   └── {userId}/
 │       ├── todos/
 │       │   └── {todoId}/
-│       │       ├── title: string
+│       │       ├── title: string (max 200 chars)
 │       │       ├── description: string?
 │       │       ├── completed: boolean
 │       │       ├── priority: 'high' | 'medium' | 'low'
 │       │       ├── startDate: timestamp?
 │       │       ├── endDate: timestamp?
 │       │       ├── createdAt: timestamp
-│       │       └── updatedAt: timestamp
+│       │       ├── updatedAt: timestamp
+│       │       └── completedAt: timestamp?
 │       ├── presets/
 │       │   └── {presetId}/
 │       │       ├── title: string
@@ -116,71 +117,78 @@ Firestore Database
         ├── memberCount: number
         ├── settings: TeamSettings
         ├── createdAt: timestamp
-        └── members/
-            └── {userId}/
+        ├── members/
+        │   └── {userId}/
+        │       ├── role: TeamRole
+        │       ├── displayName: string
+        │       ├── email: string
+        │       └── joinedAt: timestamp
+        └── invitations/
+            └── {inviteId}/
+                ├── invitedBy: string
+                ├── invitedEmail: string
                 ├── role: TeamRole
-                ├── displayName: string
-                ├── email: string
-                └── joinedAt: timestamp
+                ├── status: 'pending' | 'accepted' | 'declined'
+                └── createdAt: timestamp
 ```
 
 ### Tailwind CSS 4
 
-**선택 이유:**
-- **유틸리티 우선**: 빠른 스타일링과 일관된 디자인 시스템
-- **JIT 컴파일**: 필요한 스타일만 생성하여 번들 최소화
-- **다크 모드**: `dark:` 프리픽스로 간편한 다크 모드 구현
-- **반응형**: `sm:`, `md:`, `lg:` 프리픽스로 손쉬운 반응형 디자인
+**Why Selected:**
+- **Utility First**: Rapid styling and consistent design system
+- **JIT Compilation**: Generate only needed styles for minimal bundle
+- **Dark Mode**: Easy dark mode implementation with `dark:` prefix
+- **Responsive**: Simple responsive design with `sm:`, `md:`, `lg:` prefixes
 
 ### Radix UI
 
-**선택 이유:**
-- **접근성**: WCAG 표준 준수 UI 컴포넌트
-- **헤드리스**: 스타일 커스터마이징 자유도 높음
-- **구성 요소**: Dialog, Checkbox, Slot 등 필수 컴포넌트 제공
+**Why Selected:**
+- **Accessibility**: WCAG compliant UI components
+- **Headless**: Full styling customization freedom
+- **Components**: Dialog, Checkbox, Slot and other essential primitives
 
-**사용 컴포넌트:**
-- `@radix-ui/react-checkbox`: 체크박스
-- `@radix-ui/react-dialog`: 모달/다이얼로그
-- `@radix-ui/react-slot`: 컴포넌트 합성
+**Used Components:**
+- `@radix-ui/react-checkbox`: Checkbox input
+- `@radix-ui/react-dialog`: Modal/dialog
+- `@radix-ui/react-slot`: Component composition
 
 ### Playwright
 
-**선택 이유:**
-- **크로스 브라우저**: Chromium, Firefox, WebKit 지원
-- **자동 대기**: 요소 로딩 자동 대기
-- **병렬 실행**: 테스트 병렬 실행으로 빠른 피드백
-- **디버깅 도구**: UI 모드, 트레이스 뷰어
+**Why Selected:**
+- **Cross Browser**: Chromium, Firefox, WebKit support
+- **Auto Waiting**: Automatic element loading waits
+- **Parallel Execution**: Fast test feedback via parallel runs
+- **Debugging Tools**: UI mode, trace viewer
 
 ### Serwist (PWA)
 
-**선택 이유:**
-- **Next.js 통합**: `@serwist/next`로 간편한 PWA 설정
-- **서비스 워커**: 오프라인 지원 및 캐싱 전략
-- **자동 업데이트**: 새 버전 자동 감지 및 업데이트
+**Why Selected:**
+- **Next.js Integration**: Simple PWA setup via `@serwist/next`
+- **Service Worker**: Offline support and caching strategies
+- **Auto Update**: Automatic new version detection and updates
 
-## 개발 환경 요구사항
+## Development Environment Requirements
 
-### 필수 도구
+### Required Tools
 
-| 도구 | 최소 버전 | 권장 버전 |
-|------|----------|----------|
+| Tool | Minimum Version | Recommended Version |
+|------|----------------|---------------------|
 | Node.js | 18.x | 20.x LTS |
 | npm | 9.x | 10.x |
-| Git | 2.x | 최신 |
+| Git | 2.x | Latest |
 
-### 권장 IDE/에디터
+### Recommended IDE/Editor
 
-- **Visual Studio Code** 권장
-- 필수 확장:
+- **Visual Studio Code** (recommended)
+- Required extensions:
   - ESLint
   - Tailwind CSS IntelliSense
   - TypeScript Importer
   - Playwright Test for VSCode
 
-### 환경 변수
+### Environment Variables
 
-프로젝트 루트에 `.env.local` 파일을 생성하고 다음 변수를 설정합니다:
+Create `.env.local` file in project root with following variables:
 
 ```bash
 # Firebase Configuration
@@ -190,118 +198,151 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
 NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your-measurement-id
 ```
 
-## 빌드 및 배포
+## Build and Deployment
 
-### 개발 서버
+### Development Server
 
 ```bash
-# 의존성 설치
+# Install dependencies
 npm install
 
-# 개발 서버 실행 (http://localhost:3000)
+# Start development server (http://localhost:3000)
 npm run dev
 ```
 
-### 프로덕션 빌드
+### Production Build
 
 ```bash
-# 프로덕션 빌드 (Webpack 사용)
+# Production build (Webpack)
 npm run build
 
-# 프로덕션 서버 실행
+# Start production server
 npm run start
 ```
 
-### 테스트 실행
+### Testing
 
 ```bash
-# 유닛 테스트 실행
+# Run unit tests
 npm run test:unit
 
-# 유닛 테스트 (watch 모드)
+# Run unit tests in watch mode
 npm run test:unit -- --watch
 
-# 커버리지 리포트
+# Generate coverage report
 npm run test:coverage
 
-# E2E 테스트 실행
+# Run E2E tests
 npm run test
 
-# UI 모드로 테스트 실행
+# Run tests in UI mode
 npm run test:ui
 
-# 테스트 리포트 확인
+# View test report
 npm run test:report
 ```
 
-### 배포 설정
+### Firebase Emulators
 
-**Vercel 배포 (권장):**
-1. GitHub 저장소 연결
-2. 프레임워크 프리셋: Next.js 자동 감지
-3. 환경 변수 설정: Firebase 키 입력
-4. 빌드 설정: 기본값 사용
-
-**Firebase 호스팅:**
 ```bash
-# Firebase CLI 설치
+# Start Firebase emulators
+npm run emulators
+
+# Export emulator data
+npm run emulators:export
+
+# Import emulator data
+npm run emulators:import
+```
+
+### Deployment
+
+**Vercel Deployment (Recommended):**
+1. Connect GitHub repository
+2. Framework preset: Next.js auto-detected
+3. Environment variables: Enter Firebase keys
+4. Build settings: Use defaults
+
+**Firebase Hosting:**
+```bash
+# Install Firebase CLI
 npm install -g firebase-tools
 
-# 로그인 및 초기화
+# Login and initialize
 firebase login
 firebase init hosting
 
-# 배포
+# Deploy
 npm run build
 firebase deploy --only hosting
 ```
 
-## PWA 설정
+## PWA Configuration
 
 ### Web App Manifest
 
-`src/app/manifest.ts`에서 PWA 매니페스트를 동적으로 생성합니다:
+`src/app/manifest.ts` generates PWA manifest dynamically:
 
 ```typescript
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Todo App - 할 일 관리',
+    name: 'Todo App - Task Management',
     short_name: 'Todo',
-    description: '할 일을 관리하세요',
+    description: 'Manage your tasks efficiently',
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',
     theme_color: '#3b82f6',
-    // ...
+    icons: [
+      {
+        src: '/icon-192.png',
+        sizes: '192x192',
+        type: 'image/png',
+        purpose: 'any'
+      },
+      {
+        src: '/icon-512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'any'
+      },
+      {
+        src: '/icon-maskable-512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'maskable'
+      }
+    ]
   }
 }
 ```
 
-### 서비스 워커
+### Service Worker
 
-`src/app/sw.ts`에서 서비스 워커를 정의하고, `@serwist/next`가 `public/sw.js`로 컴파일합니다.
+`src/app/sw.ts` defines service worker, `@serwist/next` compiles to `public/sw.js`.
 
-### 앱 설치
+### App Installation
 
-- **모바일**: "홈 화면에 추가" 프롬프트
-- **데스크톱**: 주소창 설치 아이콘
+- **Mobile**: "Add to Home Screen" prompt
+- **Desktop**: Install icon in address bar
 
-## 코드 품질
+## Code Quality
 
-### ESLint 설정
+### ESLint Configuration
 
-`eslint.config.mjs`에서 Next.js 권장 규칙을 사용합니다.
+`eslint.config.mjs` uses Next.js recommended rules.
 
 ```bash
-# 린트 실행
+# Run linter
 npm run lint
 ```
 
-### TypeScript 설정
+### TypeScript Configuration
 
-`tsconfig.json`에서 엄격한 타입 검사를 적용합니다:
+`tsconfig.json` applies strict type checking:
 
 ```json
 {
@@ -313,22 +354,88 @@ npm run lint
 }
 ```
 
-## 성능 최적화
+### TRUST 5 Framework
 
-### 적용된 최적화
+Quality framework compliance:
 
-1. **코드 분할**: Next.js 자동 코드 스플리팅
-2. **이미지 최적화**: Next.js Image 컴포넌트
-3. **폰트 최적화**: `next/font` 로컬 폰트
-4. **상태 분리**: Zustand 스토어별 독립적 구독
-5. **캐싱**: 서비스 워커 캐싱 전략
+- **Tested**: 85%+ coverage target, characterization tests for existing code
+- **Readable**: Clear naming, English comments
+- **Unified**: Consistent style, Tailwind CSS utility classes
+- **Secured**: OWASP compliance, input validation (200 char limit)
+- **Trackable**: Conventional commits, SPEC references
 
-### 번들 크기
+## Performance Optimization
+
+### Applied Optimizations
+
+1. **Code Splitting**: Next.js automatic code splitting
+2. **Image Optimization**: Next.js Image component
+3. **Font Optimization**: `next/font` local fonts
+4. **State Separation**: Independent subscriptions per Zustand store
+5. **Caching**: Service worker caching strategy
+6. **Real-time Sync**: Firestore onSnapshot for instant updates
+
+### Bundle Size
 
 - **Zustand**: ~1KB (gzip)
-- **Firebase**: 선택적 import로 최소화
-- **Radix UI**: 사용 컴포넌트만 번들링
+- **Firebase**: Selective imports to minimize
+- **Radix UI**: Tree-shakeable, only used components bundled
+
+### Performance Targets
+
+- **First Contentful Paint**: < 1.5s
+- **Time to Interactive**: < 3s
+- **Lighthouse Score**: 90+ across all categories
+
+## Data Validation
+
+### Input Validation
+
+- **Title Length**: Maximum 200 characters (client-side enforcement)
+- **Email**: Firebase Auth validation
+- **Dates**: HTML5 date input validation
+- **Priority**: Enum validation (high, medium, low)
+
+### Error Handling
+
+- **Firestore Errors**: Graceful fallback to local state
+- **Auth Errors**: User-friendly error messages
+- **Network Errors**: Retry logic with exponential backoff
+
+## Security Considerations
+
+### Authentication
+
+- **Firebase Auth**: Secure token-based authentication
+- **Session Management**: Automatic token refresh
+- **OAuth**: Secure Google OAuth flow
+
+### Data Security
+
+- **Firestore Rules**: Server-side security rules for access control
+- **Input Sanitization**: Trim whitespace, limit string length
+- **XSS Prevention**: React's built-in XSS protection
+
+### Best Practices
+
+- No hardcoded secrets (environment variables only)
+- HTTPS-only in production
+- Secure headers via Next.js
+- CSP (Content Security Policy) configured
+
+## Monitoring and Observability
+
+### Logging
+
+- **Development**: Detailed console logging via `logger.ts`
+- **Production**: Conditional logging (disabled in production)
+- **Error Tracking**: Firebase Crashlytics (optional)
+
+### Analytics
+
+- **Firebase Analytics**: User behavior tracking
+- **Performance Monitoring**: Firebase Performance Monitoring (optional)
 
 ---
 
-마지막 업데이트: 2026-01-29
+Last Updated: 2026-02-25

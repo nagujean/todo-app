@@ -7,11 +7,11 @@ interface Logger {
   error: (...args: unknown[]) => void;
 }
 
-const isDevelopment = process.env.NODE_ENV === 'development';
+const getIsDevelopment = () => process.env.NODE_ENV === 'development';
 
 export const logger: Logger = {
-  debug: (...args) => isDevelopment && console.debug('[DEBUG]', ...args),
-  info: (...args) => isDevelopment && console.info('[INFO]', ...args),
+  debug: (...args) => getIsDevelopment() && console.debug('[DEBUG]', ...args),
+  info: (...args) => getIsDevelopment() && console.info('[INFO]', ...args),
   warn: (...args) => console.warn('[WARN]', ...args),
   error: (...args) => console.error('[ERROR]', ...args),
 };

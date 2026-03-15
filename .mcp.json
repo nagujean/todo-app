@@ -2,32 +2,14 @@
   "$schema": "https://raw.githubusercontent.com/anthropics/claude-code/main/.mcp.schema.json",
   "mcpServers": {
     "context7": {
-      "$comment": "Using shell wrapper to load PATH (fixes npx bash function issue). Use .mcp.windows.json for Windows.",
-      "command": "{{MCP_SHELL}}",
-      "args": [
-        "-l",
-        "-c",
-        "exec npx -y @upstash/context7-mcp@latest"
-      ]
+      "$comment": "Up-to-date documentation and code examples via Context7",
+      "command": "cmd.exe",
+      "args": ["/c", "npx -y @upstash/context7-mcp@latest"]
     },
     "sequential-thinking": {
-      "command": "{{MCP_SHELL}}",
-      "args": [
-        "-l",
-        "-c",
-        "exec npx -y @modelcontextprotocol/server-sequential-thinking"
-      ]
-    },
-    "stitch": {
-      "command": "{{MCP_SHELL}}",
-      "args": [
-        "-l",
-        "-c",
-        "exec npx -y stitch-mcp"
-      ],
-      "env": {
-        "GOOGLE_CLOUD_PROJECT": "YOUR_PROJECT_ID"
-      }
+      "$comment": "Step-by-step reasoning for complex problems",
+      "command": "cmd.exe",
+      "args": ["/c", "npx -y @modelcontextprotocol/server-sequential-thinking"]
     }
   },
   "staggeredStartup": {

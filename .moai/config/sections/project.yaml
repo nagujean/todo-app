@@ -1,9 +1,8 @@
 project:
-  name: todo-app
-  description: ''
-  type: ''
-  locale: '{{LOCALE}}'
-  created_at: '2026-01-25T18:47:38.065961Z'
-  initialized: 'true'
-github:
-  profile_name: nagujean
+    created_at: ""
+    description: ""
+    initialized: false
+    mode: personal
+    name: ""
+    optimized: false
+    template_version: 2.7.14

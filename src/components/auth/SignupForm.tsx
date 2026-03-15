@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -10,11 +10,18 @@ import { useAuthStore } from '@/store/authStore'
 
 export function SignupForm() {
   const router = useRouter()
-  const { signUp, signInWithGoogle, loading, error, clearError } = useAuthStore()
+  const { signUp, signInWithGoogle, loading, error, clearError, user } = useAuthStore()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [validationError, setValidationError] = useState('')
+
+  // Redirect to home when user is set after successful signup
+  useEffect(() => {
+    if (user) {
+      router.push('/')
+    }
+  }, [user, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,7 +40,7 @@ export function SignupForm() {
 
     try {
       await signUp(email, password)
-      router.push('/')
+      // Redirect will happen via useEffect when user state is updated
     } catch {
       // Error is handled in the store
     }
@@ -45,7 +52,7 @@ export function SignupForm() {
 
     try {
       await signInWithGoogle()
-      router.push('/')
+      // AuthProvider will handle redirect when user state is updated
     } catch {
       // Error is handled in the store
     }

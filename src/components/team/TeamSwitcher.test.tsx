@@ -21,6 +21,7 @@ function setupStore(overrides: Record<string, unknown> = {}) {
     currentTeam: null,
     setCurrentTeam: mockSetCurrentTeam,
     isLoading: false,
+    getUserRole: vi.fn(() => null),
     ...overrides,
   } as ReturnType<typeof useTeamStore>)
 }

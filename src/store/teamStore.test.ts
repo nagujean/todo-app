@@ -740,7 +740,17 @@ describe('teamStore', () => {
     });
 
     it('should call writeBatch when deleting team', async () => {
-      useTeamStore.setState({ userId: 'user-123' });
+      useTeamStore.setState({
+        userId: 'user-123',
+        teams: [{
+          id: 'team-123',
+          name: 'Test Team',
+          ownerId: 'user-123',
+          memberCount: 1,
+          createdAt: new Date().toISOString(),
+          settings: { defaultRole: 'editor' as const, allowInviteLinks: true },
+        }],
+      });
       const store = useTeamStore.getState();
       const { writeBatch } = await import('firebase/firestore');
 
@@ -759,8 +769,16 @@ describe('teamStore', () => {
           ownerId: 'user-123',
           memberCount: 1,
           createdAt: new Date().toISOString(),
-          settings: { defaultRole: 'editor', allowInviteLinks: true },
+          settings: { defaultRole: 'editor' as const, allowInviteLinks: true },
         },
+        teams: [{
+          id: 'team-123',
+          name: 'Test Team',
+          ownerId: 'user-123',
+          memberCount: 1,
+          createdAt: new Date().toISOString(),
+          settings: { defaultRole: 'editor' as const, allowInviteLinks: true },
+        }],
       });
       const store = useTeamStore.getState();
 
@@ -772,11 +790,38 @@ describe('teamStore', () => {
     });
 
     it('should throw error when batch commit fails', async () => {
-      useTeamStore.setState({ userId: 'user-123' });
+      useTeamStore.setState({
+        userId: 'user-123',
+        teams: [{
+          id: 'team-123',
+          name: 'Test Team',
+          ownerId: 'user-123',
+          memberCount: 1,
+          createdAt: new Date().toISOString(),
+          settings: { defaultRole: 'editor' as const, allowInviteLinks: true },
+        }],
+      });
       setMockBatchCommitError(new Error('Batch commit failed'));
       const store = useTeamStore.getState();
 
       await expect(store.deleteTeam('team-123')).rejects.toThrow('Batch commit failed');
+    });
+
+    it('should throw error when user is not owner', async () => {
+      useTeamStore.setState({
+        userId: 'user-456',
+        teams: [{
+          id: 'team-123',
+          name: 'Test Team',
+          ownerId: 'user-123',
+          memberCount: 1,
+          createdAt: new Date().toISOString(),
+          settings: { defaultRole: 'editor' as const, allowInviteLinks: true },
+        }],
+      });
+      const store = useTeamStore.getState();
+
+      await expect(store.deleteTeam('team-123')).rejects.toThrow('팀 삭제 권한이 없습니다');
     });
   });
 

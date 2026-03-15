@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -10,9 +10,18 @@ import { useAuthStore } from '@/store/authStore'
 
 export function LoginForm() {
   const router = useRouter()
-  const { signIn, signInWithGoogle, loading, error, clearError } = useAuthStore()
+  const { signIn, signInWithGoogle, loading, error, clearError, user } = useAuthStore()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+
+  // Redirect to home when user is set after successful login
+  useEffect(() => {
+    console.log('[LoginForm] user changed:', user?.uid || 'null')
+    if (user) {
+      console.log('[LoginForm] Redirecting to home...')
+      router.push('/')
+    }
+  }, [user, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -20,7 +29,7 @@ export function LoginForm() {
 
     try {
       await signIn(email, password)
-      router.push('/')
+      // Redirect will happen via useEffect when user state is updated
     } catch {
       // Error is handled in the store
     }
@@ -31,7 +40,7 @@ export function LoginForm() {
 
     try {
       await signInWithGoogle()
-      router.push('/')
+      // AuthProvider will handle redirect when user state is updated
     } catch {
       // Error is handled in the store
     }

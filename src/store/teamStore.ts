@@ -15,6 +15,7 @@ import {
 import { db } from '@/lib/firebase'
 import { isE2ETestMode, convertTimestamp } from '@/lib/utils'
 import { logger } from '@/lib/logger'
+import { subscribeToTodos, subscribeToTeamTodos, unsubscribeFromTodos } from './todoStore'
 
 // Types
 export type TeamRole = 'owner' | 'admin' | 'editor' | 'viewer'
@@ -68,6 +69,7 @@ interface TeamState {
   updateMemberRole: (teamId: string, memberId: string, newRole: TeamRole) => Promise<void>
   removeMember: (teamId: string, memberId: string) => Promise<void>
   clearTeams: () => void
+  getUserRole: (teamId: string) => TeamRole | null
 
   // Internal setters
   setTeams: (teams: Team[]) => void
@@ -106,9 +108,22 @@ export const useTeamStore = create<TeamState>()(
       },
 
       setCurrentTeam: (teamId) => {
-        const { teams } = get()
+        const { teams, userId } = get()
         const team = teamId ? teams.find((t) => t.id === teamId) || null : null
         set({ currentTeamId: teamId, currentTeam: team, members: [] })
+
+        // 팀 변경 시 todo 구독 전환
+        logger.info('[TeamStore] Switching team context:', { teamId, userId })
+        if (teamId) {
+          // 팀 모드: 팀 할일 구독
+          subscribeToTeamTodos(teamId)
+        } else if (userId) {
+          // 개인 모드: 개인 할일 구독
+          subscribeToTodos(userId)
+        } else {
+          // 로그아웃 상태: 구독 해제
+          unsubscribeFromTodos()
+        }
       },
 
       createTeam: async (name, description) => {
@@ -224,8 +239,14 @@ export const useTeamStore = create<TeamState>()(
       },
 
       deleteTeam: async (teamId) => {
-        const { userId, currentTeamId } = get()
+        const { userId, currentTeamId, teams } = get()
         if (!userId || !db) return
+
+        // 소유자 권한 검증
+        const team = teams.find((t) => t.id === teamId)
+        if (!team || team.ownerId !== userId) {
+          throw new Error('팀 삭제 권한이 없습니다. 소유자만 삭제할 수 있습니다.')
+        }
 
         try {
           const batch = writeBatch(db)
@@ -248,8 +269,14 @@ export const useTeamStore = create<TeamState>()(
       },
 
       leaveTeam: async (teamId) => {
-        const { userId, currentTeamId } = get()
+        const { userId, currentTeamId, teams, members } = get()
         if (!userId || !db) return
+
+        // 소유자는 탈퇴할 수 없음 - 팀 삭제 필요
+        const team = teams.find((t) => t.id === teamId)
+        if (team && team.ownerId === userId) {
+          throw new Error('소유자는 팀에서 탈퇴할 수 없습니다. 팀을 삭제하거나 소유권을 이전하세요.')
+        }
 
         try {
           const batch = writeBatch(db)
@@ -324,6 +351,19 @@ export const useTeamStore = create<TeamState>()(
 
       clearTeams: () => {
         set({ teams: [], currentTeamId: null, currentTeam: null, members: [], userId: null })
+      },
+
+      getUserRole: (teamId) => {
+        const { userId, teams, members } = get()
+        if (!userId) return null
+
+        const team = teams.find((t) => t.id === teamId)
+        if (!team) return null
+
+        if (team.ownerId === userId) return 'owner'
+
+        const member = members.find((m) => m.id === userId)
+        return member?.role || null
       },
 
       setTeams: (teams) => {

@@ -163,4 +163,119 @@ describe('presetStore', () => {
       expect(usePresetStore.getState().isLoading).toBe(false);
     });
   });
+
+  describe('Edge cases', () => {
+    it('should handle empty string title gracefully', async () => {
+      const store = usePresetStore.getState();
+
+      await store.addPreset('');
+
+      const presets = usePresetStore.getState().presets;
+      // Empty title should still add a preset (validation is UI-level)
+      expect(presets).toHaveLength(1);
+    });
+
+    it('should handle whitespace-only title', async () => {
+      const store = usePresetStore.getState();
+
+      await store.addPreset('   ');
+
+      const presets = usePresetStore.getState().presets;
+      expect(presets).toHaveLength(1);
+    });
+
+    it('should handle very long titles', async () => {
+      const store = usePresetStore.getState();
+      const longTitle = 'a'.repeat(500);
+
+      await store.addPreset(longTitle);
+
+      const presets = usePresetStore.getState().presets;
+      expect(presets).toHaveLength(1);
+      expect(presets[0].title).toBe(longTitle);
+    });
+
+    it('should handle special characters in title', async () => {
+      const store = usePresetStore.getState();
+
+      await store.addPreset('Preset with <script> & "quotes"');
+
+      const presets = usePresetStore.getState().presets;
+      expect(presets).toHaveLength(1);
+      expect(presets[0].title).toBe('Preset with <script> & "quotes"');
+    });
+
+    it('should handle Unicode and emoji characters', async () => {
+      const store = usePresetStore.getState();
+
+      await store.addPreset('프리셋 😀 한국어 🇰🇷');
+
+      const presets = usePresetStore.getState().presets;
+      expect(presets).toHaveLength(1);
+      expect(presets[0].title).toBe('프리셋 😀 한국어 🇰🇷');
+    });
+
+    it('should generate unique IDs for each preset', async () => {
+      const store = usePresetStore.getState();
+
+      await store.addPreset('Preset 1');
+      await store.addPreset('Preset 2');
+      await store.addPreset('Preset 3');
+
+      const presets = usePresetStore.getState().presets;
+      const ids = new Set(presets.map(p => p.id));
+
+      expect(ids.size).toBe(3);
+    });
+
+    it('should handle case-sensitive duplicate check', async () => {
+      const store = usePresetStore.getState();
+
+      await store.addPreset('daily standup');
+      await store.addPreset('Daily Standup');
+
+      // These are different strings, so both should be added
+      const presets = usePresetStore.getState().presets;
+      expect(presets).toHaveLength(2);
+    });
+
+    it('should handle rapid sequential additions', async () => {
+      const store = usePresetStore.getState();
+
+      const promises = Array.from({ length: 10 }, (_, i) =>
+        store.addPreset(`Preset ${i}`)
+      );
+
+      await Promise.all(promises);
+
+      const presets = usePresetStore.getState().presets;
+      expect(presets).toHaveLength(10);
+    });
+  });
+
+  describe('Timestamp handling', () => {
+    it('should create preset with valid ISO timestamp', async () => {
+      const store = usePresetStore.getState();
+
+      await store.addPreset('Timestamp Test');
+
+      const presets = usePresetStore.getState().presets;
+      expect(presets[0].createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+    });
+
+    it('should create timestamps in chronological order', async () => {
+      const store = usePresetStore.getState();
+
+      await store.addPreset('First');
+      // Small delay to ensure different timestamps
+      await new Promise(resolve => setTimeout(resolve, 10));
+      await store.addPreset('Second');
+
+      const presets = usePresetStore.getState().presets;
+      const firstTime = new Date(presets[0].createdAt).getTime();
+      const secondTime = new Date(presets[1].createdAt).getTime();
+
+      expect(secondTime).toBeGreaterThan(firstTime);
+    });
+  });
 });

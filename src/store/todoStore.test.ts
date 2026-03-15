@@ -23,6 +23,16 @@ vi.mock('@/lib/firebase', () => ({
   db: null, // Set to null to use local storage mode
 }));
 
+vi.mock('./todoStore', async () => {
+  const actual = await vi.importActual('./todoStore')
+  return {
+    ...actual,
+    subscribeToTodos: vi.fn(),
+    subscribeToTeamTodos: vi.fn(),
+    unsubscribeFromTodos: vi.fn(),
+  }
+});
+
 describe('todoStore', () => {
   beforeEach(() => {
     // Reset the store state before each test
@@ -294,6 +304,46 @@ describe('todoStore', () => {
       const remainingTodos = useTodoStore.getState().todos;
       expect(remainingTodos).toHaveLength(2);
       expect(remainingTodos.every((t) => !t.completed)).toBe(true);
+    });
+  });
+
+  describe('Team mode', () => {
+    it('should have currentTeamId in initial state', () => {
+      const state = useTodoStore.getState();
+      expect(state.currentTeamId).toBeNull();
+    });
+
+    it('should set currentTeamId', () => {
+      const store = useTodoStore.getState();
+      store.setCurrentTeamId('team-123');
+      expect(useTodoStore.getState().currentTeamId).toBe('team-123');
+    });
+
+    it('should clear todos when switching team', async () => {
+      const store = useTodoStore.getState();
+
+      // Add a personal todo
+      await store.addTodo({ title: 'Personal Todo' });
+      expect(useTodoStore.getState().todos).toHaveLength(1);
+
+      // Switch to team mode
+      store.setCurrentTeamId('team-456');
+      expect(useTodoStore.getState().todos).toHaveLength(0);
+      expect(useTodoStore.getState().currentTeamId).toBe('team-456');
+    });
+
+    it('should clear todos when switching back to personal', async () => {
+      const store = useTodoStore.getState();
+
+      // Set team mode and add todo
+      store.setCurrentTeamId('team-789');
+      await store.addTodo({ title: 'Team Todo' });
+      expect(useTodoStore.getState().todos).toHaveLength(1);
+
+      // Switch back to personal mode
+      store.setCurrentTeamId(null);
+      expect(useTodoStore.getState().todos).toHaveLength(0);
+      expect(useTodoStore.getState().currentTeamId).toBeNull();
     });
   });
 

@@ -17,6 +17,11 @@ vi.mock('@/store/teamStore', () => ({
 vi.mock('@/components/team', () => ({
   TeamMembers: () => <div data-testid="team-members" />,
   InviteDialog: () => <div data-testid="invite-dialog" />,
+  IntegratedTeamManagementSheet: ({ teamId, open, onOpenChange }: any) => (
+    <div data-testid="integrated-team-management" data-open={open}>
+      Team Management for {teamId}
+    </div>
+  ),
 }))
 
 const mockLogout = vi.fn()
@@ -86,8 +91,7 @@ describe('UserMenu', () => {
     setupStores({ team: { id: 'team-1', name: 'My Team' } })
     render(<UserMenu />)
     await user.click(screen.getByRole('button'))
-    expect(screen.getByText('팀 멤버')).toBeInTheDocument()
-    expect(screen.getByText('팀원 초대')).toBeInTheDocument()
+    expect(screen.getByText('팀 관리')).toBeInTheDocument()
   })
 
   it('hides team options when no currentTeam', async () => {
@@ -95,8 +99,7 @@ describe('UserMenu', () => {
     setupStores({ team: null })
     render(<UserMenu />)
     await user.click(screen.getByRole('button'))
-    expect(screen.queryByText('팀 멤버')).not.toBeInTheDocument()
-    expect(screen.queryByText('팀원 초대')).not.toBeInTheDocument()
+    expect(screen.queryByText('팀 관리')).not.toBeInTheDocument()
   })
 
   it('closes dropdown when clicking outside', async () => {

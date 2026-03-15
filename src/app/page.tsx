@@ -56,22 +56,22 @@ export default function Home() {
   const title = currentTeam ? currentTeam.name : '할 일 목록'
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-8">
-      <main className={`mx-auto w-full ${viewMode === 'calendar' ? 'md:max-w-4xl' : 'md:max-w-xl'}`}>
-        <Card className="shadow-sm">
-          <CardHeader className="pb-4">
-            <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 justify-between">
-              <div className="flex items-center gap-2 order-1">
-                <ThemeToggle />
-                <TeamSwitcher />
-              </div>
-              <CardTitle className="text-xl md:text-2xl font-semibold truncate text-center md:text-left w-full md:w-auto md:max-w-[200px] order-3 md:order-2">
+    <div className="min-h-screen bg-background px-4 sm:px-8 py-4 sm:py-8 overflow-visible">
+      <main className={`mx-auto w-full px-0 md:px-4 overflow-visible ${viewMode === 'calendar' ? 'md:max-w-4xl' : 'md:max-w-2xl'}`}>
+        <Card className="shadow-sm overflow-visible">
+          <CardHeader className="pb-4 overflow-visible space-y-2">
+            {/* 첫 번째 줄: 테마, 타이틀, 계정정보 */}
+            <div className="flex items-center gap-1 sm:gap-2 justify-between overflow-visible">
+              <ThemeToggle />
+              <CardTitle className="text-base sm:text-lg md:text-xl font-semibold truncate text-center flex-1 min-w-0 px-1">
                 {title}
               </CardTitle>
-              <div className="flex items-center gap-2 order-2 md:order-3">
-                <ViewToggle />
-                <UserMenu />
-              </div>
+              <UserMenu />
+            </div>
+            {/* 두 번째 줄: 팀 선택, 뷰 토글 */}
+            <div className="flex items-center gap-1 sm:gap-2 justify-between overflow-visible flex-wrap">
+              <TeamSwitcher />
+              <ViewToggle />
             </div>
           </CardHeader>
           <CardContent className="space-y-6">

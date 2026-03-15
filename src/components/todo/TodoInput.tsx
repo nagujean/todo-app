@@ -51,6 +51,25 @@ export function TodoInput() {
     }
   }
 
+  // Handle Enter key press for mobile keyboards (fallback)
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && title.trim()) {
+      e.preventDefault()
+      addTodo({
+        title: title.trim(),
+        description: description.trim() || undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        priority: priority || undefined,
+      })
+      setTitle('')
+      setDescription('')
+      setStartDate('')
+      setEndDate('')
+      setPriority('')
+    }
+  }
+
   const characterCount = title.length
   const isNearLimit = characterCount > MAX_TITLE_LENGTH * 0.9 // Show warning at 90%
 
@@ -62,6 +81,9 @@ export function TodoInput() {
             type="text"
             value={title}
             onChange={handleTitleChange}
+            onKeyDown={handleKeyDown}
+            onFocus={() => setShowOptions(true)}
+            enterKeyHint="done"
             placeholder="할 일을 입력하세요..."
             className="flex-1 pr-16"
             maxLength={MAX_TITLE_LENGTH}

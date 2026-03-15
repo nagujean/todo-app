@@ -38,7 +38,7 @@ describe('cn (className utility)', () => {
 });
 
 describe('isE2ETestMode', () => {
-  const originalWindow = global.window;
+  const _originalWindow = global.window;
   const originalProcess = process.env;
 
   beforeEach(() => {
@@ -58,7 +58,7 @@ describe('isE2ETestMode', () => {
     windowSpy.mockReturnValue(undefined as unknown as Window & typeof globalThis);
 
     // Re-import to test with undefined window
-    const result = isE2ETestMode();
+    const _result = isE2ETestMode();
 
     // The function checks typeof window === 'undefined', but in jsdom window exists
     // So we test the actual SSR condition differently
