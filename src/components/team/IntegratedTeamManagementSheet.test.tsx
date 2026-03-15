@@ -215,8 +215,9 @@ describe('IntegratedTeamManagementSheet', () => {
 
       await waitFor(() => {
         expect(screen.getByText(/마지막 소유자/)).toBeInTheDocument()
-        // 마지막 소유자는 팀 삭제 불가
-        expect(screen.queryByRole('button', { name: /팀 삭제/ })).not.toBeInTheDocument()
+        // SPEC-TEAM-003: 마지막 소유자도 팀 삭제 가능
+        // 삭제는 팀 전체를 제거하는 작업이므로 owner 권한만 있으면 됩니다
+        expect(screen.getByRole('button', { name: /팀 삭제/ })).toBeInTheDocument()
       })
     })
 

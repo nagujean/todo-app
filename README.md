@@ -2,10 +2,12 @@
 
 Modern task management web application with real-time sync and team collaboration.
 
-## Version 0.2.0 Highlights
+## Version 0.2.1 Highlights
 
 ### New Features
-- **Mobile Responsive Design**: Enhanced mobile experience with responsive layout
+- **Team Management Menu UX**: Enhanced team management workflow with integrated team management sheet (SPEC-TEAM-003)
+- **Improved Team Permissions**: Last owner can delete team, improved permission system
+- **Enhanced Mobile Experience**: Mobile responsive design improvements
 - **Code Quality Improvements**: Refactored components for better maintainability
 - **Security Enhancements**: Improved error handling and input validation
 - **Accessibility**: WCAG 2.1 Level AA compliance improvements
@@ -26,11 +28,12 @@ Modern task management web application with real-time sync and team collaboratio
 - **Team Workspaces**: Create and manage team workspaces
 - **Role-Based Access Control**: Owner, Admin, Editor, Viewer roles
 - **Member Invitation**: Invite team members via email
-- **Integrated Team Management**: Unified team management interface (v0.2.0)
+- **Integrated Team Management**: Enhanced unified team management interface (v0.2.1)
   - Single entry point for all team operations
   - Member list with role management
   - Team settings (name, description)
-  - Team deletion (Owner only) / Team leave (Non-owner)
+  - Team deletion (Owner including last owner) / Team leave (Non-owner)
+  - **New**: Team management menu in team switcher for quick access
 
 ### Views
 
