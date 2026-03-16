@@ -150,7 +150,7 @@ export function TeamSwitcher({ className }: TeamSwitcherProps) {
             {teams.length > 0 && (
               <>
                 <div className="my-1 h-px bg-border" role="separator" />
-                <div className="max-h-48 overflow-y-auto">
+                <div className="max-h-96 overflow-y-auto">
                   {teams.map((team) => (
                     <div
                       key={team.id}
