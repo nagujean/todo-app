@@ -13,11 +13,22 @@ interface SlashCommandMenuProps {
   editor: Editor | null
 }
 
+// @MX:NOTE: SSR hydration 오류 방지 - 클라이언트에서만 Portal 렌더링
+function useIsClient() {
+  const [isClient, setIsClient] = useState(false)
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+  return isClient
+}
+
 /**
  * SlashCommandMenu 컴포넌트
  * "/" 키 입력 시 블록 타입 선택 메뉴를 표시합니다.
  */
 export function SlashCommandMenu({ editor }: SlashCommandMenuProps) {
+  // @MX:NOTE: SSR hydration 오류 방지 - 최상위에서 호출
+  const isClient = useIsClient()
   const [isOpen, setIsOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -161,7 +172,8 @@ export function SlashCommandMenu({ editor }: SlashCommandMenuProps) {
     }
   }, [editor, isOpen])
 
-  if (!isOpen || !editor) {
+  // @MX:NOTE: SSR hydration 오류 방지 - 클라이언트에서만 렌더링
+  if (!isOpen || !editor || !isClient) {
     return null
   }
 
@@ -192,7 +204,7 @@ export function SlashCommandMenu({ editor }: SlashCommandMenuProps) {
     </div>
   )
 
-  // Portal을 사용하여 메뉴 렌더링
+  // Portal을 사용하여 메뉴 렌더링 (클라이언트에서만)
   return createPortal(menuContent, document.body)
 }
 
