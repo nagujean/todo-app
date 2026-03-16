@@ -23,11 +23,11 @@ interface RichTextEditorProps {
 }
 
 /** Debounce hook */
-function useDebouncedCallback<T extends (...args: unknown[]) => void>(
-  callback: T,
+function useDebouncedCallback<TArgs extends unknown[]>(
+  callback: (...args: TArgs) => void,
   delay: number
-): T {
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>()
+): (...args: TArgs) => void {
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   useEffect(() => {
     return () => {
@@ -37,12 +37,12 @@ function useDebouncedCallback<T extends (...args: unknown[]) => void>(
     }
   }, [])
 
-  return ((...args: Parameters<T>) => {
+  return (...args: TArgs) => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current)
     }
     timeoutRef.current = setTimeout(() => callback(...args), delay)
-  }) as T
+  }
 }
 
 /**
