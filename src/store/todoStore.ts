@@ -516,12 +516,14 @@ export function subscribeToTeamTodos(teamId: string) {
     todosQuery,
     (snapshot) => {
       logger.debug('[TodoStore] Team onSnapshot fired, docs:', snapshot.docs.length)
+      // @MX:NOTE: SPEC-CHECKLIST-001 - content 필드 누락 버그 수정
       const todos: Todo[] = snapshot.docs.map((doc) => {
         const data = doc.data()
         return {
           id: doc.id,
           title: data.title,
           description: data.description || undefined,
+          content: data.content || undefined, // @MX:FIX: 팀 할일에서 content 필드 로드 누락 수정
           completed: data.completed,
           createdAt: convertTimestamp(data.createdAt),
           updatedAt: convertTimestamp(data.updatedAt),
