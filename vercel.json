@@ -4,7 +4,27 @@
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
-  "regions": ["iad1"],
+  "regions": ["iad1", "sfo1", "fra1"],
+  "functions": {
+    "app/api/**/*.ts": {
+      "memory": 1024,
+      "maxDuration": 10
+    },
+    "app/api/**/*.js": {
+      "memory": 1024,
+      "maxDuration": 10
+    },
+    "app/api/health/route.ts": {
+      "memory": 512,
+      "maxDuration": 5
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -24,8 +44,22 @@
         {
           "key": "Referrer-Policy",
           "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.vercel.app https://*.firebaseio.com https://*.googleapis.com; frame-src 'self' https://*.firebaseapp.com; object-src 'none'; base-uri 'self'; form-action 'self';"
         }
       ]
     }
-  ]
+  ],
+  "trailingSlash": false,
+  "cleanUrls": true
 }

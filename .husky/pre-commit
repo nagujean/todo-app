@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# SPEC-DEPLOY-STABILITY-001 Phase 1: Quality Gates Foundation
+# Run lint-staged for pre-commit validation
+npx lint-staged
+
+# Type check (noEmit)
+echo "Running TypeScript type check..."
+npx tsc --noEmit
+
+# Run related tests for changed files
+echo "Running tests for changed files..."
+npx vitest related --run
