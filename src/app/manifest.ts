@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: 'Todo',
     description: '할 일을 관리하세요',
     start_url: '/',
-    display: 'standalone',
+    display: 'browser',
     background_color: '#ffffff',
     theme_color: '#3b82f6',
     orientation: 'portrait-primary',
