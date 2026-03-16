@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { useTodoStore, type Priority } from '@/store/todoStore'
 import { ChevronDown, ChevronUp } from 'lucide-react'
+import { RichTextEditor } from '@/components/editor'
+import type { JSONContent } from '@tiptap/react'
 
 const MAX_TITLE_LENGTH = 200 // REQ-DATA-005: Max 200 characters
 
@@ -18,7 +19,7 @@ const priorityOptions: { value: Priority | ''; label: string; color: string }[] 
 
 export function TodoInput() {
   const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
+  const [content, setContent] = useState<JSONContent | undefined>(undefined)
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [priority, setPriority] = useState<Priority | ''>('')
@@ -30,13 +31,13 @@ export function TodoInput() {
     if (title.trim()) {
       addTodo({
         title: title.trim(),
-        description: description.trim() || undefined,
+        content,
         startDate: startDate || undefined,
         endDate: endDate || undefined,
         priority: priority || undefined,
       })
       setTitle('')
-      setDescription('')
+      setContent(undefined)
       setStartDate('')
       setEndDate('')
       setPriority('')
@@ -57,13 +58,13 @@ export function TodoInput() {
       e.preventDefault()
       addTodo({
         title: title.trim(),
-        description: description.trim() || undefined,
+        content,
         startDate: startDate || undefined,
         endDate: endDate || undefined,
         priority: priority || undefined,
       })
       setTitle('')
-      setDescription('')
+      setContent(undefined)
       setStartDate('')
       setEndDate('')
       setPriority('')
@@ -116,12 +117,10 @@ export function TodoInput() {
         <div className="space-y-3 pt-1">
           <div>
             <label className="text-muted-foreground text-xs mb-1.5 block">상세 내용</label>
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="상세 내용을 입력하세요..."
-              rows={3}
-              className="resize-none"
+            <RichTextEditor
+              initialContent={content}
+              onChange={setContent}
+              placeholder="상세 내용을 입력하세요... (/ 로 명령어 메뉴 열기)"
             />
           </div>
           <div>
