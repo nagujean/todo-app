@@ -1,147 +1,142 @@
-# Todo App - Product Overview
+# Todo App - 제품 개요
 
-## Project Information
+## 프로젝트 비전
 
-- **Project Name**: Todo App
-- **Version**: 0.2.0
-- **Type**: Progressive Web Application (PWA)
+Todo App은 현대적인 작업 관리 경험을 제공하는 프로그레시브 웹 애플리케이션(PWA)으로, 개인 및 팀 협업을 위한 실시간 동기화 기능을 갖추고 있습니다.
 
-## Product Description
+## 핵심 목표
 
-Todo App is a modern web application for individual and team-based task management. With real-time synchronization powered by Firebase and offline support through PWA capabilities, users can efficiently manage their tasks anytime, anywhere.
+1. **사용자 경험 최적화**: 직관적인 UI와 빠른 반응속도로 생산성 향상
+2. **팀 협업 강화**: 역할 기반 액세스 제어와 실시간 동기화로 효율적인 협업 지원
+3. **접근성 보장**: 모바일 최적화와 오프라인 지원으로 언제 어디서나 접근 가능
+4. **신뢰성 제공**: Firebase 백엔드를 통한 안정적인 데이터 관리와 실시간 동기화
 
-## Target Users
+## 타겟 사용자
 
-### Primary Users
+### 1차 타겟: 개인 사용자
+- 일상적인 작업 관리가 필요한 개인
+- 모바일과 데스크톱을 모두 사용하는 사용자
+- 오프라인 환경에서도 앱 사용을 원하는 사용자
 
-- **Individual Users**: Users who want to systematically manage daily tasks and projects
-- **Small Teams**: Teams who want to collaborate on shared projects
+### 2차 타겟: 팀 및 소규모 조직
+- 2-10인 규모의 팀 워크스페이스
+- 프로젝트별 작업 할당 및 추적이 필요한 팀
+- 역할 기반 권한 관리가 필요한 조직
 
-### User Personas
+## 핵심 기능
 
-1. **Busy Professional**: Wants to efficiently separate and manage work and personal tasks
-2. **Project Manager**: Wants to assign tasks to team members and track progress
-3. **Student**: Wants to systematically manage assignments and exam schedules
+### 기본 기능
+- **작업 관리**: 생성, 조회, 수정, 삭제 (CRUD)
+- **우선순위 설정**: 높음/중간/낮음 3단계
+- **날짜 범위**: 시작일과 종료일 설정
+- **정렬**: 생성일, 우선순위, 시작일, 종료일 기준
+- **필터링**: 전체/미완료/완료된 작업 필터
+- **일괄 삭제**: 완료된 작업 한번에 삭제
 
-## Core Features
+### 협업 기능
+- **팀 워크스페이스**: 팀 생성 및 관리
+- **역할 기반 액세스 제어**: Owner, Admin, Editor, Viewer
+- **멤버 초대**: 이메일 기반 초대 시스템
+- **통합 팀 관리**: 단일 인터페이스에서 팀 운영 (v0.2.1)
+  - 멤버 목록 및 역할 관리
+  - 팀 설정 (이름, 설명)
+  - 팀 삭제/나가기
+  - 팀 스위처에서 빠른 팀 관리 메뉴 접근
 
-### 1. Todo Management
+### 뷰 모드
+- **리스트 뷰**: 전통적인 작업 목록 표시
+- **캘린더 뷰**: 날짜 기반 작업 시각화
 
-- **CRUD Operations**: Create, read, update, and delete todos
-- **Priority Levels**: 3-level priority system (high, medium, low)
-- **Date Range**: Set start and end dates for scheduling
-- **Detailed Description**: Add detailed descriptions to each todo
-- **Sorting Options**: Sort by creation date, priority, start date, or end date
-- **Filtering**: Filter by all, incomplete, or completed items
-- **Batch Delete**: Clear all completed todos at once
-- **200 Character Limit**: Title validation with real-time character count
+### 추가 기능
+- **프리셋**: 자주 사용하는 작업을 템플릿으로 저장
+- **다크 모드**: 라이트/다크 테마 전환
+- **PWA 지원**: 앱 설치 및 오프라인 작동
+- **실시간 동기화**: Firebase 기반 데이터 동기화
+- **모바일 최적화**: 반응형 디자인 (v0.2.0)
+- **GitHub 자동 배포**: Vercel 연동 CI/CD 파이프라인 (SPEC-DEPLOY-001)
 
-### 2. Authentication System
+## 비즈니스 목표 및 성공 지표
 
-- **Email/Password Authentication**: Basic signup and login
-- **Google OAuth**: Quick login with Google account
-- **Session Management**: Maintain login state with automatic logout
+### 비즈니스 목표
+1. **사용자 채택**: 월간 활성 사용자(MAU) 1,000명 달성
+2. **사용자 유지**: 30일 리텐션 비율 40% 이상 유지
+3. **협업 참여**: 팀 워크스페이스 생성율 20% 이상
+4. **사용자 만족**: NPS 점수 50점 이상 유지
 
-### 3. Team Collaboration
+### 성공 지표 (KPI)
+- **기술적 성능**
+  - 첫 페이지 로드 시간: 2초 이내 (P95)
+  - API 응답 시간: 500ms 이내 (P95)
+  - 오프라인 기능 작동률: 100%
 
-- **Team Management**: Create, update, and delete teams
-- **Role-Based Access Control (RBAC)**:
-  - **Owner**: Full team permissions including team deletion
-  - **Admin**: Member management and settings changes
-  - **Editor**: Create and modify todos
-  - **Viewer**: Read-only access
-- **Member Invitations**: Invite other users to teams
-- **Team Switching**: Seamless switching between personal and team workspaces
+- **사용자 참여**
+  - 일일 활성 사용자(DAU) / 월간 활성 사용자(MAU) 비율: 20% 이상
+  - 평균 세션 시간: 5분 이상
+  - 기능 사용률 (필터, 정렬, 프리셋): 30% 이상
 
-### 4. View Modes
+- **품질**
+  - 버그 리포트: 월간 5건 이하
+  - 크래시 율: 0.1% 이하
+  - 테스트 커버리지: 80% 이상
 
-- **List View**: Traditional list-based todo display
-- **Calendar View**: Date-based visualization of todos
+## 경쟁사와의 차별화
 
-### 5. Theme System
+### 기존 솔루션의 한계
+- 복잡한 인터페이스와 높은 러닝 커브
+- 오프라인 환경 지원 부족
+- 팀 협업 기능의 불편함
+- 느린 로딩 속도와 반응성
 
-- **Dark Mode**: Eye-friendly dark theme
-- **Light Mode**: Bright theme for well-lit environments
-- **Persistent Settings**: User theme preference automatically saved
+### Todo App의 차별화 요소
+1. **간단하고 직관적인 UX**: 최소한의 클릭으로 핵심 기능 수행
+2. **완벽한 PWA 경험**: 오프라인에서도 완벽하게 작동
+3. **강력한 팀 협업**: 역할 기반 권한과 실시간 동기화
+4. **빠른 성능**: Next.js 16과 최신 기술 스택으로 최적화
+5. **모바일 최적화**: 반응형 디자인으로 모든 디바이스 지원
 
-### 6. Presets
+## 향후 로드맵
 
-- **Todo Templates**: Save frequently used tasks as templates
-- **Quick Creation**: Instantly create todos from saved templates
-- **Personalization**: User-specific preset management
+### 단기 (3개월)
+- [ ] 알림 기능 (마감일 알림, 팀 멤버 활동 알림)
+- [ ] 작업 댓글 및 협업 기능 강화
+- [ ] 태그 및 라벨 시스템
+- [ ] 검색 기능 개선
 
-### 7. PWA Support
+### 중기 (6개월)
+- [ ] 프로젝트 및 하위 작업 지원
+- [ ] 파일 첨부 기능
+- [ ] 작업 템플릿 라이브러리
+- [ ] 통계 및 대시보드
 
-- **Offline Support**: Use the app without internet connection
-- **App Installation**: Installable on mobile and desktop devices
-- **Service Worker**: Background synchronization and caching
+### 장기 (12개월 이상)
+- [ ] AI 기반 작업 추천
+- [ ] 캘린더 앱 연동 (Google Calendar, Outlook)
+- [ ] 웹훅 및 API 공개
+- [ ] 엔터프라이즈 기능 (SSO, 감사 로그)
 
-### 8. Mobile Responsiveness
+## 기술적 제약 사항
 
-- **Touch-Friendly Interface**: Optimized for touch interactions
-- **Adaptive Layout**: Responsive design for various screen sizes
-- **Enter Key Support**: Mobile keyboard optimization with enterKeyHint
+### 플랫폼
+- 웹 브라우저: Chrome, Edge, Firefox, Safari (최신 2개 버전)
+- 모바일: iOS Safari 14+, Chrome Mobile 90+
+- PWA: 설치 가능한 형태로 제공
 
-## Use Cases
+### 성능
+- Core Web Vitals 준수
+- LCP (Largest Contentful Paint): 2.5초 이내
+- FID (First Input Delay): 100ms 이내
+- CLS (Cumulative Layout Shift): 0.1 이내
 
-### Use Case 1: Personal Schedule Management
+### 보안
+- OWASP Top 10 준수
+- Firebase Authentication 사용
+- Firestore 보안 규칙 적용
+- HTTPS 강제
+- XSS 방지 (React 기본 보안 활용)
 
-1. User signs up with email or logs in with Google account
-2. Adds today's tasks with priority levels
-3. Views weekly/monthly schedule in calendar view
-4. Checks off completed tasks to track progress
+## 법적/규제 요구사항
 
-### Use Case 2: Team Project Collaboration
-
-1. Team leader creates a new team
-2. Invites team members with Editor role
-3. Creates project-related todos and assigns them
-4. All team members see real-time progress updates
-
-### Use Case 3: Recurring Task Management
-
-1. Saves frequently performed tasks as presets
-2. Clicks preset to instantly create a todo
-3. Checks off task when completed
-
-## Differentiation
-
-| Feature | Todo App | Simple Memo Apps | Complex PM Tools |
-|---------|----------|------------------|------------------|
-| Learning Curve | Low | Very Low | High |
-| Team Collaboration | Supported | Not Supported | Supported |
-| Offline | Fully Supported | Partial | Limited |
-| Real-time Sync | Supported | Not Supported | Supported |
-| Free Usage | Completely Free | Free | Paid |
-
-## Success Metrics
-
-### User Engagement
-- Daily Active Users (DAU)
-- Average session duration
-- Task completion rate
-
-### Feature Usage
-- Preset creation frequency
-- Team collaboration rate
-- PWA installation rate
-
-### Performance
-- Page load time < 2 seconds
-- Offline mode functionality
-- Cross-browser compatibility
-
-## Future Plans
-
-- Notification and reminder functionality
-- Recurring todo settings
-- Tags and categories
-- Enhanced search functionality
-- Statistics and productivity reports
-- File attachments for todos
-- Subtask support
-- Time tracking
-
----
-
-Last Updated: 2026-02-25
+- GDPR 준수 (데이터 삭제 권한, 데이터 내보내기)
+- 접근성 (WCAG 2.1 Level AA)
+- 개인정보 처리방침 준수
+- 이용약관 명시

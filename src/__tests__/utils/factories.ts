@@ -1,10 +1,12 @@
 import type { Todo, Priority } from '@/store/todoStore'
 import type { Preset } from '@/store/presetStore'
+import type { JSONContent } from '@tiptap/react'
 
 export interface MockTodoOptions {
   id?: string
   title?: string
   description?: string
+  content?: JSONContent
   completed?: boolean
   createdAt?: string
   updatedAt?: string
@@ -23,6 +25,7 @@ export function createMockTodo(options: MockTodoOptions = {}): Todo {
     id: options.id ?? `todo-${todoCounter}`,
     title: options.title ?? `Test Todo ${todoCounter}`,
     description: options.description,
+    content: options.content,
     completed: options.completed ?? false,
     createdAt: options.createdAt ?? now,
     updatedAt: options.updatedAt ?? now,
