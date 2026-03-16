@@ -4,7 +4,6 @@
 // "/" 키를 입력했을 때 표시되는 명령어 메뉴입니다.
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useEditor, EditorContent } from '@tiptap/react'
 import type { Editor } from '@tiptap/react'
 import { filterCommands, type SlashCommandItemType } from './utils/slashCommands'
 import { createPortal } from 'react-dom'
@@ -29,6 +28,8 @@ export function SlashCommandMenu({ editor }: SlashCommandMenuProps) {
   const filteredCommands = filterCommands(query)
 
   // 에디터에서 "/" 입력 감지
+  // keydown 이벤트는 문자 입력 전에 발생하므로,
+  // 커서가 줄 시작이나 공백 뒤에 있을 때 "/" 입력을 감지합니다.
   useEffect(() => {
     if (!editor) {
       return
@@ -40,8 +41,10 @@ export function SlashCommandMenu({ editor }: SlashCommandMenuProps) {
         const { from } = editor.state.selection
         const textBefore = editor.state.doc.textBetween(Math.max(0, from - 100), from)
 
-        // 이미 "/"가 입력된 상태인지 확인
-        if (textBefore.endsWith('/')) {
+        // 줄 시작이거나 공백 뒤에서 "/" 입력 시 메뉴 표시 (Notion 스타일)
+        const shouldOpenMenu = textBefore === '' || /\s$/.test(textBefore)
+
+        if (shouldOpenMenu) {
           const { view } = editor
           const coords = view.coordsAtPos(from)
           const scrollX = window.scrollX
@@ -78,11 +81,11 @@ export function SlashCommandMenu({ editor }: SlashCommandMenuProps) {
     }
   }, [])
 
-  // 키보드 네비게이션
-  const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent) => {
-      if (!isOpen) return
+  // 키보드 네비게이션 (document 레벨 이벤트 리스너)
+  useEffect(() => {
+    if (!isOpen || !editor) return
 
+    const handleNavigationKeyDown = (event: KeyboardEvent) => {
       switch (event.key) {
         case 'ArrowDown':
           event.preventDefault()
@@ -103,9 +106,14 @@ export function SlashCommandMenu({ editor }: SlashCommandMenuProps) {
           setIsOpen(false)
           break
       }
-    },
-    [isOpen, selectedIndex, filteredCommands]
-  )
+    }
+
+    document.addEventListener('keydown', handleNavigationKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleNavigationKeyDown)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, selectedIndex, filteredCommands, editor])
 
   // 명령어 삽입
   const insertCommand = useCallback(
@@ -120,9 +128,8 @@ export function SlashCommandMenu({ editor }: SlashCommandMenuProps) {
         )
       )
 
-      // 명령어 실행
-      const content = command.action()
-      editor.chain().focus().insertContent(content).run()
+      // 명령어 실행 (editor를 전달하여 chain 명령어 사용)
+      command.action(editor)
 
       setIsOpen(false)
       setQuery('')
@@ -166,7 +173,6 @@ export function SlashCommandMenu({ editor }: SlashCommandMenuProps) {
         left: `${coords.x}px`,
         top: `${coords.y}px`,
       }}
-      onKeyDown={handleKeyDown}
     >
       {filteredCommands.length === 0 ? (
         <div className="p-3 text-sm text-muted-foreground">검색 결과가 없습니다</div>

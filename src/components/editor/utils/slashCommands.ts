@@ -1,7 +1,7 @@
 // 슬래시 명령어 유틸리티
 // 에디터에서 "/" 키 입력 시 표시할 명령어 메뉴를 정의합니다.
 
-import type { JSONContent } from '@tiptap/react'
+import type { Editor } from '@tiptap/react'
 
 /**
  * 슬래시 명령어 타입
@@ -12,7 +12,7 @@ export type SlashCommandItemType = {
   description: string
   icon: string
   keywords: string[]
-  action: () => JSONContent
+  action: (editor: Editor) => void
 }
 
 /**
@@ -26,28 +26,9 @@ export const slashCommands: SlashCommandItemType[] = [
     description: '체크 가능한 항목 리스트',
     icon: '☑️',
     keywords: ['task', 'checklist', 'todo', '할일'],
-    action: () => ({
-      type: 'taskList',
-      content: [
-        {
-          type: 'taskItem',
-          attrs: {
-            checked: false,
-          },
-          content: [
-            {
-              type: 'paragraph',
-              content: [
-                {
-                  type: 'text',
-                  text: '',
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    }),
+    action: (editor: Editor) => {
+      editor.chain().focus().toggleTaskList().run()
+    },
   },
   {
     id: 'bullet-list',
@@ -55,25 +36,9 @@ export const slashCommands: SlashCommandItemType[] = [
     description: '글머리 기호가 있는 리스트',
     icon: '•',
     keywords: ['bullet', 'list', 'ul', '점'],
-    action: () => ({
-      type: 'bulletList',
-      content: [
-        {
-          type: 'listItem',
-          content: [
-            {
-              type: 'paragraph',
-              content: [
-                {
-                  type: 'text',
-                  text: '',
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    }),
+    action: (editor: Editor) => {
+      editor.chain().focus().toggleBulletList().run()
+    },
   },
   {
     id: 'ordered-list',
@@ -81,25 +46,9 @@ export const slashCommands: SlashCommandItemType[] = [
     description: '번호가 있는 리스트',
     icon: '1.',
     keywords: ['ordered', 'number', 'ol', '숫자', '번호'],
-    action: () => ({
-      type: 'orderedList',
-      content: [
-        {
-          type: 'listItem',
-          content: [
-            {
-              type: 'paragraph',
-              content: [
-                {
-                  type: 'text',
-                  text: '',
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    }),
+    action: (editor: Editor) => {
+      editor.chain().focus().toggleOrderedList().run()
+    },
   },
   {
     id: 'heading-1',
@@ -107,18 +56,9 @@ export const slashCommands: SlashCommandItemType[] = [
     description: '큰 제목',
     icon: 'H1',
     keywords: ['heading', 'h1', 'title', '제목'],
-    action: () => ({
-      type: 'heading',
-      attrs: {
-        level: 1,
-      },
-      content: [
-        {
-          type: 'text',
-          text: '',
-        },
-      ],
-    }),
+    action: (editor: Editor) => {
+      editor.chain().focus().toggleHeading({ level: 1 }).run()
+    },
   },
   {
     id: 'heading-2',
@@ -126,18 +66,9 @@ export const slashCommands: SlashCommandItemType[] = [
     description: '중간 제목',
     icon: 'H2',
     keywords: ['heading', 'h2', 'subtitle', '부제목'],
-    action: () => ({
-      type: 'heading',
-      attrs: {
-        level: 2,
-      },
-      content: [
-        {
-          type: 'text',
-          text: '',
-        },
-      ],
-    }),
+    action: (editor: Editor) => {
+      editor.chain().focus().toggleHeading({ level: 2 }).run()
+    },
   },
   {
     id: 'horizontal-rule',
@@ -145,9 +76,9 @@ export const slashCommands: SlashCommandItemType[] = [
     description: '가로 구분선',
     icon: '—',
     keywords: ['hr', 'divider', 'separator', '구분선', '선'],
-    action: () => ({
-      type: 'horizontalRule',
-    }),
+    action: (editor: Editor) => {
+      editor.chain().focus().setHorizontalRule().run()
+    },
   },
 ]
 

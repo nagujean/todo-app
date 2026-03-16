@@ -6,6 +6,7 @@
 import { useEditor, EditorContent } from '@tiptap/react'
 import { extensions } from './extensions'
 import { textToContent, isEmptyContent } from './utils/contentConverter'
+import { SlashCommandMenu } from './SlashCommandMenu'
 import { useEffect, useRef } from 'react'
 import type { JSONContent } from '@tiptap/react'
 
@@ -108,6 +109,7 @@ export function RichTextEditor({
   return (
     <div className="border rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:border-transparent transition-colors">
       <EditorContent editor={editor} className="min-h-[100px]" />
+      <SlashCommandMenu editor={editor} />
     </div>
   )
 }
