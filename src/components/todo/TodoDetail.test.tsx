@@ -39,10 +39,10 @@ describe('TodoDetail', () => {
     expect(screen.getByDisplayValue('Test Todo')).toBeInTheDocument()
   })
 
-  it('renders description field', () => {
+  it('renders description field with rich text editor', () => {
     const todo = createMockTodo({ description: 'Some description' })
     render(<TodoDetail todo={todo} open={true} onOpenChange={vi.fn()} />)
-    expect(screen.getByDisplayValue('Some description')).toBeInTheDocument()
+    expect(screen.getByText('Some description')).toBeInTheDocument()
   })
 
   it('renders priority options', () => {

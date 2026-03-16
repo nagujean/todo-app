@@ -8,10 +8,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { useTodoStore, type Todo, type Priority } from '@/store/todoStore'
 import { Calendar, Clock } from 'lucide-react'
+import { RichTextEditor } from '@/components/editor'
+import type { JSONContent } from '@tiptap/react'
 
 interface TodoDetailProps {
   todo: Todo | null
@@ -43,7 +44,7 @@ function TodoDetailForm({ todo, onOpenChange }: { todo: Todo; onOpenChange: (ope
 
   // Initialize state from todo prop - state resets when component remounts via key
   const [title, setTitle] = useState(todo.title)
-  const [description, setDescription] = useState(todo.description || '')
+  const [content, setContent] = useState<JSONContent | undefined>(todo.content)
   const [startDate, setStartDate] = useState(todo.startDate || '')
   const [endDate, setEndDate] = useState(todo.endDate || '')
   const [priority, setPriority] = useState<Priority | ''>(todo.priority || '')
@@ -54,7 +55,7 @@ function TodoDetailForm({ todo, onOpenChange }: { todo: Todo; onOpenChange: (ope
     updateTodo({
       id: todo.id,
       title: title.trim(),
-      description: description.trim() || undefined,
+      content,
       startDate: startDate || undefined,
       endDate: endDate || undefined,
       priority: priority || undefined,
@@ -85,15 +86,14 @@ function TodoDetailForm({ todo, onOpenChange }: { todo: Todo; onOpenChange: (ope
           />
         </div>
 
-        {/* Description */}
+        {/* Description - Rich Text Editor */}
         <div>
           <label className="text-sm font-medium mb-1.5 block">상세 내용</label>
-          <Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="상세 내용을 입력하세요..."
-            rows={4}
-            className="resize-none"
+          <RichTextEditor
+            initialContent={content}
+            description={todo.description}
+            onChange={setContent}
+            placeholder="상세 내용을 입력하세요... (/ 로 명령어 메뉴 열기)"
           />
         </div>
 

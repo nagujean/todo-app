@@ -16,6 +16,8 @@ import { db } from '@/lib/firebase'
 import { convertTimestamp } from '@/lib/utils'
 import { logger } from '@/lib/logger'
 
+import type { JSONContent } from '@tiptap/react'
+
 export type Priority = 'high' | 'medium' | 'low'
 export type SortType = 'created' | 'priority' | 'startDate' | 'endDate'
 export type SortOrder = 'asc' | 'desc'
@@ -25,7 +27,8 @@ export type FilterMode = 'all' | 'incomplete' | 'completed'
 export interface Todo {
   id: string
   title: string
-  description?: string
+  description?: string // @MX:NOTE: Deprecated - read-only for backward compatibility
+  content?: JSONContent // @MX:NOTE: Tiptap JSON format for rich text content
   completed: boolean
   createdAt: string
   updatedAt: string
@@ -38,7 +41,8 @@ export interface Todo {
 
 interface AddTodoParams {
   title: string
-  description?: string
+  description?: string // @MX:NOTE: Deprecated - use content instead
+  content?: JSONContent // Tiptap JSON format
   startDate?: string
   endDate?: string
   priority?: Priority
@@ -47,7 +51,8 @@ interface AddTodoParams {
 interface UpdateTodoParams {
   id: string
   title?: string
-  description?: string
+  description?: string // @MX:NOTE: Deprecated - use content instead
+  content?: JSONContent // Tiptap JSON format
   startDate?: string
   endDate?: string
   priority?: Priority
@@ -166,7 +171,7 @@ export const useTodoStore = create<TodoState>()(
       currentTeamId: null,
       isLoading: false,
 
-      addTodo: async ({ title, description, startDate, endDate, priority }) => {
+      addTodo: async ({ title, description, content, startDate, endDate, priority }) => {
         const { userId, currentTeamId, todos } = get()
         const trimmedTitle = title.trim().slice(0, 200)
         if (!trimmedTitle) return
@@ -182,6 +187,7 @@ export const useTodoStore = create<TodoState>()(
           id: tempId,
           title: trimmedTitle,
           description: description?.trim() || undefined,
+          content,
           completed: false,
           createdAt: now,
           updatedAt: now,
@@ -202,6 +208,7 @@ export const useTodoStore = create<TodoState>()(
             const todoData = {
               title: trimmedTitle,
               description: description?.trim() || null,
+              content: content || null,
               completed: false,
               createdAt: Timestamp.now(),
               updatedAt: Timestamp.now(),
@@ -230,7 +237,7 @@ export const useTodoStore = create<TodoState>()(
         }
       },
 
-      updateTodo: async ({ id, title, description, startDate, endDate, priority }) => {
+      updateTodo: async ({ id, title, description, content, startDate, endDate, priority }) => {
         const { userId, currentTeamId } = get()
 
         if ((userId || currentTeamId) && db) {
@@ -245,6 +252,7 @@ export const useTodoStore = create<TodoState>()(
 
             if (title !== undefined) updates.title = title.trim().slice(0, 200)
             if (description !== undefined) updates.description = description || null
+            if (content !== undefined) updates.content = content || null
             if (startDate !== undefined) updates.startDate = startDate || null
             if (endDate !== undefined) updates.endDate = endDate || null
             if (priority !== undefined) updates.priority = priority || null
@@ -260,6 +268,7 @@ export const useTodoStore = create<TodoState>()(
                       ...todo,
                       title: title !== undefined ? title.trim().slice(0, 200) : todo.title,
                       description: description !== undefined ? description : todo.description,
+                      content: content !== undefined ? content : todo.content,
                       startDate: startDate !== undefined ? startDate : todo.startDate,
                       endDate: endDate !== undefined ? endDate : todo.endDate,
                       priority: priority !== undefined ? priority : todo.priority,
@@ -277,6 +286,7 @@ export const useTodoStore = create<TodoState>()(
                     ...todo,
                     title: title !== undefined ? title.trim().slice(0, 200) : todo.title,
                     description: description !== undefined ? description : todo.description,
+                    content: content !== undefined ? content : todo.content,
                     startDate: startDate !== undefined ? startDate : todo.startDate,
                     endDate: endDate !== undefined ? endDate : todo.endDate,
                     priority: priority !== undefined ? priority : todo.priority,
@@ -456,6 +466,7 @@ export function subscribeToTodos(userId: string) {
           id: doc.id,
           title: data.title,
           description: data.description || undefined,
+          content: data.content || undefined,
           completed: data.completed,
           createdAt: convertTimestamp(data.createdAt),
           updatedAt: convertTimestamp(data.updatedAt),
