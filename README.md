@@ -2,21 +2,30 @@
 
 Modern task management web application with real-time sync and team collaboration.
 
-## Version 0.2.1 Highlights
+## Version 0.2.2 Highlights
 
 ### New Features
+
+- **Rich Text Editor**: Notion-style rich text editing with slash commands, bullet lists, and formatting (SPEC-CHECKLIST-001)
+- **Deployment Stability**: Automated health checks, alert notifications, and deployment verification (SPEC-DEPLOY-STABILITY-001)
+- **GitHub Actions CI/CD**: Automated quality gates with ESLint, TypeScript checks, and build verification
 - **Team Management Menu UX**: Enhanced team management workflow with integrated team management sheet (SPEC-TEAM-003)
 - **Improved Team Permissions**: Last owner can delete team, improved permission system
 - **Enhanced Mobile Experience**: Mobile responsive design improvements
-- **Code Quality Improvements**: Refactored components for better maintainability
-- **Security Enhancements**: Improved error handling and input validation
-- **Accessibility**: WCAG 2.1 Level AA compliance improvements
+- **Code Quality Improvements**: ES Modules migration, React 19 best practices with useSyncExternalStore
+
+### Security & Stability
+
+- PWA offline support with service worker caching
+- Health check endpoints for deployment monitoring
+- Alert notifications for deployment failures (Slack integration ready)
 
 ## Features
 
 ### Core Features
 
 - **Todo Management**: Create, read, update, delete tasks with priority levels (high/medium/low)
+- **Rich Text Editor**: Notion-style editor with slash commands (/), bullet lists, and formatting (v0.2.2)
 - **Date Range**: Set start and end dates for scheduling
 - **Sorting**: Sort by creation date, priority, start date, or end date
 - **Filtering**: Filter by all, incomplete, or completed tasks
@@ -44,25 +53,26 @@ Modern task management web application with real-time sync and team collaboratio
 
 - **Presets**: Save frequently used tasks as templates
 - **Dark Mode**: Toggle between light and dark themes
-- **PWA Support**: Install as app, works offline
+- **PWA Support**: Install as app, works offline with service worker caching
 - **Real-time Sync**: Firebase-powered data synchronization
 - **Mobile Optimized**: Responsive design for mobile devices (v0.2.0)
 - **GitHub Automatic Deployment**: Automated CI/CD pipeline with Vercel integration (SPEC-DEPLOY-001)
+- **Deployment Stability**: Health checks, alert notifications, and deployment verification (SPEC-DEPLOY-STABILITY-001)
 
 ## Tech Stack
 
-| Category | Technology | Version |
-|----------|-----------|---------|
-| Framework | Next.js (App Router) | 16.1.2 |
-| UI Library | React | 19.2.3 |
-| State Management | Zustand | 5.0.10 |
-| Backend | Firebase (Auth + Firestore) | 12.8.0 |
-| Styling | Tailwind CSS | 4.x |
-| UI Components | Radix UI | - |
-| Unit Testing | Vitest | 4.0.18 |
-| Testing | Playwright | 1.57.0 |
-| PWA | Serwist | 9.5.0 |
-| Language | TypeScript | 5.x |
+| Category         | Technology                  | Version |
+| ---------------- | --------------------------- | ------- |
+| Framework        | Next.js (App Router)        | 16.1.2  |
+| UI Library       | React                       | 19.2.3  |
+| State Management | Zustand                     | 5.0.10  |
+| Backend          | Firebase (Auth + Firestore) | 12.8.0  |
+| Styling          | Tailwind CSS                | 4.x     |
+| UI Components    | Radix UI                    | -       |
+| Unit Testing     | Vitest                      | 4.0.18  |
+| Testing          | Playwright                  | 1.57.0  |
+| PWA              | Serwist                     | 9.5.0   |
+| Language         | TypeScript                  | 5.x     |
 
 ## Quick Start
 
@@ -133,16 +143,16 @@ npm run test:unit
 npm run test:coverage
 ```
 
-Unit test coverage (67.6% overall, 445 tests):
+Unit test coverage (557 tests, 39 test files):
 
-| Category | Coverage |
-|----------|----------|
-| Store Tests | authStore 93.42%, themeStore 100%, invitationStore 73.91%, teamStore 71.42% |
-| UI Components | button, input, checkbox, card, dialog, textarea (95%+) |
-| Todo Components | TodoItem, TodoList, TodoInput, TodoDetail (84%+) |
-| Auth Components | LoginForm, SignupForm, UserMenu, AuthProvider (88%+) |
-| Team Components | TeamSwitcher, CreateTeamDialog, InviteDialog, TeamMembers (67%+) |
-| Other Components | CalendarView, PresetList, ThemeToggle, ViewToggle, pages |
+| Category         | Coverage                                                                    |
+| ---------------- | --------------------------------------------------------------------------- |
+| Store Tests      | authStore 93.42%, themeStore 100%, invitationStore 73.91%, teamStore 71.42% |
+| UI Components    | button, input, checkbox, card, dialog, textarea (95%+)                      |
+| Todo Components  | TodoItem, TodoList, TodoInput, TodoDetail (84%+)                            |
+| Auth Components  | LoginForm, SignupForm, UserMenu, AuthProvider (88%+)                        |
+| Team Components  | TeamSwitcher, CreateTeamDialog, InviteDialog, TeamMembers (67%+)            |
+| Other Components | CalendarView, PresetList, ThemeToggle, ViewToggle, pages                    |
 
 ### E2E Tests
 
@@ -158,6 +168,7 @@ npm run test:report
 ```
 
 Test coverage includes:
+
 - Todo CRUD operations
 - Filtering and sorting
 - Data persistence
