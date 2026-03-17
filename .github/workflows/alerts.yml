@@ -28,8 +28,12 @@ on:
   pull_request:
     types: [closed]
 
+permissions:
+  issues: write
+  contents: read
+
 env:
-  VERCEL_URL: ${{ github.event.deployment_status.target_url || 'https://todo-app.vercel.app' }}
+  VERCEL_URL: ${{ github.event.deployment_status.target_url || 'https://todo-app-2.vercel.app' }}
   SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
 jobs:
