@@ -35,6 +35,9 @@ permissions:
 env:
   VERCEL_URL: ${{ github.event.deployment_status.target_url || 'https://todo-app-2.vercel.app' }}
   SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  # Vercel Deployment Protection Bypass Token
+  # Get from: Vercel Dashboard > Project > Settings > Deployment Protection
+  VERCEL_BYPASS_TOKEN: ${{ secrets.VERCEL_PROTECTION_BYPASS }}
 
 jobs:
   monitor-deployment:
@@ -125,7 +128,14 @@ jobs:
         run: |
           echo "Running health check on ${{ env.VERCEL_URL }}"
 
-          RESPONSE=$(curl -s -w "\n%{http_code}" "${{ env.VERCEL_URL }}/api/health")
+          # Build URL with bypass token if available
+          if [ -n "$VERCEL_BYPASS_TOKEN" ]; then
+            HEALTH_URL="${{ env.VERCEL_URL }}/api/health?x-vercel-set-bypass-cookie=true&x-vercel-protection-bypass=$VERCEL_BYPASS_TOKEN"
+          else
+            HEALTH_URL="${{ env.VERCEL_URL }}/api/health"
+          fi
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" "$HEALTH_URL")
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
           BODY=$(echo "$RESPONSE" | sed '$d')
 
