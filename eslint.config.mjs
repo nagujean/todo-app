@@ -20,6 +20,10 @@ const eslintConfig = defineConfig([
     ".claude/**",
     // Generated functions build output
     "functions/lib/**",
+    // Root-level test/debug scripts (CommonJS, not part of main codebase)
+    "*.js",
+    // Coverage directory
+    "coverage/**",
   ]),
   // Allow underscore-prefixed unused variables (intentionally unused)
   {

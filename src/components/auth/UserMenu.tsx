@@ -1,42 +1,40 @@
-'use client'
+"use client";
 
-import { useState, useRef, useEffect } from 'react'
-import { LogOut, User, Users, UserPlus, Settings, ChevronDown } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { useAuthStore } from '@/store/authStore'
-import { useTeamStore } from '@/store/teamStore'
-import { TeamMembers, InviteDialog, IntegratedTeamManagementSheet } from '@/components/team'
+import { useState, useRef, useEffect } from "react";
+import { LogOut, User, Settings, ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useAuthStore } from "@/store/authStore";
+import { useTeamStore } from "@/store/teamStore";
+import { IntegratedTeamManagementSheet } from "@/components/team";
 
 export function UserMenu() {
-  const { user, logout, loading } = useAuthStore()
-  const { currentTeam, currentTeamId } = useTeamStore()
-  const [isOpen, setIsOpen] = useState(false)
-  const [showMembers, setShowMembers] = useState(false)
-  const [showInvite, setShowInvite] = useState(false)
-  const [showTeamManagement, setShowTeamManagement] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
+  const { user, logout, loading } = useAuthStore();
+  const { currentTeam, currentTeamId } = useTeamStore();
+  const [isOpen, setIsOpen] = useState(false);
+  const [showTeamManagement, setShowTeamManagement] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
+        setIsOpen(false);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-  if (!user) return null
+  if (!user) return null;
 
   const handleLogout = async () => {
     try {
-      await logout()
+      await logout();
     } catch {
       // Error is handled in the store
     }
-  }
+  };
 
-  const displayName = user.displayName || user.email?.split('@')[0] || '사용자'
+  const displayName = user.displayName || user.email?.split("@")[0] || "사용자";
 
   return (
     <>
@@ -63,13 +61,12 @@ export function UserMenu() {
               <div className="p-1 border-b">
                 <button
                   onClick={() => {
-                    setShowTeamManagement(true)
-                    setIsOpen(false)
+                    setShowTeamManagement(true);
+                    setIsOpen(false);
                   }}
                   className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-accent"
                 >
-                  <Settings className="h-4 w-4" />
-                  팀 관리
+                  <Settings className="h-4 w-4" />팀 관리
                 </button>
               </div>
             )}
@@ -96,5 +93,5 @@ export function UserMenu() {
         />
       )}
     </>
-  )
+  );
 }

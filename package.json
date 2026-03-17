@@ -5,7 +5,7 @@
   "scripts": {
     "claude:glm": "dotenv -e .env.glm -- claude --model glm-4.7",
     "dev": "next dev",
-    "build": "node scripts/sw-version.js && next build --webpack",
+    "build": "node scripts/sw-version.mjs && next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "lint:fix": "eslint --fix",

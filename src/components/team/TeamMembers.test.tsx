@@ -1,10 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { TeamMembers } from "./TeamMembers";
-import {
-  useTeamStore,
-  subscribeToTeamMembers,
-  unsubscribeFromTeamMembers,
-} from "@/store/teamStore";
+import { useTeamStore, subscribeToTeamMembers } from "@/store/teamStore";
 import { useAuthStore } from "@/store/authStore";
 
 vi.mock("@/store/teamStore", () => ({

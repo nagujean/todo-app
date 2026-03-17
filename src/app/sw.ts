@@ -14,7 +14,7 @@ declare const self: WorkerGlobalScope;
 
 // @MX:NOTE: 강제 캐시 무효화 - auth/unauthorized-domain 오류 해결
 // 버전 업데이트 시 기존 캐시 자동 삭제
-const CACHE_VERSION = "v3-2026-03-16-a";
+const CACHE_VERSION = "v3-2026-03-17-a";
 
 self.addEventListener("activate", async () => {
   // 모든 기존 캐시 삭제
