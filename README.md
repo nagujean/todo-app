@@ -13,6 +13,7 @@ Modern task management web application with real-time sync and team collaboratio
 - **Improved Team Permissions**: Last owner can delete team, improved permission system
 - **Enhanced Mobile Experience**: Mobile responsive design improvements
 - **Code Quality Improvements**: ES Modules migration, React 19 best practices with useSyncExternalStore
+- **Sentry Error Tracking**: Real-time error monitoring and tracking with Sentry integration (SPEC-OBSERVABILITY-001)
 
 ### Security & Stability
 
@@ -61,6 +62,7 @@ Modern task management web application with real-time sync and team collaboratio
 - **Mobile Optimized**: Responsive design for mobile devices (v0.2.0)
 - **GitHub Automatic Deployment**: Automated CI/CD pipeline with Vercel integration (SPEC-DEPLOY-001)
 - **Deployment Stability**: Health checks, alert notifications, and deployment verification (SPEC-DEPLOY-STABILITY-001)
+- **Sentry Integration**: Real-time error tracking and monitoring with automated alerts (SPEC-OBSERVABILITY-001)
 
 ## Tech Stack
 

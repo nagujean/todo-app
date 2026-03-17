@@ -612,8 +612,5 @@ todo-app/
 
 ## Next Steps
 
-1. **Phase 1 시작**: Husky 및 pre-commit hooks 설치
-2. **테스트 커버리지 향상**: 현재 64.76% → 85% 목표
-3. **GitHub Actions 워크플로우 구성**: CI/CD 파이프라인 구축
-4. **Sentry 통합**: 에러 추적 시스템 도입
-5. **Feature Flags 구현**: Vercel Edge Config 활용
+1. ✅ **Phase 1-2 완료**: Husky, Pre-commit Hooks, Test Coverage Gate, Security Scanning, GitHub Actions
+2. 📋 **SPEC-OBSERVABILITY-001 진행**: Sentry, Health Monitoring, Alerting, Feature Flags, Rollback Automation

@@ -1,20 +1,37 @@
 ---
 id: SPEC-TEAM-001
-version: "1.0.0"
-status: draft
+version: "1.1.0"
+status: Closed
 created: 2026-03-15
-updated: 2026-03-15
+updated: 2026-03-17
 author: MoAI
 priority: MEDIUM
+completion_date: 2026-03-17
+completion_note: Requirements implemented in SPEC-TEAM-002 and SPEC-TEAM-003
 ---
 
 # SPEC-TEAM-001: 팀 관리 기능
 
 ## HISTORY
 
-| 날짜 | 버전 | 작성자 | 변경 내용 |
-|------|------|--------|-----------|
-| 2026-03-15 | 1.0.0 | MoAI | 초기 SPEC 생성 |
+| 날짜       | 버전  | 작성자 | 변경 내용                                                        |
+| ---------- | ----- | ------ | ---------------------------------------------------------------- |
+| 2026-03-15 | 1.0.0 | MoAI   | 초기 SPEC 생성                                                   |
+| 2026-03-17 | 1.1.0 | MoAI   | Closed - 요구사항이 SPEC-TEAM-002, SPEC-TEAM-003에서 구현 완료됨 |
+
+## Closure Summary
+
+이 SPEC의 모든 요구사항이 다음 SPEC에서 구현되었습니다:
+
+- **SPEC-TEAM-002**: IntegratedTeamManagementSheet 컴포넌트 구현
+- **SPEC-TEAM-003**: TeamManagementMenu UX 개선
+
+구현된 컴포넌트:
+
+- `src/components/team/TeamManagementMenu.tsx` ✅
+- `src/components/team/DeleteTeamDialog.tsx` ✅
+- `src/components/team/LeaveTeamDialog.tsx` ✅
+- `src/components/team/IntegratedTeamManagementSheet.tsx` ✅
 
 ---
 
@@ -27,12 +44,14 @@ priority: MEDIUM
 ### 목표
 
 사용자가 팀을 관리할 수 있는 UI를 제공하여 다음 기능을 가능하게 합니다:
+
 1. 소유자: 팀 삭제, 팀 설정 변경
 2. 관리자/편집자/뷰어: 팀 탈퇴
 
 ### 범위
 
 **포함 (In-Scope):**
+
 - 팀 관리 메뉴 UI 컴포넌트
 - 팀 삭제 다이얼로그 (소유자 전용)
 - 팀 탈퇴 다이얼로그 (멤버용)
@@ -40,6 +59,7 @@ priority: MEDIUM
 - 소유자 권한 백엔드 검증
 
 **제외 (Out-of-Scope):**
+
 - 팀 설정 상세 페이지 (별도 SPEC)
 - 멤버 초대/관리 기능 (기존 구현됨)
 - 팀 이관 (소유권 이전)
@@ -106,6 +126,7 @@ src/components/team/
 ### 상태 관리
 
 기존 `teamStore.ts` 활용:
+
 - `deleteTeam(teamId)` - 팀 삭제
 - `leaveTeam(teamId)` - 팀 탈퇴
 - `currentTeam` - 현재 선택된 팀
@@ -113,12 +134,12 @@ src/components/team/
 
 ### 권한 체계
 
-| 권한 | 팀 삭제 | 팀 탈퇴 | 팀 설정 |
-|------|---------|---------|---------|
-| Owner | O | X (팀 삭제만) | O |
-| Admin | X | O | O |
-| Editor | X | O | X |
-| Viewer | X | O | X |
+| 권한   | 팀 삭제 | 팀 탈퇴       | 팀 설정 |
+| ------ | ------- | ------------- | ------- |
+| Owner  | O       | X (팀 삭제만) | O       |
+| Admin  | X       | O             | O       |
+| Editor | X       | O             | X       |
+| Viewer | X       | O             | X       |
 
 ### Firestore 보안 규칙 업데이트 필요
 
@@ -142,6 +163,7 @@ TeamSwitcher 드롭다운 내 팀 항목 우측에 설정 아이콘 배치
 ### 다이얼로그 디자인
 
 **팀 삭제 다이얼로그:**
+
 - 제목: "팀 삭제"
 - 내용: 정말로 이 팀을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.
 - 확인 입력: 팀 이름 입력 필드
@@ -149,6 +171,7 @@ TeamSwitcher 드롭다운 내 팀 항목 우측에 설정 아이콘 배치
 - 버튼: [취소] [삭제]
 
 **팀 탈퇴 다이얼로그:**
+
 - 제목: "팀 탈퇴"
 - 내용: "{팀이름}" 팀에서 탈퇴하시겠습니까?
 - 안내: 탈퇴 후에도 팀의 다른 멤버들은 계속 이 팀을 사용할 수 있습니다.

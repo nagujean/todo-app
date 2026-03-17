@@ -31,12 +31,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PWA 오프라인 지원 서비스 워커 캐싱
 - 배포 모니터링을 위한 헬스 체크 엔드포인트
 - 배포 실패 알림 시스템 (Slack 통합 준비)
+- Sentry 실시간 에러 추적 및 모니터링 시스템 (SPEC-OBSERVABILITY-001)
 
 ### 🐛 버그 수정 (Bug Fixes)
 
 - GitHub Actions alerts.yml YAML 문법 오류 수정
 - TypeScript 타입 에러 수정
 - Stage 1 Quality Gate 에러 해결 - ES Modules 및 린트 수정
+- Health Check API 테스트 커버리지 개선 및 배포 안정성 향상 (SPEC-GITHUB-WORKFLOW-FIX-001)
 
 ### 📊 테스트 및 코드 커버리지 (Testing & Coverage)
 
@@ -47,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Todo Components: TodoItem, TodoList, TodoInput, TodoDetail (84%+)
   - Auth Components: LoginForm, SignupForm, UserMenu, AuthProvider (88%+)
   - Team Components: TeamSwitcher, CreateTeamDialog, InviteDialog, TeamMembers (67%+)
+  - Sentry Integration: 19개 테스트 통과, 94.59% 커버리지 (Health Check API)
 
 ### 📁 프로젝트 구조 변경 (Project Structure Changes)
 
