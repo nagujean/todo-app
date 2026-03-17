@@ -2,7 +2,7 @@
 
 Modern task management web application with real-time sync and team collaboration.
 
-## Version 0.2.2 Highlights
+## Version 0.2.2 Highlights (v0.2.2)
 
 ### New Features
 
@@ -19,6 +19,9 @@ Modern task management web application with real-time sync and team collaboratio
 - PWA offline support with service worker caching
 - Health check endpoints for deployment monitoring
 - Alert notifications for deployment failures (Slack integration ready)
+- **Enhanced CI/CD**: Vercel Deployment Protection 바이패스 토큰 지원
+- **Deployment Optimization**: 배포 리전 icn1 제한 및 Edge Runtime 호환성
+- **Infrastructure Health**: GitHub Actions alerts.yml Health Check 개선
 
 ## Features
 
