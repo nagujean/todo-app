@@ -179,12 +179,21 @@ jobs:
       - name: Create GitHub issue on repeated failures
         if: failure()
         uses: actions/github-script@v7
+        env:
+          VERCEL_URL: ${{ env.VERCEL_URL }}
+          HTTP_CODE: ${{ steps.health_check.outputs.http_code }}
+          RESPONSE_BODY: ${{ steps.health_check.outputs.response_body }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const { owner, repo } = context.repo
             const title = '🚨 Health Check Failure Alert'
             const labels = ['bug', 'monitoring', 'urgent']
+
+            // Get values from environment (set above to avoid YAML/JS template conflict)
+            const vercelUrl = process.env.VERCEL_URL || 'unknown'
+            const httpCode = process.env.HTTP_CODE || 'unknown'
+            const responseBody = process.env.RESPONSE_BODY || 'No response'
 
             // Check if there's already an open issue for this
             const issues = await github.rest.issues.listForRepo({
@@ -195,30 +204,32 @@ jobs:
             })
 
             if (issues.data.length === 0) {
-              // Create new issue
+              // Create new issue - using string concatenation to avoid YAML parsing issues
+              const body = [
+                '## Health Check Failed',
+                '',
+                '**URL:** ' + vercelUrl + '/api/health',
+                '**HTTP Code:** ' + httpCode,
+                '**Time:** ' + new Date().toISOString(),
+                '',
+                '### Response Body',
+                '```',
+                responseBody,
+                '```',
+                '',
+                '### Action Required',
+                '- Check deployment logs',
+                '- Verify database connectivity',
+                '- Check authentication service',
+                '- Run rollback script if needed: `./scripts/rollback.sh --confirm`'
+              ].join('\n')
+
               await github.rest.issues.create({
                 owner,
                 repo,
                 title,
                 labels,
-                body: `
-## Health Check Failed
-
-**URL:** ${{ env.VERCEL_URL }}/api/health
-**HTTP Code:** ${{ steps.health_check.outputs.http_code }}
-**Time:** ${new Date().toISOString()}
-
-### Response Body
-\`\`\`
-${{ steps.health_check.outputs.response_body }}
-\`\`\`
-
-### Action Required
-- Check deployment logs
-- Verify database connectivity
-- Check authentication service
-- Run rollback script if needed: \`./scripts/rollback.sh --confirm\`
-                `.trim()
+                body: body
               })
             }
 
