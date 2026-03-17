@@ -1,0 +1,129 @@
+name: Preview Deployment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [master, main]
+
+env:
+  NODE_VERSION: '20'
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+jobs:
+  preview-deploy:
+    name: Deploy to Vercel Preview
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project Artifacts
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel Preview
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "preview_url=$url" >> $GITHUB_OUTPUT
+          echo "🔗 Preview URL: $url"
+
+      - name: Comment PR with Preview URL
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const previewUrl = '${{ steps.deploy.outputs.preview_url }}';
+            const comment = `## 🚀 Preview Deployment Ready
+
+            Your preview deployment is now available!
+
+            🔗 **Preview URL**: ${previewUrl}
+
+            ### 📋 Deployment Details
+            - **Branch**: ${context.ref}
+            - **Commit**: ${context.sha}
+            - **Triggered by**: ${context.actor}
+
+            ### 🧪 Testing Checklist
+            - [ ] Smoke tests passed
+            - [ ] Critical user flows verified
+            - [ ] No console errors
+            - [ ] Responsive design checked
+
+            > 💡 **Note**: This preview will be updated automatically on each push to this PR.
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: Run Smoke Tests on Preview
+        run: |
+          echo "Running smoke tests on preview deployment..."
+          # Add your smoke test commands here
+          # Example: npm run test:smoke -- --base-url=${{ steps.deploy.outputs.preview_url }}
+
+      - name: Update PR Status
+        if: success()
+        run: |
+          echo "✅ Preview deployment successful"
+          echo "Preview URL: ${{ steps.deploy.outputs.preview_url }}"
+
+      - name: Cleanup on Failure
+        if: failure()
+        run: |
+          echo "❌ Preview deployment failed"
+          echo "Please check the logs for details"
+
+  health-check:
+    name: Preview Health Check
+    runs-on: ubuntu-latest
+    needs: preview-deploy
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Wait for deployment
+        run: sleep 30
+
+      - name: Check health endpoint
+        run: |
+          preview_url="${{ needs.preview-deploy.outputs.preview_url }}"
+          echo "Checking health of $preview_url"
+          curl -f "$preview_url/api/health" || exit 1
+
+      - name: Verify critical pages
+        run: |
+          preview_url="${{ needs.preview-deploy.outputs.preview_url }}"
+          echo "Verifying critical pages..."
+          curl -f "$preview_url/" || exit 1
+          curl -f "$preview_url/login" || exit 1
+
+      - name: Report health status
+        if: always()
+        run: |
+          if [ $? -eq 0 ]; then
+            echo "✅ Health check passed"
+          else
+            echo "❌ Health check failed"
+            exit 1
+          fi

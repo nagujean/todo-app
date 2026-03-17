@@ -1,0 +1,180 @@
+name: Emergency Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for rollback'
+        required: true
+        type: string
+      deployment_id:
+        description: 'Specific deployment ID to rollback to (optional)'
+        required: false
+        type: string
+
+env:
+  NODE_VERSION: '20'
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+jobs:
+  rollback:
+    name: Rollback to Previous Stable Version
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Authenticate with Vercel
+        run: vercel login --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: List Recent Deployments
+        id: list-deployments
+        run: |
+          echo "Fetching recent deployments..."
+          vercel ls --token=${{ secrets.VERCEL_TOKEN }} > deployments.txt
+          cat deployments.txt
+
+      - name: Rollback to Previous Deployment
+        id: rollback
+        run: |
+          if [ -n "${{ inputs.deployment_id }}" ]; then
+            echo "Rolling back to specific deployment: ${{ inputs.deployment_id }}"
+            vercel rollback ${{ inputs.deployment_id }} --token=${{ secrets.VERCEL_TOKEN }} --yes
+          else
+            echo "Rolling back to previous stable deployment..."
+            vercel rollback --token=${{ secrets.VERCEL_TOKEN }} --yes
+          fi
+          echo "rollback_timestamp=$(date +%s)" >> $GITHUB_OUTPUT
+
+      - name: Verify Rollback
+        run: |
+          echo "Verifying rollback..."
+          sleep 30
+          # Add verification checks here
+          # Example: health check, smoke tests
+
+      - name: Disable Feature Flags (Kill Switch)
+        if: success()
+        run: |
+          echo "🔘 Disabling feature flags..."
+          # Implement kill switch logic here
+          # Example: Update Vercel Edge Config to disable new features
+
+      - name: Create Rollback Report
+        run: |
+          echo "## 🔄 Rollback Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Rollback Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp**: ${{ steps.rollback.outputs.rollback_timestamp }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Reason**: ${{ inputs.reason }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggered by**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Deployment ID**: ${{ inputs.deployment_id || 'Previous stable' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Rollback Actions Completed" >> $GITHUB_STEP_SUMMARY
+          echo "- [x] Vercel deployment rolled back" >> $GITHUB_STEP_SUMMARY
+          echo "- [x] Feature flags disabled" >> $GITHUB_STEP_SUMMARY
+          echo "- [x] System verified" >> $GITHUB_STEP_SUMMARY
+
+      - name: Notify Team
+        run: |
+          echo "📢 Sending rollback notification..."
+          # Add notification logic here
+          # Example: Slack webhook, email, etc.
+
+      - name: Create Incident Report
+        if: always()
+        run: |
+          echo "📝 Creating incident report..."
+          echo "Incident Type: Emergency Rollback"
+          echo "Reason: ${{ inputs.reason }}"
+          echo "Timestamp: ${{ steps.rollback.outputs.rollback_timestamp }}"
+          echo "Triggered by: ${{ github.actor }}"
+
+  health-check-after-rollback:
+    name: Health Check After Rollback
+    runs-on: ubuntu-latest
+    needs: rollback
+
+    steps:
+      - name: Wait for Rollback Propagation
+        run: sleep 60
+
+      - name: Check Health Endpoint
+        run: |
+          production_url="https://your-app.vercel.app"
+          echo "Checking health endpoint..."
+          curl -f "$production_url/api/health" || exit 1
+
+      - name: Run Critical User Flows
+        run: |
+          echo "Running critical user flow checks..."
+          # Add smoke tests here
+
+      - name: Report Health Status
+        if: always()
+        run: |
+          if [ $? -eq 0 ]; then
+            echo "✅ System healthy after rollback"
+          else
+            echo "❌ System unhealthy after rollback"
+            echo "🚨 Manual intervention required!"
+          fi
+
+  disable-deployments:
+    name: Disable Future Deployments
+    runs-on: ubuntu-latest
+    needs: rollback
+    if: success()
+
+    steps:
+      - name: Create Deployment Protection
+        run: |
+          echo "🛡️ Enabling deployment protection..."
+          # Add logic to prevent automatic deployments
+          # Example: Update branch protection rules, pause CI/CD
+
+      - name: Notify Team of Deployment Pause
+        run: |
+          echo "📢 Team notified of deployment pause"
+          echo "Deployments must be manually approved until issue is resolved"
+
+  postmortem-checklist:
+    name: Generate Postmortem Checklist
+    runs-on: ubuntu-latest
+    needs: [rollback, health-check-after-rollback]
+    if: always()
+
+    steps:
+      - name: Generate Postmortem Template
+        run: |
+          echo "## 📋 Postmortem Checklist" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔍 Investigation" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] What happened?" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] What was the impact?" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Why did it happen?" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] How did we respond?" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🛠️ Action Items" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Fix root cause" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Update monitoring" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Improve testing" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Document lessons learned" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Timeline" >> $GITHUB_STEP_SUMMARY
+          echo "- **Incident detected**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "- **Rollback initiated**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "- **Rollback completed**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "- **System restored**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY

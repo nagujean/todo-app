@@ -1,0 +1,261 @@
+name: Deployment Alerts and Monitoring
+
+################################################################################
+# GitHub Actions Workflow: Deployment Alerts
+#
+# REQ-002: 시스템은 항상 배포 상태를 실시간으로 모니터링하고 대시보드에 표시해야 한다.
+# REQ-011: WHEN 헬스 체크가 3회 연속 실패하면, THEN 시스템은 알림을 발송하고
+#          인시던트를 생성해야 한다.
+#
+# Triggers:
+# - Deployment status changes
+# - Manual trigger for health checks
+# - Scheduled health monitoring
+################################################################################
+
+on:
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      health_check:
+        description: 'Run health check'
+        required: false
+        default: 'true'
+        type: boolean
+  schedule:
+    # Run health check every 5 minutes
+    - cron: '*/5 * * * *'
+  pull_request:
+    types: [closed]
+
+env:
+  VERCEL_URL: ${{ github.event.deployment_status.target_url || 'https://todo-app.vercel.app' }}
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+jobs:
+  monitor-deployment:
+    name: Monitor Deployment Status
+    runs-on: ubuntu-latest
+    if: github.event_name == 'deployment_status'
+
+    steps:
+      - name: Check deployment status
+        id: check_status
+        run: |
+          DEPLOYMENT_STATUS="${{ github.event.deployment_status.state }}"
+          echo "status=${DEPLOYMENT_STATUS}" >> $GITHUB_OUTPUT
+
+          if [ "$DEPLOYMENT_STATUS" = "success" ]; then
+            echo "Deployment successful"
+            exit 0
+          else
+            echo "Deployment failed with status: $DEPLOYMENT_STATUS"
+            exit 1
+          fi
+
+      - name: Send success notification
+        if: steps.check_status.outputs.status == 'success'
+        run: |
+          echo "Deployment successful - sending notification"
+          # Slack notification
+          if [ -n "$SLACK_WEBHOOK_URL" ]; then
+            curl -X POST "$SLACK_WEBHOOK_URL" \
+              -H 'Content-Type: application/json' \
+              -d "{
+                \"text\": \"✅ Deployment Successful\",
+                \"blocks\": [
+                  {
+                    \"type\": \"section\",
+                    \"text\": {
+                      \"type\": \"mrkdwn\",
+                      \"text\": \":white_check_mark: *Deployment Completed Successfully*\n\n*Environment:* ${{ github.event.deployment_status.environment }}\n*URL:* ${{ github.event.deployment_status.target_url }}\n*Commit:* ${{ github.event.deployment_status.repository_url }}\"
+                    }
+                  }
+                ]
+              }"
+          fi
+
+      - name: Send failure notification
+        if: steps.check_status.outputs.status != 'success'
+        run: |
+          echo "Deployment failed - sending alert"
+          # Slack notification
+          if [ -n "$SLACK_WEBHOOK_URL" ]; then
+            curl -X POST "$SLACK_WEBHOOK_URL" \
+              -H 'Content-Type: application/json' \
+              -d "{
+                \"text\": \"🚨 Deployment Failed\",
+                \"blocks\": [
+                  {
+                    \"type\": \"section\",
+                    \"text\": {
+                      \"type\": \"mrkdwn\",
+                      \"text\": \":x: *Deployment Failed*\n\n*Environment:* ${{ github.event.deployment_status.environment }}\n*Status:* ${{ steps.check_status.outputs.status }}\n*Commit:* ${{ github.event.deployment_status.repository_url }}\"
+                    }
+                  },
+                  {
+                    \"type\": \"actions\",
+                    \"elements\": [
+                      {
+                        \"type\": \"button\",
+                        \"text\": {
+                          \"type\": \"plain_text\",
+                          \"text\": \"View Logs\"
+                        },
+                        \"url\": \"${{ github.event.deployment_status.target_url }}/logs\"
+                      }
+                    ]
+                  }
+                ]
+              }"
+          fi
+
+  health-check:
+    name: Health Check Monitoring
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Run health check
+        id: health_check
+        run: |
+          echo "Running health check on ${{ env.VERCEL_URL }}"
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" "${{ env.VERCEL_URL }}/api/health")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          echo "http_code=${HTTP_CODE}" >> $GITHUB_OUTPUT
+          echo "response_body=${BODY}" >> $GITHUB_OUTPUT
+
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "Health check passed"
+            exit 0
+          else
+            echo "Health check failed with HTTP code: $HTTP_CODE"
+            exit 1
+          fi
+
+      - name: Parse health check response
+        if: steps.health_check.outputs.http_code == '200'
+        run: |
+          BODY='${{ steps.health_check.outputs.response_body }}'
+          STATUS=$(echo "$BODY" | jq -r '.status')
+          echo "Health status: $STATUS"
+
+          if [ "$STATUS" != "healthy" ]; then
+            echo "Service is degraded or unhealthy"
+            exit 1
+          fi
+
+      - name: Send alert on health check failure
+        if: failure() && steps.health_check.outputs.http_code != '200'
+        run: |
+          echo "Health check failed - sending alert"
+          if [ -n "$SLACK_WEBHOOK_URL" ]; then
+            curl -X POST "$SLACK_WEBHOOK_URL" \
+              -H 'Content-Type: application/json' \
+              -d "{
+                \"text\": \"🚨 Health Check Failed\",
+                \"blocks\": [
+                  {
+                    \"type\": \"section\",
+                    \"text\": {
+                      \"type\": \"mrkdwn\",
+                      \"text\": \":x: *Health Check Failed*\n\n*URL:* ${{ env.VERCEL_URL }}/api/health\n*HTTP Code:* ${{ steps.health_check.outputs.http_code }}\n*Time:* $(date -u '+%Y-%m-%d %H:%M:%S UTC')\"
+                    }
+                  },
+                  {
+                    \"type\": \"section\",
+                    \"text\": {
+                      \"type\": \"mrkdwn\",
+                      \"text\": \"*Response:*\\n\`${{ steps.health_check.outputs.response_body }}\`\"
+                    }
+                  }
+                ]
+              }"
+          fi
+
+      - name: Create GitHub issue on repeated failures
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo
+            const title = '🚨 Health Check Failure Alert'
+            const labels = ['bug', 'monitoring', 'urgent']
+
+            // Check if there's already an open issue for this
+            const issues = await github.rest.issues.listForRepo({
+              owner,
+              repo,
+              state: 'open',
+              labels: labels.join(','),
+            })
+
+            if (issues.data.length === 0) {
+              // Create new issue
+              await github.rest.issues.create({
+                owner,
+                repo,
+                title,
+                labels,
+                body: `
+## Health Check Failed
+
+**URL:** ${{ env.VERCEL_URL }}/api/health
+**HTTP Code:** ${{ steps.health_check.outputs.http_code }}
+**Time:** ${new Date().toISOString()}
+
+### Response Body
+\`\`\`
+${{ steps.health_check.outputs.response_body }}
+\`\`\`
+
+### Action Required
+- Check deployment logs
+- Verify database connectivity
+- Check authentication service
+- Run rollback script if needed: \`./scripts/rollback.sh --confirm\`
+                `.trim()
+              })
+            }
+
+  verify-pr-deployment:
+    name: Verify PR Deployment
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
+
+    steps:
+      - name: Wait for deployment
+        run: |
+          echo "Waiting for deployment to complete..."
+          sleep 30
+
+      - name: Run smoke tests
+        run: |
+          echo "Running smoke tests on production..."
+          curl -f "${{ env.VERCEL_URL }}" || exit 1
+          curl -f "${{ env.VERCEL_URL }}/api/health" || exit 1
+          echo "Smoke tests passed"
+
+      - name: Send deployment confirmation
+        if: success()
+        run: |
+          if [ -n "$SLACK_WEBHOOK_URL" ]; then
+            curl -X POST "$SLACK_WEBHOOK_URL" \
+              -H 'Content-Type: application/json' \
+              -d "{
+                \"text\": \"🚀 PR Deployed to Production\",
+                \"blocks\": [
+                  {
+                    \"type\": \"section\",
+                    \"text\": {
+                      \"type\": \"mrkdwn\",
+                      \"text\": \":rocket: *PR Deployed Successfully*\n\n*PR:* #${{ github.event.pull_request.number }}\n*Title:* ${{ github.event.pull_request.title }}\n*URL:* ${{ env.VERCEL_URL }}\"
+                    }
+                  }
+                ]
+              }"
+          fi

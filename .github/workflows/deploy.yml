@@ -1,0 +1,208 @@
+name: Production Deployment
+
+on:
+  push:
+    branches: [master, main]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+jobs:
+  quality-gate:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Lint
+        run: npm run lint
+
+      - name: Run Type Check
+        run: npx tsc --noEmit
+
+      - name: Run Unit Tests
+        run: npm run test:coverage
+
+      - name: Verify Coverage Threshold
+        run: |
+          COVERAGE=$(cat coverage/coverage-summary.json | jq '.total.lines.pct')
+          echo "Current Coverage: $COVERAGE%"
+          if (( $(echo "$COVERAGE < 85" | bc -l) )); then
+            echo "❌ Coverage is below 85% threshold"
+            exit 1
+          fi
+          echo "✅ Coverage meets 85% threshold"
+
+      - name: Run E2E Tests
+        run: npm run test:e2e
+        env:
+          CI: true
+
+      - name: Security Scan
+        run: npm audit --audit-level=critical
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: quality-gate
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project Artifacts
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel Production
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$url" >> $GITHUB_OUTPUT
+          echo "🚀 Production URL: $url"
+
+      - name: Create GitHub Deployment
+        uses: chrnorm/deployment-action@v2
+        with:
+          token: '${{ github.token }}'
+          environment_url: ${{ steps.deploy.outputs.url }}
+          environment: 'production'
+          description: 'Production deployment'
+
+      - name: Update Deployment Status
+        if: success()
+        run: |
+          echo "✅ Production deployment successful"
+          echo "URL: ${{ steps.deploy.outputs.url }}"
+
+      - name: Run Post-Deployment Smoke Tests
+        run: |
+          echo "Running post-deployment smoke tests..."
+          url="${{ steps.deploy.outputs.url }}"
+          curl -f "$url/api/health" || exit 1
+          curl -f "$url/" || exit 1
+
+  gradual-rollout:
+    name: Gradual Rollout
+    runs-on: ubuntu-latest
+    needs: deploy-production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Wait for DNS propagation
+        run: sleep 60
+
+      - name: Canary 10%
+        run: |
+          echo "🎯 Starting canary rollout at 10%"
+          # Update feature flags to enable for 10% of users
+          # This is a placeholder - implement based on your feature flag system
+
+      - name: Monitor Canary 10%
+        run: |
+          echo "⏳ Monitoring canary at 10% for 30 minutes..."
+          sleep 1800  # 30 minutes
+
+      - name: Canary 50%
+        if: success()
+        run: |
+          echo "🎯 Increasing canary rollout to 50%"
+          # Update feature flags to enable for 50% of users
+
+      - name: Monitor Canary 50%
+        run: |
+          echo "⏳ Monitoring canary at 50% for 30 minutes..."
+          sleep 1800  # 30 minutes
+
+      - name: Full Rollout 100%
+        if: success()
+        run: |
+          echo "✅ Proceeding to full rollout (100%)"
+          # Update feature flags to enable for all users
+
+      - name: Rollback on Failure
+        if: failure()
+        run: |
+          echo "❌ Canary rollout failed - initiating rollback"
+          # Trigger rollback workflow
+          gh workflow run rollback.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [quality-gate, deploy-production, gradual-rollout]
+    if: always()
+
+    steps:
+      - name: Send Deployment Notification
+        run: |
+          if [ "${{ needs.quality-gate.result }}" == "failure" ]; then
+            echo "❌ Quality gate failed"
+          elif [ "${{ needs.deploy-production.result }}" == "failure" ]; then
+            echo "❌ Production deployment failed"
+          elif [ "${{ needs.gradual-rollout.result }}" == "failure" ]; then
+            echo "❌ Gradual rollout failed"
+          else
+            echo "✅ Deployment successful!"
+            echo "🔗 Production URL: ${{ needs.deploy-production.outputs.url }}"
+          fi
+
+      - name: Create Deployment Summary
+        run: |
+          echo "## 🚀 Production Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Quality Gate | ${{ needs.quality-gate.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deploy Production | ${{ needs.deploy-production.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Gradual Rollout | ${{ needs.gradual-rollout.result == 'success' && '✅ Passed' || '⚠️ Review' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Deployment Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: Production" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL**: ${{ needs.deploy-production.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Deployed by**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
