@@ -4,7 +4,7 @@
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
-  "regions": ["iad1", "sfo1", "fra1"],
+  "regions": ["icn1"],
   "functions": {
     "app/api/**/*.ts": {
       "memory": 1024,
