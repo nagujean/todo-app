@@ -8,12 +8,14 @@ Modern task management web application with real-time sync and team collaboratio
 
 - **Rich Text Editor**: Notion-style rich text editing with slash commands, bullet lists, and formatting (SPEC-CHECKLIST-001)
 - **Deployment Stability**: Automated health checks, alert notifications, and deployment verification (SPEC-DEPLOY-STABILITY-001)
+- **Health Check System**: Automated monitoring with GitHub Secrets configuration for accurate deployment tracking
 - **GitHub Actions CI/CD**: Automated quality gates with ESLint, TypeScript checks, and build verification
 - **Team Management Menu UX**: Enhanced team management workflow with integrated team management sheet (SPEC-TEAM-003)
 - **Improved Team Permissions**: Last owner can delete team, improved permission system
 - **Enhanced Mobile Experience**: Mobile responsive design improvements
 - **Code Quality Improvements**: ES Modules migration, React 19 best practices with useSyncExternalStore
 - **Sentry Error Tracking**: Real-time error monitoring and tracking with Sentry integration (SPEC-OBSERVABILITY-001)
+- **UI Bug Fixes**: Mobile UI layout improvements and completion status display fixes (SPEC-BUG-UI-001)
 
 ### Security & Stability
 
@@ -22,7 +24,8 @@ Modern task management web application with real-time sync and team collaboratio
 - Alert notifications for deployment failures (Slack integration ready)
 - **Enhanced CI/CD**: Vercel Deployment Protection 바이패스 토큰 지원
 - **Deployment Optimization**: 배포 리전 icn1 제한 및 Edge Runtime 호환성
-- **Infrastructure Health**: GitHub Actions alerts.yml Health Check 개선
+- **Infrastructure Health**: GitHub Actions alerts.yml Health Check 개선 및 모니터링 안정성 강화
+- **Health Check URL Fix**: 자동화된 헬스 체크를 위한 GitHub Secrets 설정 완료
 
 ## Features
 
@@ -62,6 +65,8 @@ Modern task management web application with real-time sync and team collaboratio
 - **Mobile Optimized**: Responsive design for mobile devices (v0.2.0)
 - **GitHub Automatic Deployment**: Automated CI/CD pipeline with Vercel integration (SPEC-DEPLOY-001)
 - **Deployment Stability**: Health checks, alert notifications, and deployment verification (SPEC-DEPLOY-STABILITY-001)
+- **Health Check System**: Automated monitoring with GitHub Secrets configuration for accurate deployment tracking
+- **Health Check System**: Automated monitoring with GitHub Secrets configuration for accurate deployment tracking
 - **Sentry Integration**: Real-time error tracking and monitoring with automated alerts (SPEC-OBSERVABILITY-001)
 
 ## Tech Stack

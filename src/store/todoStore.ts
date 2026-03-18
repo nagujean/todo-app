@@ -310,6 +310,21 @@ export const useTodoStore = create<TodoState>()(
 
         const newCompleted = !todo.completed;
         const now = Timestamp.now();
+        const nowStr = getTimestamp();
+
+        // 낙관적 업데이트: 즉시 로컬 상태 반영
+        set((state) => ({
+          todos: state.todos.map((t) =>
+            t.id === id
+              ? {
+                  ...t,
+                  completed: newCompleted,
+                  updatedAt: nowStr,
+                  completedAt: newCompleted ? nowStr : null,
+                }
+              : t
+          ),
+        }));
 
         if ((userId || currentTeamId) && db) {
           try {
@@ -328,35 +343,21 @@ export const useTodoStore = create<TodoState>()(
               mode: currentTeamId ? "team" : "personal",
             });
           } catch (error) {
-            logger.error("Failed to toggle todo, falling back to local:", error);
-            const nowStr = getTimestamp();
+            logger.error("Failed to toggle todo, rolling back local state:", error);
+            // 에러 발생 시 로컬 상태 롤백
             set((state) => ({
               todos: state.todos.map((t) =>
                 t.id === id
                   ? {
                       ...t,
-                      completed: newCompleted,
+                      completed: !newCompleted,
                       updatedAt: nowStr,
-                      completedAt: newCompleted ? nowStr : null,
+                      completedAt: !newCompleted ? null : nowStr,
                     }
                   : t
               ),
             }));
           }
-        } else {
-          const nowStr = getTimestamp();
-          set((state) => ({
-            todos: state.todos.map((t) =>
-              t.id === id
-                ? {
-                    ...t,
-                    completed: newCompleted,
-                    updatedAt: nowStr,
-                    completedAt: newCompleted ? nowStr : null,
-                  }
-                : t
-            ),
-          }));
         }
       },
 

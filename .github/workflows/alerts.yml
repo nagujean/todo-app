@@ -33,7 +33,10 @@ permissions:
   contents: read
 
 env:
-  VERCEL_URL: ${{ github.event.deployment_status.target_url || 'https://todo-app-2.vercel.app' }}
+  # GitHub Secret Configuration:
+  # Set VERCEL_PRODUCTION_URL in GitHub Secrets with your actual production URL
+  # This ensures health checks use the correct project URL
+  VERCEL_URL: ${{ secrets.VERCEL_PRODUCTION_URL || github.event.deployment_status.target_url || 'https://todo-app-2.vercel.app' }}
   SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
   # Vercel Deployment Protection Bypass Token
   # Get from: Vercel Dashboard > Project > Settings > Deployment Protection
@@ -123,6 +126,17 @@ jobs:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
 
     steps:
+      - name: Display URL configuration
+        run: |
+          echo "=== Health Check Configuration ==="
+          echo "VERCEL_URL: ${{ env.VERCEL_URL }}"
+          echo "VERCEL_BYPASS_TOKEN: ${VERCEL_BYPASS_TOKEN:+configured}"
+          echo "Event: ${{ github.event_name }}"
+          if [ "${{ github.event_name }}" = "deployment_status" ]; then
+            echo "Deployment target URL: ${{ github.event.deployment_status.target_url }}"
+          fi
+          echo "================================="
+
       - name: Run health check
         id: health_check
         run: |
@@ -131,13 +145,20 @@ jobs:
           # Build URL with bypass token if available
           if [ -n "$VERCEL_BYPASS_TOKEN" ]; then
             HEALTH_URL="${{ env.VERCEL_URL }}/api/health?x-vercel-set-bypass-cookie=true&x-vercel-protection-bypass=$VERCEL_BYPASS_TOKEN"
+            echo "Using bypass token for deployment protection"
           else
             HEALTH_URL="${{ env.VERCEL_URL }}/api/health"
+            echo "No bypass token configured"
           fi
+
+          echo "Health check URL: $HEALTH_URL"
 
           RESPONSE=$(curl -s -w "\n%{http_code}" "$HEALTH_URL")
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
           BODY=$(echo "$RESPONSE" | sed '$d')
+
+          echo "HTTP Code: $HTTP_CODE"
+          echo "Response: $BODY"
 
           echo "http_code=${HTTP_CODE}" >> $GITHUB_OUTPUT
           echo "response_body=${BODY}" >> $GITHUB_OUTPUT
