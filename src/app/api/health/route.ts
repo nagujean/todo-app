@@ -69,7 +69,7 @@ async function checkAuth(): Promise<{ status: "ok" | "error"; missingVars: strin
 
   return {
     status: missingVars.length === 0 ? "ok" : "error",
-    missingVars
+    missingVars,
   };
 }
 
@@ -140,7 +140,7 @@ export async function GET() {
   // Add details if there are missing environment variables
   if (authResult.missingVars.length > 0) {
     healthResult.details = {
-      missingEnvVars: authResult.missingVars
+      missingEnvVars: authResult.missingVars,
     };
   }
 
@@ -151,8 +151,9 @@ export async function GET() {
 }
 
 /**
- * Edge Runtime Configuration
+ * Runtime Configuration
  *
- * This endpoint should be fast and lightweight
+ * Node.js runtime required for Firebase SDK compatibility
+ * @MX:NOTE: Edge Runtime does not fully support Firebase client SDK
  */
-export const runtime = "edge";
+export const runtime = "nodejs";
