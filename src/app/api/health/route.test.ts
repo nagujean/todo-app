@@ -411,13 +411,13 @@ describe("Health Check Endpoint", () => {
     });
   });
 
-  describe("Edge Runtime", () => {
-    it("should have edge runtime configured", async () => {
+  describe("Node.js Runtime", () => {
+    it("should have nodejs runtime configured", async () => {
       // Arrange
       const { runtime } = await import("./route");
 
       // Assert
-      expect(runtime).toBe("edge");
+      expect(runtime).toBe("nodejs");
     });
   });
 
