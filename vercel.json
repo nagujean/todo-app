@@ -15,8 +15,8 @@
       "maxDuration": 10
     },
     "app/api/health/route.ts": {
-      "memory": 512,
-      "maxDuration": 5
+      "memory": 1024,
+      "maxDuration": 10
     }
   },
   "rewrites": [
